@@ -101,11 +101,18 @@ fun SimAndRuleConfigScreen(
     var maxDelayText by remember(rule) { mutableStateOf(rule.maxDelaySec.toString()) }
     var startHourText by remember(rule) { mutableStateOf(rule.startHour.toString()) }
     var endHourText by remember(rule) { mutableStateOf(rule.endHour.toString()) }
+    var phoneColumnNameText by remember(rule) { mutableStateOf(rule.phoneColumnName) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Cấu hình SIM & Quy tắc") },
+                title = {
+                    Text(
+                        "Cấu hình SIM",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 actions = {
                     Button(
                         onClick = {
@@ -114,7 +121,7 @@ fun SimAndRuleConfigScreen(
                             val start = startHourText.toIntOrNull() ?: 8
                             val end = endHourText.toIntOrNull() ?: 17
 
-                            viewModel.updateRule(min, max, start, end)
+                            viewModel.updateRule(min, max, start, end, phoneColumnNameText)
                             Toast.makeText(context, "Đã lưu cài đặt!", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.padding(end = 8.dp)
@@ -295,6 +302,18 @@ fun SimAndRuleConfigScreen(
                             singleLine = true
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text("Tên cột Số điện thoại trong file Excel:")
+
+                    OutlinedTextField(
+                        value = phoneColumnNameText,
+                        onValueChange = { phoneColumnNameText = it },
+                        label = { Text("Tên tiêu đề cột SĐT (Mặc định: sdt)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
             }
         }

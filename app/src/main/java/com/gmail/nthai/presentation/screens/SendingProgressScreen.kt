@@ -71,7 +71,15 @@ fun SendingProgressScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Tiến độ Gửi SMS") })
+            TopAppBar(
+                title = {
+                    Text(
+                        "Tiến độ gửi SMS",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            )
         }
     ) { innerPadding ->
         Column(

@@ -8,5 +8,6 @@ interface SendingLogRepository {
     fun getAllLogs(): Flow<List<LogRecord>>
     suspend fun insertLog(log: LogRecord): Long
     suspend fun updateLogStatus(id: Long, status: LogStatus, errorMessage: String? = null)
+    suspend fun getLogsForCustomer(customerId: Long): List<LogRecord>
     suspend fun deleteAllLogs()
 }

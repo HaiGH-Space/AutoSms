@@ -9,9 +9,9 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    data object Customers : Screen("customers", "Khách hàng", Icons.Default.People)
+    data object Customers : Screen("customers", "Khách", Icons.Default.People)
     data object Template : Screen("template", "Mẫu tin", Icons.Default.EditNote)
-    data object Config : Screen("config", "Cấu hình", Icons.Default.Settings)
-    data object Progress : Screen("progress", "Tiến độ", Icons.Default.Send)
+    data object Config : Screen("config", "Cài đặt", Icons.Default.Settings)
+    data object Progress : Screen("progress", "Gửi tin", Icons.Default.Send)
     data object Report : Screen("report", "Báo cáo", Icons.Default.Assessment)
 }

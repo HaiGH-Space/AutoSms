@@ -37,6 +37,14 @@ class CustomerRepositoryImpl(
         customerDao.updateCustomerStatus(id, status.name)
     }
 
+    override suspend fun updateCustomerSelection(id: Long, isSelected: Boolean) {
+        customerDao.updateCustomerSelection(id, isSelected)
+    }
+
+    override suspend fun updateAllSelection(isSelected: Boolean) {
+        customerDao.updateAllSelection(isSelected)
+    }
+
     override suspend fun deleteAllCustomers() {
         customerDao.deleteAllCustomers()
     }

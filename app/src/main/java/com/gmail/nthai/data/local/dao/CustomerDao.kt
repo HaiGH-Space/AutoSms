@@ -14,7 +14,7 @@ interface CustomerDao {
     @Query("SELECT * FROM customers ORDER BY id ASC")
     fun getAllCustomers(): Flow<List<CustomerEntity>>
 
-    @Query("SELECT * FROM customers WHERE status = 'PENDING' ORDER BY id ASC")
+    @Query("SELECT * FROM customers WHERE status = 'PENDING' AND isSelected = 1 ORDER BY id ASC")
     fun getPendingCustomers(): Flow<List<CustomerEntity>>
 
     @Query("SELECT * FROM customers WHERE id = :id")
@@ -28,6 +28,12 @@ interface CustomerDao {
 
     @Query("UPDATE customers SET status = :status WHERE id = :id")
     suspend fun updateCustomerStatus(id: Long, status: String)
+
+    @Query("UPDATE customers SET isSelected = :isSelected WHERE id = :id")
+    suspend fun updateCustomerSelection(id: Long, isSelected: Boolean)
+
+    @Query("UPDATE customers SET isSelected = :isSelected")
+    suspend fun updateAllSelection(isSelected: Boolean)
 
     @Query("DELETE FROM customers")
     suspend fun deleteAllCustomers()

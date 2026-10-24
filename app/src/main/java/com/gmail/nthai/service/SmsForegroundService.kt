@@ -118,7 +118,9 @@ class SmsForegroundService : Service() {
                 return@launch
             }
 
-            currentTotal = pendingCustomers.size
+            currentTotal = pendingCustomers.sumOf { customer ->
+                customer.phone.split(',').count { it.isNotBlank() }
+            }
             currentSent = 0
 
             val template = templateRepository.getTemplate().first() ?: SmsTemplate()
@@ -127,93 +129,123 @@ class SmsForegroundService : Service() {
             for (customer in pendingCustomers) {
                 if (isStopped) break
 
-                while (isPaused && !isStopped) {
-                    delay(1000L)
+                val recipients = customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
+                val existingLogs = sendingLogRepository.getLogsForCustomer(customer.id)
+
+                for (recipient in recipients) {
+                    while (isPaused && !isStopped) {
+                        delay(1000L)
+                    }
+
+                    if (isStopped) break
+
+                    val isAlreadySent = existingLogs.any {
+                        it.phone == recipient && (it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED)
+                    }
+                    if (isAlreadySent) {
+                        currentSent++
+                        continue
+                    }
+
+                    val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                    var activeSimSlot = 0
+                    var chosenSubId = -1
+
+                    for (slot in 1..2) {
+                        var config = simConfigRepository.getSimConfigBySlot(slot)
+                        val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(slot)
+                            ?: config?.subscriptionId
+                            ?: -1
+
+                        if (currentSubId != -1) {
+                            if (config == null) {
+                                config = SimConfig(subscriptionId = currentSubId, simSlot = slot, dailyLimit = 100)
+                                simConfigRepository.saveSimConfig(config)
+                            } else if (config.subscriptionId != currentSubId) {
+                                config = config.copy(subscriptionId = currentSubId)
+                                simConfigRepository.saveSimConfig(config)
+                            }
+
+                            val constraint = validateConstraintUseCase(rule, currentHour, config)
+                            if (constraint is ValidationResult.OutsideTimeFrame) {
+                                val msg = "Ngoài khung giờ làm việc (${rule.startHour}h - ${rule.endHour}h)"
+                                updateState(SendingServiceState.Error(msg))
+                                updateNotification(msg, currentSent, currentTotal)
+                                return@launch
+                            }
+
+                            if (constraint is ValidationResult.Valid) {
+                                activeSimSlot = slot
+                                chosenSubId = currentSubId
+                                break
+                            }
+                        }
+                    }
+
+                    if (chosenSubId == -1) {
+                        val msg = "Không tìm thấy SIM hoạt động hoặc tất cả SIM đã đạt hạn mức gửi trong ngày"
+                        updateState(SendingServiceState.Error(msg))
+                        updateNotification(msg, currentSent, currentTotal)
+                        return@launch
+                    }
+
+                    val updatedCustomFields = customer.customFields.toMutableMap()
+                    updatedCustomFields.keys.filter { key ->
+                        key.equals("sdt", ignoreCase = true) ||
+                        key.equals("sđt", ignoreCase = true) ||
+                        key.equals("phone", ignoreCase = true) ||
+                        key.equals(rule.phoneColumnName, ignoreCase = true)
+                    }.forEach { key ->
+                        updatedCustomFields[key] = recipient
+                    }
+
+                    val recipientCustomer = customer.copy(
+                        phone = recipient,
+                        customFields = updatedCustomFields
+                    )
+                    val messageContent = parseSpintaxUseCase(template.content, recipientCustomer)
+                    val displayName = customer.customFields.values.firstOrNull { it.isNotBlank() } ?: recipient
+
+                    val logId = sendingLogRepository.insertLog(
+                        LogRecord(
+                            customerId = customer.id,
+                            customerName = displayName,
+                            phone = recipient,
+                            messageContent = messageContent,
+                            simSlot = activeSimSlot,
+                            status = LogStatus.PENDING
+                        )
+                    )
+
+                    val sentPendingIntent = PendingIntent.getBroadcast(
+                        this@SmsForegroundService,
+                        logId.toInt(),
+                        Intent(this@SmsForegroundService, SmsStatusReceiver::class.java).apply {
+                            action = SmsStatusReceiver.ACTION_SMS_SENT
+                            putExtra(SmsStatusReceiver.EXTRA_LOG_ID, logId)
+                            putExtra(SmsStatusReceiver.EXTRA_CUSTOMER_ID, customer.id)
+                            putExtra(SmsStatusReceiver.EXTRA_SIM_SLOT, activeSimSlot)
+                        },
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    smsSenderEngine.sendSms(
+                        subscriptionId = chosenSubId,
+                        destinationAddress = recipient,
+                        text = messageContent,
+                        sentIntent = sentPendingIntent,
+                        deliveryIntent = null
+                    )
+
+                    currentSent++
+                    updateState(SendingServiceState.Running(currentSent, currentTotal, displayName))
+                    updateNotification("Đang gửi $displayName", currentSent, currentTotal)
+
+                    val delayMs = calculateNextDelayUseCase(rule.minDelaySec, rule.maxDelaySec)
+                    delay(delayMs)
                 }
 
                 if (isStopped) break
-
-                val currentHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-                var activeSimSlot = 0
-                var chosenSubId = -1
-
-                for (slot in 1..2) {
-                    var config = simConfigRepository.getSimConfigBySlot(slot)
-                    val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(slot)
-                        ?: config?.subscriptionId
-                        ?: -1
-
-                    if (currentSubId != -1) {
-                        if (config == null) {
-                            config = SimConfig(subscriptionId = currentSubId, simSlot = slot, dailyLimit = 100)
-                            simConfigRepository.saveSimConfig(config)
-                        } else if (config.subscriptionId != currentSubId) {
-                            config = config.copy(subscriptionId = currentSubId)
-                            simConfigRepository.saveSimConfig(config)
-                        }
-
-                        val constraint = validateConstraintUseCase(rule, currentHour, config)
-                        if (constraint is ValidationResult.OutsideTimeFrame) {
-                            val msg = "Ngoài khung giờ làm việc (${rule.startHour}h - ${rule.endHour}h)"
-                            updateState(SendingServiceState.Error(msg))
-                            updateNotification(msg, currentSent, currentTotal)
-                            return@launch
-                        }
-
-                        if (constraint is ValidationResult.Valid) {
-                            activeSimSlot = slot
-                            chosenSubId = currentSubId
-                            break
-                        }
-                    }
-                }
-
-                if (chosenSubId == -1) {
-                    val msg = "Không tìm thấy SIM hoạt động hoặc tất cả SIM đã đạt hạn mức gửi trong ngày"
-                    updateState(SendingServiceState.Error(msg))
-                    updateNotification(msg, currentSent, currentTotal)
-                    break
-                }
-
-                val messageContent = parseSpintaxUseCase(template.content, customer)
-
-                val logId = sendingLogRepository.insertLog(
-                    LogRecord(
-                        customerId = customer.id,
-                        customerName = customer.name,
-                        phone = customer.phone,
-                        messageContent = messageContent,
-                        simSlot = activeSimSlot,
-                        status = LogStatus.PENDING
-                    )
-                )
-
-                val sentPendingIntent = PendingIntent.getBroadcast(
-                    this@SmsForegroundService,
-                    logId.toInt(),
-                    Intent(this@SmsForegroundService, SmsStatusReceiver::class.java).apply {
-                        action = SmsStatusReceiver.ACTION_SMS_SENT
-                        putExtra(SmsStatusReceiver.EXTRA_LOG_ID, logId)
-                        putExtra(SmsStatusReceiver.EXTRA_CUSTOMER_ID, customer.id)
-                        putExtra(SmsStatusReceiver.EXTRA_SIM_SLOT, activeSimSlot)
-                    },
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-
-                smsSenderEngine.sendSms(
-                    subscriptionId = chosenSubId,
-                    destinationAddress = customer.phone,
-                    text = messageContent,
-                    sentIntent = sentPendingIntent,
-                    deliveryIntent = null
-                )
-
-                currentSent++
-                updateState(SendingServiceState.Running(currentSent, currentTotal, customer.name))
-                updateNotification("Đang gửi ${customer.name}", currentSent, currentTotal)
-
-                val delayMs = calculateNextDelayUseCase(rule.minDelaySec, rule.maxDelaySec)
-                delay(delayMs)
             }
 
             if (!isStopped) {

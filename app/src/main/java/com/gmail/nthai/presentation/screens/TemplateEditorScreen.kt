@@ -29,10 +29,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,13 +53,30 @@ fun TemplateEditorScreen(
     val context = LocalContext.current
     val template by viewModel.template.collectAsStateWithLifecycle()
     val previewText by viewModel.preview.collectAsStateWithLifecycle()
+    val availableFields by viewModel.availableFields.collectAsStateWithLifecycle()
+    var contentFieldValue by remember {
+        mutableStateOf(TextFieldValue(template.content))
+    }
 
-    val tags = listOf("{Ten_KH}", "{So_Tien}", "{Ma_HD}", "{Ngay_Han}", "{SDT}")
+    LaunchedEffect(template.content) {
+        if (contentFieldValue.text != template.content) {
+            contentFieldValue = TextFieldValue(
+                text = template.content,
+                selection = TextRange(template.content.length)
+            )
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Soạn Mẫu Tin nhắn") },
+                title = {
+                    Text(
+                        "Soạn mẫu tin nhắn",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 actions = {
                     Button(
                         onClick = {
@@ -88,30 +111,55 @@ fun TemplateEditorScreen(
             )
 
             OutlinedTextField(
-                value = template.content,
-                onValueChange = { viewModel.updateContent(it) },
+                value = contentFieldValue,
+                onValueChange = {
+                    contentFieldValue = it
+                    viewModel.updateContent(it.text)
+                },
                 label = { Text("Nội dung tin nhắn (Hỗ trợ Spintax)") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp),
-                placeholder = { Text("Ví dụ: Kính gửi {Ten_KH}, {xin vui lòng|vui lòng} thanh toán hợp đồng {Ma_HD}...") }
+                placeholder = { Text("Ví dụ: Kính gửi {{Tên khách hàng}}, vui lòng thanh toán {{Mã hợp đồng}}...") }
             )
 
             Text(
-                text = "Chèn thẻ động thay thế:",
+                text = "Biến từ các cột Excel (nhấn để chèn):",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
 
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                tags.forEach { tag ->
-                    AssistChip(
-                        onClick = { viewModel.insertTag(tag) },
-                        label = { Text(tag) }
-                    )
+            if (availableFields.isEmpty()) {
+                Text(
+                    text = "Nhập file Excel có hàng tiêu đề trước để hiển thị biến theo cột.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    availableFields.forEach { field ->
+                        val variable = "{{$field}}"
+                        AssistChip(
+                            onClick = {
+                                val selection = contentFieldValue.selection
+                                val updatedText = buildString {
+                                    append(contentFieldValue.text.substring(0, selection.start))
+                                    append(variable)
+                                    append(contentFieldValue.text.substring(selection.end))
+                                }
+                                val cursorPosition = selection.start + variable.length
+                                contentFieldValue = TextFieldValue(
+                                    text = updatedText,
+                                    selection = TextRange(cursorPosition)
+                                )
+                                viewModel.updateContent(updatedText)
+                            },
+                            label = { Text(variable) }
+                        )
+                    }
                 }
             }
 
@@ -129,7 +177,7 @@ fun TemplateEditorScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Sử dụng cú pháp {Lựa chọn 1|Lựa chọn 2|Lựa chọn 3} để hệ thống chọn ngẫu nhiên 1 cụm từ mỗi lần gửi, giúp giảm nguy cơ bị chặn SPAM.",
+                        text = "Dùng {{Tên cột}} để chèn dữ liệu từ Excel. Cú pháp {Lựa chọn 1|Lựa chọn 2} chọn ngẫu nhiên một cụm từ mỗi lần gửi.",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

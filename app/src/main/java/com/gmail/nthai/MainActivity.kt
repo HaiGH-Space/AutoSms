@@ -9,10 +9,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.view.WindowCompat
 import com.gmail.nthai.presentation.navigation.AppNavHost
+import com.gmail.nthai.presentation.theme.AutoSmsTheme
 import com.gmail.nthai.util.PermissionUtils
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MaterialTheme(colorScheme = lightColorScheme()) {
+            AutoSmsTheme {
                 Surface(
                     color = MaterialTheme.colorScheme.background,
                     contentColor = MaterialTheme.colorScheme.onBackground

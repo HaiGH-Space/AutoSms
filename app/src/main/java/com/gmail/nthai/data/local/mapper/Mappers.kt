@@ -12,26 +12,33 @@ import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.SendingRule
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.model.SmsTemplate
+import org.json.JSONObject
 
 // Customer Mappers
 fun CustomerEntity.toDomain(): Customer = Customer(
     id = id,
-    name = name,
-    contractId = contractId,
-    amount = amount,
-    dueDate = dueDate,
     phone = phone,
-    status = try { CustomerStatus.valueOf(status) } catch (_: Exception) { CustomerStatus.PENDING }
+    customFields = JSONObject(customFieldsJson).let { json ->
+        buildMap {
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                put(key, json.optString(key))
+            }
+        }
+    },
+    status = try { CustomerStatus.valueOf(status) } catch (_: Exception) { CustomerStatus.PENDING },
+    isSelected = isSelected
 )
 
 fun Customer.toEntity(): CustomerEntity = CustomerEntity(
     id = id,
-    name = name,
-    contractId = contractId,
-    amount = amount,
-    dueDate = dueDate,
     phone = phone,
-    status = status.name
+    customFieldsJson = JSONObject().apply {
+        customFields.forEach { (key, value) -> put(key, value) }
+    }.toString(),
+    status = status.name,
+    isSelected = isSelected
 )
 
 // SmsTemplate Mappers
@@ -69,7 +76,8 @@ fun SendingRuleEntity.toDomain(): SendingRule = SendingRule(
     minDelaySec = minDelaySec,
     maxDelaySec = maxDelaySec,
     startHour = startHour,
-    endHour = endHour
+    endHour = endHour,
+    phoneColumnName = phoneColumnName
 )
 
 fun SendingRule.toEntity(): SendingRuleEntity = SendingRuleEntity(
@@ -77,7 +85,8 @@ fun SendingRule.toEntity(): SendingRuleEntity = SendingRuleEntity(
     minDelaySec = minDelaySec,
     maxDelaySec = maxDelaySec,
     startHour = startHour,
-    endHour = endHour
+    endHour = endHour,
+    phoneColumnName = phoneColumnName
 )
 
 // LogRecord Mappers

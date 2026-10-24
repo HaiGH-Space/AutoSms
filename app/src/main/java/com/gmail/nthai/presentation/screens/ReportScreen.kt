@@ -70,7 +70,13 @@ fun ReportScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Báo cáo Bảng kê") },
+                title = {
+                    Text(
+                        "Báo cáo bảng kê",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 actions = {
                     if (logs.isNotEmpty()) {
                         IconButton(onClick = { viewModel.clearLogs() }) {

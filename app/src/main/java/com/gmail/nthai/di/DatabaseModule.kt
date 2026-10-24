@@ -2,6 +2,8 @@ package com.gmail.nthai.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.gmail.nthai.data.local.AppDatabase
 import com.gmail.nthai.data.local.dao.CustomerDao
 import com.gmail.nthai.data.local.dao.SendingLogDao
@@ -18,6 +20,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE customers ADD COLUMN customFieldsJson TEXT NOT NULL DEFAULT '{}'")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -25,7 +33,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "auto_sms_database"
-        ).fallbackToDestructiveMigration().build()
+        ).addMigrations(MIGRATION_1_2).fallbackToDestructiveMigration().build()
     }
 
     @Provides

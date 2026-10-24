@@ -13,32 +13,47 @@ import java.util.Locale
 
 class ExcelParser {
 
-    fun parseCustomers(inputStream: InputStream): Result<List<Customer>> {
+    fun parseCustomers(
+        inputStream: InputStream,
+        phoneColumnName: String = "sdt"
+    ): Result<List<Customer>> {
         return runCatching {
             val workbook = WorkbookFactory.create(inputStream)
             val sheet = workbook.getSheetAt(0) ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
 
             val customers = mutableListOf<Customer>()
             var headerRow: Row? = null
-            var nameCol = -1
-            var contractCol = -1
             var phoneCol = -1
-            var amountCol = -1
-            var dueDateCol = -1
+            var headers = emptyList<String>()
+            val targetPhoneHeader = phoneColumnName.trim().lowercase(Locale.ROOT)
 
             // Find header row (check first 10 rows)
             for (r in 0..sheet.lastRowNum.coerceAtMost(10)) {
                 val row = sheet.getRow(r) ?: continue
-                for (c in 0 until row.lastCellNum) {
-                    val valStr = getCellValueAsString(row.getCell(c)).lowercase(Locale.ROOT).trim()
-                    if (valStr.contains("tên") || valStr.contains("ten") || valStr.contains("khách")) nameCol = c
-                    else if (valStr.contains("mã") || valStr.contains("hợp đồng") || valStr.contains("hd")) contractCol = c
-                    else if (valStr.contains("sđt") || valStr.contains("sdt") || valStr.contains("thoại") || valStr.contains("phone")) phoneCol = c
-                    else if (valStr.contains("tiền") || valStr.contains("nợ") || valStr.contains("amount")) amountCol = c
-                    else if (valStr.contains("hạn") || valStr.contains("ngày")) dueDateCol = c
+                val rowHeaders = (0 until row.lastCellNum.toInt().coerceAtLeast(0))
+                    .map { getCellValueAsString(row.getCell(it)).trim() }
+
+                var candidatePhoneCol = -1
+                for ((c, header) in rowHeaders.withIndex()) {
+                    val valStr = header.lowercase(Locale.ROOT)
+                    if (valStr == targetPhoneHeader || valStr == "sdt" || valStr == "sđt") {
+                        candidatePhoneCol = c
+                        break
+                    } else if (candidatePhoneCol == -1 && (
+                                valStr.contains(targetPhoneHeader) ||
+                                valStr.contains("sđt") ||
+                                valStr.contains("sdt") ||
+                                valStr.contains("thoại") ||
+                                valStr.contains("phone")
+                            )) {
+                        candidatePhoneCol = c
+                    }
                 }
-                if (phoneCol != -1 && (nameCol != -1 || contractCol != -1)) {
+
+                if (candidatePhoneCol != -1) {
                     headerRow = row
+                    headers = rowHeaders
+                    phoneCol = candidatePhoneCol
                     break
                 }
             }
@@ -48,27 +63,36 @@ class ExcelParser {
             for (r in startRowIndex..sheet.lastRowNum) {
                 val row = sheet.getRow(r) ?: continue
 
-                val rawName = if (nameCol != -1) getCellValueAsString(row.getCell(nameCol)) else "Khách hàng"
-                val rawContract = if (contractCol != -1) getCellValueAsString(row.getCell(contractCol)) else ""
                 val rawPhone = if (phoneCol != -1) getCellValueAsString(row.getCell(phoneCol)) else ""
-                val rawAmountStr = if (amountCol != -1) getCellValueAsString(row.getCell(amountCol)) else "0"
-                val rawDueDate = if (dueDateCol != -1) getCellValueAsString(row.getCell(dueDateCol)) else ""
+                val normalizedPhones = cleanAndFilterPhoneNumbers(rawPhone)
 
-                val normalizedPhone = normalizePhoneNumber(rawPhone)
-                if (normalizedPhone.isBlank()) continue
+                if (normalizedPhones.isEmpty()) continue
 
-                val amount = rawAmountStr.replace("[^0-9.]".toRegex(), "").toDoubleOrNull() ?: 0.0
+                val rowCustomFields = linkedMapOf<String, String>()
+                headers.forEachIndexed { index, header ->
+                    if (header.isNotBlank()) {
+                        rowCustomFields[header] = getCellValueAsString(row.getCell(index))
+                    }
+                }
 
-                customers.add(
-                    Customer(
-                        name = rawName.ifBlank { "Khách hàng" },
-                        contractId = rawContract,
-                        amount = amount,
-                        dueDate = rawDueDate,
-                        phone = normalizedPhone,
-                        status = CustomerStatus.PENDING
+                // Create a separate customer entry for each phone number
+                for (singlePhone in normalizedPhones) {
+                    val itemCustomFields = rowCustomFields.toMutableMap()
+                    headers.forEach { header ->
+                        val h = header.lowercase(Locale.ROOT)
+                        if (h == targetPhoneHeader || h == "sdt" || h == "sđt" || h == "phone" || h.contains("thoại")) {
+                            itemCustomFields[header] = singlePhone
+                        }
+                    }
+
+                    customers.add(
+                        Customer(
+                            phone = singlePhone,
+                            customFields = itemCustomFields,
+                            status = CustomerStatus.PENDING
+                        )
                     )
-                )
+                }
             }
 
             workbook.close()
@@ -76,14 +100,54 @@ class ExcelParser {
         }
     }
 
-    private fun normalizePhoneNumber(phone: String): String {
-        var cleaned = phone.replace("[^0-9+]".toRegex(), "")
-        if (cleaned.startsWith("+84")) {
-            cleaned = "0" + cleaned.substring(3)
-        } else if (cleaned.startsWith("84") && cleaned.length >= 11) {
-            cleaned = "0" + cleaned.substring(2)
+    fun getExcelHeaders(inputStream: InputStream): Result<List<String>> {
+        return runCatching {
+            val workbook = WorkbookFactory.create(inputStream)
+            val sheet = workbook.getSheetAt(0) ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
+            var headers = emptyList<String>()
+            for (r in 0..sheet.lastRowNum.coerceAtMost(10)) {
+                val row = sheet.getRow(r) ?: continue
+                val rowHeaders = (0 until row.lastCellNum.toInt().coerceAtLeast(0))
+                    .map { getCellValueAsString(row.getCell(it)).trim() }
+                    .filter { it.isNotBlank() }
+                if (rowHeaders.isNotEmpty()) {
+                    headers = rowHeaders
+                    break
+                }
+            }
+            workbook.close()
+            headers
         }
-        return cleaned
+    }
+
+    fun cleanAndFilterPhoneNumbers(rawPhone: String): List<String> {
+        if (rawPhone.isBlank()) return emptyList()
+
+        // Split by common delimiters (comma, semicolon, newline, slash, tab)
+        val tokens = rawPhone.split(Regex("[,;\\n\\r\\t/]+"))
+        val result = mutableListOf<String>()
+
+        for (token in tokens) {
+            val trimmed = token.trim()
+            if (trimmed.isBlank()) continue
+
+            var cleaned = trimmed.replace("[^0-9+]".toRegex(), "")
+            if (cleaned.isBlank()) continue
+
+            if (cleaned.startsWith("+84")) {
+                cleaned = "0" + cleaned.substring(3)
+            } else if (cleaned.startsWith("84") && cleaned.length >= 11) {
+                cleaned = "0" + cleaned.substring(2)
+            }
+
+            val digitsOnly = cleaned.replace("[^0-9]".toRegex(), "")
+            if (digitsOnly.length in 9..11 && (cleaned.startsWith("0") || cleaned.startsWith("+"))) {
+                if (!result.contains(cleaned)) {
+                    result.add(cleaned)
+                }
+            }
+        }
+        return result
     }
 
     private fun getCellValueAsString(cell: Cell?): String {

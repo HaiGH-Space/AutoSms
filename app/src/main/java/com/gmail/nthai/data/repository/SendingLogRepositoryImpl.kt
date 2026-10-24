@@ -25,6 +25,10 @@ class SendingLogRepositoryImpl(
         sendingLogDao.updateLogStatus(id, status.name, errorMessage)
     }
 
+    override suspend fun getLogsForCustomer(customerId: Long): List<LogRecord> {
+        return sendingLogDao.getLogsForCustomer(customerId).map { it.toDomain() }
+    }
+
     override suspend fun deleteAllLogs() {
         sendingLogDao.deleteAllLogs()
     }

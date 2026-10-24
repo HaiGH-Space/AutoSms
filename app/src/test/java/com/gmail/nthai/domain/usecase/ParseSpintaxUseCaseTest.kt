@@ -12,11 +12,13 @@ class ParseSpintaxUseCaseTest {
 
     private val sampleCustomer = Customer(
         id = 1,
-        name = "Nguyen Van A",
-        contractId = "HD12345",
-        amount = 1500000.0,
-        dueDate = "15/10/2025",
-        phone = "0912345678"
+        phone = "0912345678",
+        customFields = mapOf(
+            "Tên" to "Nguyen Van A",
+            "Mã HD" to "HD12345",
+            "Số tiền" to "1500000",
+            "Hạn" to "15/10/2025"
+        )
     )
 
     @Test
@@ -50,5 +52,27 @@ class ParseSpintaxUseCaseTest {
 
         val containsOption = result.startsWith("Chao Nguyen Van A") || result.startsWith("Kinh chao Nguyen Van A")
         assertTrue(containsOption)
+    }
+
+    @Test
+    fun `parse custom Excel column variables without consuming spintax`() {
+        val customer = sampleCustomer.copy(
+            customFields = mapOf("Tên khách hàng" to "Nguyễn An", "Số tiền" to "250000")
+        )
+
+        val result = useCase(
+            "Kính gửi {{Tên khách hàng}}, số tiền {{Số tiền}}. {Vui lòng|Xin hãy} thanh toán.",
+            customer
+        )
+
+        assertTrue(result.startsWith("Kính gửi Nguyễn An, số tiền 250000. "))
+        assertTrue(result.endsWith(" thanh toán."))
+    }
+
+    @Test
+    fun `unknown custom Excel column variable remains in message`() {
+        val result = useCase("Xin chào {{Cột không tồn tại}}", sampleCustomer)
+
+        assertEquals("Xin chào {{Cột không tồn tại}}", result)
     }
 }

@@ -8,10 +8,8 @@ enum class CustomerStatus {
 
 data class Customer(
     val id: Long = 0,
-    val name: String,
-    val contractId: String,
-    val amount: Double,
-    val dueDate: String,
     val phone: String,
-    val status: CustomerStatus = CustomerStatus.PENDING
+    val customFields: Map<String, String> = emptyMap(),
+    val status: CustomerStatus = CustomerStatus.PENDING,
+    val isSelected: Boolean = true
 )

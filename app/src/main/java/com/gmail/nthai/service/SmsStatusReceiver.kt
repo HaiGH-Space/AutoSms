@@ -45,7 +45,6 @@ class SmsStatusReceiver : BroadcastReceiver() {
                     val resultCode = pendingResult.resultCode
                     if (resultCode == Activity.RESULT_OK) {
                         sendingLogRepository.updateLogStatus(logId, LogStatus.SENT_SUCCESS)
-                        customerRepository.updateCustomerStatus(customerId, CustomerStatus.SENT)
                         simConfigRepository.incrementSentCount(simSlot)
                     } else {
                         val errorMsg = when (resultCode) {
@@ -56,7 +55,19 @@ class SmsStatusReceiver : BroadcastReceiver() {
                             else -> "Lỗi gửi SMS (Mã: $resultCode)"
                         }
                         sendingLogRepository.updateLogStatus(logId, LogStatus.FAILED, errorMsg)
-                        customerRepository.updateCustomerStatus(customerId, CustomerStatus.FAILED)
+                    }
+
+                    val customer = customerRepository.getCustomerById(customerId)
+                    if (customer != null) {
+                        val totalNumbers = customer.phone.split(',').count { it.isNotBlank() }
+                        val customerLogs = sendingLogRepository.getLogsForCustomer(customerId)
+                        val finishedLogs = customerLogs.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
+
+                        if (finishedLogs.size >= totalNumbers) {
+                            val hasFailed = finishedLogs.any { it.status == LogStatus.FAILED }
+                            val newStatus = if (hasFailed) CustomerStatus.FAILED else CustomerStatus.SENT
+                            customerRepository.updateCustomerStatus(customerId, newStatus)
+                        }
                     }
                 }
             } finally {

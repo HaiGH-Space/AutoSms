@@ -11,6 +11,8 @@ interface CustomerRepository {
     suspend fun insertCustomers(customers: List<Customer>)
     suspend fun updateCustomer(customer: Customer)
     suspend fun updateCustomerStatus(id: Long, status: CustomerStatus)
+    suspend fun updateCustomerSelection(id: Long, isSelected: Boolean)
+    suspend fun updateAllSelection(isSelected: Boolean)
     suspend fun deleteAllCustomers()
     suspend fun deleteCustomer(customer: Customer)
 }

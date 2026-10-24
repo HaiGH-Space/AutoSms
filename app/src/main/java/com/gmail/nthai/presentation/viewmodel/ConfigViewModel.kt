@@ -97,13 +97,14 @@ class ConfigViewModel @Inject constructor(
         }
     }
 
-    fun updateRule(minDelay: Int, maxDelay: Int, startHour: Int, endHour: Int) {
+    fun updateRule(minDelay: Int, maxDelay: Int, startHour: Int, endHour: Int, phoneColumnName: String = "sdt") {
         viewModelScope.launch {
             val newRule = SendingRule(
                 minDelaySec = minDelay,
                 maxDelaySec = maxDelay,
                 startHour = startHour,
-                endHour = endHour
+                endHour = endHour,
+                phoneColumnName = phoneColumnName.ifBlank { "sdt" }
             )
             simConfigRepository.saveSendingRule(newRule)
         }
