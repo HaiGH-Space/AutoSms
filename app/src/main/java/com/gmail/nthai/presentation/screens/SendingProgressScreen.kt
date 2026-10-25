@@ -1,6 +1,8 @@
 package com.gmail.nthai.presentation.screens
 
-import android.widget.Toast
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,9 +33,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -55,18 +63,55 @@ fun SendingProgressScreen(
     viewModel: ProgressViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val serviceState by viewModel.serviceState.collectAsStateWithLifecycle()
+    val serviceStates by viewModel.serviceStates.collectAsStateWithLifecycle()
     val logs by viewModel.logs.collectAsStateWithLifecycle()
+    val plannedMessageCounts by viewModel.plannedMessageCounts.collectAsStateWithLifecycle()
+    var permissionSimSlot by remember { mutableIntStateOf(1) }
+    var showPermissionSettingsDialog by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions.values.all { it }
+    ) { _ ->
+        val granted = PermissionUtils.hasRequiredPermissions(context)
         if (granted) {
-            viewModel.startSending(context)
+            viewModel.startSending(context, permissionSimSlot)
         } else {
-            Toast.makeText(context, "Cần cấp đầy đủ quyền SIM & SMS để gửi tin nhắn!", Toast.LENGTH_LONG).show()
+            showPermissionSettingsDialog = true
         }
+    }
+
+    if (showPermissionSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionSettingsDialog = false },
+            title = { Text("Cần cấp quyền gửi SMS") },
+            text = {
+                Text(
+                    "Android không cho phép ứng dụng tự cấp quyền vĩnh viễn. " +
+                        "Hãy mở Cài đặt ứng dụng và bật quyền Điện thoại, SMS và Thông báo " +
+                        "để không phải xác nhận lại khi gửi."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showPermissionSettingsDialog = false
+                        context.startActivity(
+                            Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", context.packageName, null)
+                            )
+                        )
+                    }
+                ) {
+                    Text("Mở cài đặt")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPermissionSettingsDialog = false }) {
+                    Text("Để sau")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -89,112 +134,23 @@ fun SendingProgressScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    val statusTitle = when (val state = serviceState) {
-                        SendingServiceState.Idle -> "Đang rảnh (Sẵn sàng gửi)"
-                        is SendingServiceState.Running -> "Đang gửi: ${state.currentCustomerName}"
-                        is SendingServiceState.Paused -> "Đã tạm dừng"
-                        is SendingServiceState.Finished -> "Hoàn thành gửi tin"
-                        is SendingServiceState.Error -> "Tạm dừng do lỗi: ${state.message}"
-                    }
-
-                    Text(
-                        text = statusTitle,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    val (sent, total) = when (val state = serviceState) {
-                        is SendingServiceState.Running -> Pair(state.sentCount, state.totalCount)
-                        is SendingServiceState.Paused -> Pair(state.sentCount, state.totalCount)
-                        is SendingServiceState.Finished -> Pair(state.sentCount, state.totalCount)
-                        else -> Pair(0, 0)
-                    }
-
-                    val progressFraction = if (total > 0) sent.toFloat() / total else 0f
-
-                    LinearProgressIndicator(
-                        progress = { progressFraction },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp)
-                    )
-
-                    Text(
-                        text = "Tiến độ: $sent / $total tin nhắn",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        when (serviceState) {
-                            SendingServiceState.Idle, is SendingServiceState.Finished, is SendingServiceState.Error -> {
-                                Button(
-                                    onClick = {
-                                        if (PermissionUtils.hasRequiredPermissions(context)) {
-                                            viewModel.startSending(context)
-                                        } else {
-                                            permissionLauncher.launch(PermissionUtils.getRequiredPermissions())
-                                        }
-                                    }
-                                ) {
-                                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                                    Spacer(modifier = Modifier.padding(4.dp))
-                                    Text("Bắt đầu gửi")
-                                }
-                            }
-
-                            is SendingServiceState.Running -> {
-                                OutlinedButton(
-                                    onClick = { viewModel.pauseSending(context) }
-                                ) {
-                                    Icon(Icons.Default.Pause, contentDescription = null)
-                                    Spacer(modifier = Modifier.padding(4.dp))
-                                    Text("Tạm dừng")
-                                }
-
-                                Button(
-                                    onClick = { viewModel.stopSending(context) },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                                ) {
-                                    Icon(Icons.Default.Stop, contentDescription = null)
-                                    Spacer(modifier = Modifier.padding(4.dp))
-                                    Text("Dừng hẳn")
-                                }
-                            }
-
-                            is SendingServiceState.Paused -> {
-                                Button(
-                                    onClick = { viewModel.resumeSending(context) }
-                                ) {
-                                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                                    Spacer(modifier = Modifier.padding(4.dp))
-                                    Text("Tiếp tục")
-                                }
-
-                                Button(
-                                    onClick = { viewModel.stopSending(context) },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                                ) {
-                                    Icon(Icons.Default.Stop, contentDescription = null)
-                                    Spacer(modifier = Modifier.padding(4.dp))
-                                    Text("Dừng hẳn")
-                                }
-                            }
+            (1..2).forEach { simSlot ->
+                SimSendingCard(
+                    simSlot = simSlot,
+                    state = serviceStates[simSlot] ?: SendingServiceState.Idle,
+                    plannedCount = plannedMessageCounts[simSlot] ?: 0,
+                    onStart = {
+                        if (PermissionUtils.hasRequiredPermissions(context)) {
+                            viewModel.startSending(context, simSlot)
+                        } else {
+                            permissionSimSlot = simSlot
+                            permissionLauncher.launch(PermissionUtils.getRequiredPermissions())
                         }
-                    }
-                }
+                    },
+                    onPause = { viewModel.pauseSending(context, simSlot) },
+                    onResume = { viewModel.resumeSending(context, simSlot) },
+                    onStop = { viewModel.stopSending(context, simSlot) }
+                )
             }
 
             Text(
@@ -205,14 +161,14 @@ fun SendingProgressScreen(
 
             if (logs.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("Chưa có nhật ký phát tin.")
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(logs, key = { it.id }) { log ->
@@ -225,11 +181,99 @@ fun SendingProgressScreen(
 }
 
 @Composable
+private fun SimSendingCard(
+    simSlot: Int,
+    state: SendingServiceState,
+    plannedCount: Int,
+    onStart: () -> Unit,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onStop: () -> Unit
+) {
+    val (sent, total) = when (state) {
+        is SendingServiceState.Running -> state.sentCount to state.totalCount
+        is SendingServiceState.Paused -> state.sentCount to state.totalCount
+        is SendingServiceState.Finished -> state.sentCount to state.totalCount
+        SendingServiceState.Idle -> 0 to plannedCount
+        is SendingServiceState.Error -> state.sentCount to state.totalCount
+    }
+    val title = when (state) {
+        SendingServiceState.Idle -> if (plannedCount > 0) "Sẵn sàng gửi $plannedCount tin" else "Chưa có số được chọn"
+        is SendingServiceState.Running -> "Đang gửi: ${state.currentCustomerName}"
+        is SendingServiceState.Paused -> "Đã tạm dừng"
+        is SendingServiceState.Finished -> "Hoàn thành"
+        is SendingServiceState.Error -> "Lỗi: ${state.message}"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text("SIM $simSlot", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            LinearProgressIndicator(
+                progress = { if (total > 0) sent.toFloat() / total else 0f },
+                modifier = Modifier.fillMaxWidth().height(10.dp)
+            )
+            Text("Tiến độ: $sent / $total tin nhắn")
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                when (state) {
+                    SendingServiceState.Idle, is SendingServiceState.Finished, is SendingServiceState.Error -> {
+                        Button(onClick = onStart, enabled = plannedCount > 0) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            Text("Gửi bằng SIM $simSlot")
+                        }
+                    }
+                    is SendingServiceState.Running -> {
+                        OutlinedButton(onClick = onPause) {
+                            Icon(Icons.Default.Pause, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            Text("Tạm dừng")
+                        }
+                        Button(
+                            onClick = onStop,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(Icons.Default.Stop, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            Text("Dừng")
+                        }
+                    }
+                    is SendingServiceState.Paused -> {
+                        Button(onClick = onResume) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            Text("Tiếp tục")
+                        }
+                        Button(
+                            onClick = onStop,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(Icons.Default.Stop, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            Text("Dừng")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun LogItemCard(log: LogRecord) {
     val dateFormat = SimpleDateFormat("HH:mm:ss dd/MM", Locale.getDefault())
 
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(

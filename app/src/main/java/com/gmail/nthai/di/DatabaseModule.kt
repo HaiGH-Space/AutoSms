@@ -26,6 +26,13 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE customers ADD COLUMN sendSimSlot INTEGER DEFAULT 1")
+            db.execSQL("UPDATE customers SET sendSimSlot = NULL WHERE isSelected = 0")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -33,7 +40,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "auto_sms_database"
-        ).addMigrations(MIGRATION_1_2).fallbackToDestructiveMigration().build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_4_5).fallbackToDestructiveMigration().build()
     }
 
     @Provides

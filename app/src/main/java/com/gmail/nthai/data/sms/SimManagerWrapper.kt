@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.telephony.SubscriptionManager
+import android.telephony.SubscriptionInfo
+import android.telephony.TelephonyManager
 import com.gmail.nthai.domain.model.SimConfig
 
 class SimManagerWrapper(
@@ -34,7 +36,8 @@ class SimManagerWrapper(
                     SimConfig(
                         subscriptionId = info.subscriptionId,
                         simSlot = slot,
-                        dailyLimit = 100
+                        dailyLimit = 100,
+                        carrierName = getCarrierName(info.subscriptionId, info)
                     )
                 )
             }
@@ -51,7 +54,8 @@ class SimManagerWrapper(
                         SimConfig(
                             subscriptionId = info.subscriptionId,
                             simSlot = availableSlot,
-                            dailyLimit = 100
+                            dailyLimit = 100,
+                            carrierName = getCarrierName(info.subscriptionId, info)
                         )
                     )
                 }
@@ -73,7 +77,8 @@ class SimManagerWrapper(
                         SimConfig(
                             subscriptionId = info.subscriptionId,
                             simSlot = simSlot,
-                            dailyLimit = 100
+                            dailyLimit = 100,
+                            carrierName = getCarrierName(info.subscriptionId, info)
                         )
                     )
                 }
@@ -96,7 +101,11 @@ class SimManagerWrapper(
                             SimConfig(
                                 subscriptionId = subIds[0],
                                 simSlot = simSlot,
-                                dailyLimit = 100
+                                dailyLimit = 100,
+                                carrierName = getCarrierName(
+                                    subIds[0],
+                                    infoList.find { it.subscriptionId == subIds[0] }
+                                )
                             )
                         )
                     }
@@ -119,7 +128,8 @@ class SimManagerWrapper(
                     SimConfig(
                         subscriptionId = validSubId,
                         simSlot = 1,
-                        dailyLimit = 100
+                        dailyLimit = 100,
+                        carrierName = getCarrierName(validSubId)
                     )
                 )
             }
@@ -132,5 +142,33 @@ class SimManagerWrapper(
     fun getSubscriptionIdForSlot(simSlot: Int): Int? {
         val activeSims = getActiveSims()
         return activeSims.find { it.simSlot == simSlot }?.subscriptionId
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getCarrierName(subscriptionId: Int, info: SubscriptionInfo? = null): String {
+        val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val simOperatorName = telephonyManager
+            ?.createForSubscriptionId(subscriptionId)
+            ?.simOperatorName
+
+        return sequenceOf(simOperatorName, info?.carrierName?.toString())
+            .filterNotNull()
+            .map(String::trim)
+            .firstOrNull { it.isNotEmpty() }
+            ?.normalizeCarrierName()
+            .orEmpty()
+    }
+
+    private fun String.normalizeCarrierName(): String {
+        val normalized = trim()
+        return when {
+            normalized.contains("viettel", ignoreCase = true) -> "Viettel"
+            normalized.contains("vinaphone", ignoreCase = true) -> "VinaPhone"
+            normalized.contains("mobifone", ignoreCase = true) -> "MobiFone"
+            normalized.contains("vietnamobile", ignoreCase = true) -> "Vietnamobile"
+            normalized.contains("gmobile", ignoreCase = true) ||
+                normalized.contains("beeline", ignoreCase = true) -> "Gmobile"
+            else -> normalized
+        }
     }
 }

@@ -17,8 +17,8 @@ class CustomerRepositoryImpl(
         return customerDao.getAllCustomers().map { list -> list.map { it.toDomain() } }
     }
 
-    override fun getPendingCustomers(): Flow<List<Customer>> {
-        return customerDao.getPendingCustomers().map { list -> list.map { it.toDomain() } }
+    override fun getSelectedCustomersForSending(): Flow<List<Customer>> {
+        return customerDao.getSelectedCustomersForSending().map { list -> list.map { it.toDomain() } }
     }
 
     override suspend fun getCustomerById(id: Long): Customer? {
@@ -41,8 +41,28 @@ class CustomerRepositoryImpl(
         customerDao.updateCustomerSelection(id, isSelected)
     }
 
+    override suspend fun updateCustomerSelectionForSim(id: Long, simSlot: Int, isSelected: Boolean) {
+        customerDao.updateCustomerSelectionForSim(id, simSlot, isSelected)
+    }
+
     override suspend fun updateAllSelection(isSelected: Boolean) {
         customerDao.updateAllSelection(isSelected)
+    }
+
+    override suspend fun replaceSelection(selectedIds: List<Long>) {
+        customerDao.replaceSelection(selectedIds)
+    }
+
+    override suspend fun updateSelectionForCustomers(customerIds: List<Long>, isSelected: Boolean) {
+        if (customerIds.isNotEmpty()) {
+            customerDao.updateSelectionForCustomers(customerIds, isSelected)
+        }
+    }
+
+    override suspend fun updateSelectionForSim(customerIds: List<Long>, simSlot: Int, isSelected: Boolean) {
+        if (customerIds.isNotEmpty()) {
+            customerDao.updateSelectionForSim(customerIds, simSlot, isSelected)
+        }
     }
 
     override suspend fun deleteAllCustomers() {

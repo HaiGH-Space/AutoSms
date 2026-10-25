@@ -19,7 +19,7 @@ class DailySmsWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
-        val pendingCustomers = customerRepository.getPendingCustomers().first()
+        val pendingCustomers = customerRepository.getSelectedCustomersForSending().first()
         if (pendingCustomers.isNotEmpty()) {
             val intent = Intent(context, SmsForegroundService::class.java).apply {
                 action = SmsForegroundService.ACTION_START

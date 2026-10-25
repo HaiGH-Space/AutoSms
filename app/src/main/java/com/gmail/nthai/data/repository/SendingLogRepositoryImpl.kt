@@ -21,6 +21,10 @@ class SendingLogRepositoryImpl(
         return sendingLogDao.insertLog(log.toEntity())
     }
 
+    override suspend fun updateLog(log: LogRecord) {
+        sendingLogDao.updateLog(log.toEntity())
+    }
+
     override suspend fun updateLogStatus(id: Long, status: LogStatus, errorMessage: String?) {
         sendingLogDao.updateLogStatus(id, status.name, errorMessage)
     }

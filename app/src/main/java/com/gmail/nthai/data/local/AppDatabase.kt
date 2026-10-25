@@ -20,7 +20,7 @@ import com.gmail.nthai.data.local.entity.SmsTemplateEntity
         SendingRuleEntity::class,
         SendingLogEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

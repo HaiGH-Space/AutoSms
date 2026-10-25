@@ -28,7 +28,8 @@ fun CustomerEntity.toDomain(): Customer = Customer(
         }
     },
     status = try { CustomerStatus.valueOf(status) } catch (_: Exception) { CustomerStatus.PENDING },
-    isSelected = isSelected
+    isSelected = isSelected,
+    sendSimSlot = sendSimSlot
 )
 
 fun Customer.toEntity(): CustomerEntity = CustomerEntity(
@@ -38,7 +39,8 @@ fun Customer.toEntity(): CustomerEntity = CustomerEntity(
         customFields.forEach { (key, value) -> put(key, value) }
     }.toString(),
     status = status.name,
-    isSelected = isSelected
+    isSelected = isSelected,
+    sendSimSlot = sendSimSlot
 )
 
 // SmsTemplate Mappers

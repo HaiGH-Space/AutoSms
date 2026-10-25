@@ -15,9 +15,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gmail.nthai.presentation.screens.CustomerListScreen
+import com.gmail.nthai.presentation.screens.HomeScreen
 import com.gmail.nthai.presentation.screens.ReportScreen
 import com.gmail.nthai.presentation.screens.SendingProgressScreen
 import com.gmail.nthai.presentation.screens.SimAndRuleConfigScreen
@@ -27,7 +30,7 @@ import com.gmail.nthai.presentation.screens.TemplateEditorScreen
 fun AppNavHost() {
     val navController = rememberNavController()
     val screens = listOf(
-        Screen.Customers,
+        Screen.Home,
         Screen.Template,
         Screen.Config,
         Screen.Progress,
@@ -74,11 +77,30 @@ fun AppNavHost() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Customers.route,
+            startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Customers.route) {
-                CustomerListScreen()
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    onImportExcel = { navController.navigate(Screen.Customers.route(1, importExcel = true)) },
+                    onSelectSim = { slot -> navController.navigate(Screen.Customers.route(slot)) }
+                )
+            }
+            composable(
+                route = Screen.Customers.route,
+                arguments = listOf(
+                    navArgument("simSlot") { type = NavType.IntType },
+                    navArgument("importExcel") {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    }
+                )
+            ) { entry ->
+                CustomerListScreen(
+                    simSlot = entry.arguments?.getInt("simSlot") ?: 1,
+                    openImportOnStart = entry.arguments?.getBoolean("importExcel") ?: false,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Template.route) {
                 TemplateEditorScreen()

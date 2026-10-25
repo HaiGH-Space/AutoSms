@@ -12,5 +12,7 @@ data class CustomerEntity(
     val customFieldsJson: String = "{}",
     val status: String, // PENDING, SENT, FAILED
     @ColumnInfo(defaultValue = "1")
-    val isSelected: Boolean = true
+    val isSelected: Boolean = true,
+    @ColumnInfo(defaultValue = "1")
+    val sendSimSlot: Int? = 1
 )

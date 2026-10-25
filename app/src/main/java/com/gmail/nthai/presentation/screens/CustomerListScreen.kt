@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -46,13 +47,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,22 +62,29 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
+import com.gmail.nthai.domain.usecase.DetectVietnameseCarrierUseCase
+import com.gmail.nthai.presentation.viewmodel.CustomerCarrierFilter
 import com.gmail.nthai.presentation.viewmodel.CustomerFilter
 import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerListScreen(
+    simSlot: Int,
+    openImportOnStart: Boolean = false,
+    onBack: () -> Unit,
     viewModel: CustomerViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val customers by viewModel.customersState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.query.collectAsStateWithLifecycle()
     val selectedFilter by viewModel.filter.collectAsStateWithLifecycle()
+    val selectedCarrierFilter by viewModel.carrierFilter.collectAsStateWithLifecycle()
+    val selectedSimSlot by viewModel.simSlot.collectAsStateWithLifecycle()
+    val selectedCustomerCount by viewModel.selectedCustomerCount.collectAsStateWithLifecycle()
     val pendingImportState by viewModel.pendingImportState.collectAsStateWithLifecycle()
     var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
-
-    val selectedCount = customers.count { it.isSelected }
+    var hasLaunchedInitialImport by rememberSaveable { mutableStateOf(false) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -96,9 +105,27 @@ fun CustomerListScreen(
         }
     }
 
+    LaunchedEffect(simSlot) {
+        viewModel.selectSimSlot(simSlot)
+    }
+    LaunchedEffect(openImportOnStart) {
+        if (openImportOnStart && !hasLaunchedInitialImport) {
+            hasLaunchedInitialImport = true
+            filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Quay lại trang chủ"
+                        )
+                    }
+                },
                 title = {
                     Column {
                         Text(
@@ -107,7 +134,7 @@ fun CustomerListScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Quản lý danh sách và chọn SĐT gửi SMS",
+                            "Danh sách gửi bằng SIM $simSlot",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -191,7 +218,7 @@ fun CustomerListScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            "$selectedCount SĐT",
+                            "$selectedCustomerCount khách",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -240,6 +267,44 @@ fun CustomerListScreen(
                 )
             }
 
+            Text(
+                text = "Nhà mạng",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CustomerCarrierFilter.entries.forEach { carrierFilter ->
+                    FilterChip(
+                        selected = selectedCarrierFilter == carrierFilter,
+                        onClick = { viewModel.updateCarrierFilter(carrierFilter) },
+                        label = { Text(carrierFilter.label) }
+                    )
+                }
+            }
+
+            Text(
+                text = "Bộ lọc chỉ thay đổi danh sách đang xem, không làm mất lựa chọn gửi.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = if (selectedSimSlot == 1) {
+                    "Chọn số cho SIM 1. Khi chuyển sang SIM 2, các số đã gán cho SIM 1 sẽ được ẩn."
+                } else {
+                    "Chọn số cho SIM 2. Các số đã gán cho SIM 1 không xuất hiện trong danh sách này."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
 
             if (customers.isNotEmpty()) {
@@ -267,7 +332,7 @@ fun CustomerListScreen(
                     }
 
                     Text(
-                        text = "Đã chọn: $selectedCount / ${customers.size}",
+                        text = "Đã chọn cho SIM $selectedSimSlot: $selectedCustomerCount khách",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -402,6 +467,9 @@ fun CustomerItemCard(
     ElevatedCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -421,8 +489,12 @@ fun CustomerItemCard(
                     .weight(1f)
                     .padding(horizontal = 8.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     StatusBadge(customer.status)
+                    CarrierEstimateBadge(customer.phone)
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -457,6 +529,7 @@ private fun CustomerDetailDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
         title = { Text("Dữ liệu khách hàng từ Excel") },
         text = {
             Column(
@@ -480,6 +553,12 @@ private fun CustomerDetailDialog(
                         CustomerDetailRow(label, value.ifBlank { "—" })
                     }
                 }
+                CarrierEstimateBadge(customer.phone)
+                Text(
+                    text = "Nhà mạng được dự đoán từ đầu số; có thể không chính xác nếu số đã chuyển mạng giữ số.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         },
         confirmButton = {
@@ -488,6 +567,23 @@ private fun CustomerDetailDialog(
             }
         }
     )
+}
+
+@Composable
+private fun CarrierEstimateBadge(phone: String) {
+    val carrierName = DetectVietnameseCarrierUseCase.detect(phone)
+    Surface(
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        shape = MaterialTheme.shapes.small
+    ) {
+        Text(
+            text = carrierName?.let { it } ?: "Không rõ nhà mạng",
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold
+        )
+    }
 }
 
 @Composable
@@ -505,9 +601,21 @@ private fun CustomerDetailRow(label: String, value: String) {
 @Composable
 fun StatusBadge(status: CustomerStatus) {
     val (bgColor, textColor, text) = when (status) {
-        CustomerStatus.PENDING -> Triple(Color(0xFFFFF3E0), Color(0xFFE65100), "Chờ gửi")
-        CustomerStatus.SENT -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), "Thành công")
-        CustomerStatus.FAILED -> Triple(Color(0xFFFFEBEE), Color(0xFFC62828), "Lỗi")
+        CustomerStatus.PENDING -> Triple(
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer,
+            "Chờ gửi"
+        )
+        CustomerStatus.SENT -> Triple(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            "Thành công"
+        )
+        CustomerStatus.FAILED -> Triple(
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer,
+            "Lỗi"
+        )
     }
 
     Surface(

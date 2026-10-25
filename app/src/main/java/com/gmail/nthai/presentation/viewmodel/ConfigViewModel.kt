@@ -27,8 +27,6 @@ class ConfigViewModel @Inject constructor(
 
     private val _simConfigs = MutableStateFlow<List<SimConfig>>(emptyList())
     val simConfigs: StateFlow<List<SimConfig>> = _simConfigs
-    private val _simDetectionMessage = MutableStateFlow<String?>(null)
-    val simDetectionMessage: StateFlow<String?> = _simDetectionMessage
     private var loadSimsJob: Job? = null
 
     init {
@@ -38,12 +36,9 @@ class ConfigViewModel @Inject constructor(
     fun loadSims() {
         loadSimsJob?.cancel()
         loadSimsJob = viewModelScope.launch {
-            _simDetectionMessage.value = null
             val detectedSims = try {
                 simManagerWrapper.getActiveSims()
             } catch (_: SecurityException) {
-                _simDetectionMessage.value =
-                    "Android đã từ chối quyền đọc trạng thái điện thoại. Hãy cấp quyền Điện thoại trong Cài đặt ứng dụng."
                 emptyList()
             }
 
@@ -68,19 +63,12 @@ class ConfigViewModel @Inject constructor(
                     simSlot = slot,
                     dailyLimit = targetLimit,
                     sentCountToday = sentToday,
-                    lastResetDate = lastReset
+                    lastResetDate = lastReset,
+                    carrierName = detected?.carrierName.orEmpty()
                 )
 
                 merged.add(config)
                 simConfigRepository.saveSimConfig(config)
-            }
-
-            if (detectedSims.isNotEmpty()) {
-                val simDetails = detectedSims.joinToString(", ") { "SIM ${it.simSlot} (SubID: ${it.subscriptionId})" }
-                _simDetectionMessage.value = "Nhận diện thành công: $simDetails."
-            } else if (_simDetectionMessage.value == null) {
-                _simDetectionMessage.value =
-                    "Hệ thống Android không trả về thông tin SIM. Hãy kiểm tra SIM đã cắm/bật và cấp quyền Điện thoại."
             }
 
             _simConfigs.value = merged

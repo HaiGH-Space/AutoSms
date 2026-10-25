@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -22,11 +23,13 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -73,7 +76,6 @@ fun SimAndRuleConfigScreen(
     }
 
     val simConfigs by viewModel.simConfigs.collectAsStateWithLifecycle()
-    val simDetectionMessage by viewModel.simDetectionMessage.collectAsStateWithLifecycle()
     val rule by viewModel.sendingRule.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -182,35 +184,41 @@ fun SimAndRuleConfigScreen(
                 }
             }
 
-            simDetectionMessage?.let { message ->
-                Text(
-                    message,
-                    color = if (simConfigs.any { it.subscriptionId != -1 }) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.error
-                    }
-                )
-            }
-
-            TextButton(onClick = { viewModel.loadSims() }) {
-                Text("Thử nhận diện SIM ngay")
-            }
-
             simConfigs.forEach { config ->
-                Card(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.SimCard, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.padding(4.dp))
                             Text(
-                                text = "SIM ${config.simSlot} " + when {
-                                    !hasPhonePermission -> "(Chưa cấp quyền Điện thoại)"
-                                    config.subscriptionId != -1 -> "(Đã kết nối - ID: ${config.subscriptionId})"
-                                    else -> "(Chưa cắm / Chưa nhận dạng)"
-                                },
+                                text = "SIM ${config.simSlot}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        val carrierLabel = when {
+                            !hasPhonePermission -> "Cần quyền đọc SIM"
+                            config.subscriptionId == -1 -> "Chưa phát hiện SIM"
+                            config.carrierName.isBlank() -> "Chưa xác định nhà mạng"
+                            else -> config.carrierName
+                        }
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Text(
+                                text = carrierLabel,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                style = MaterialTheme.typography.labelLarge
                             )
                         }
 
@@ -246,7 +254,12 @@ fun SimAndRuleConfigScreen(
                 fontWeight = FontWeight.Bold
             )
 
-            Card(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)

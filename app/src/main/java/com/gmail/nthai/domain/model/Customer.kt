@@ -11,5 +11,6 @@ data class Customer(
     val phone: String,
     val customFields: Map<String, String> = emptyMap(),
     val status: CustomerStatus = CustomerStatus.PENDING,
-    val isSelected: Boolean = true
+    val isSelected: Boolean = false,
+    val sendSimSlot: Int? = null
 )

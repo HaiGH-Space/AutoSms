@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.gmail.nthai.data.local.entity.SendingLogEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -14,6 +15,9 @@ interface SendingLogDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: SendingLogEntity): Long
+
+    @Update
+    suspend fun updateLog(log: SendingLogEntity)
 
     @Query("UPDATE sending_logs SET status = :status, errorMessage = :errorMessage WHERE id = :id")
     suspend fun updateLogStatus(id: Long, status: String, errorMessage: String?)

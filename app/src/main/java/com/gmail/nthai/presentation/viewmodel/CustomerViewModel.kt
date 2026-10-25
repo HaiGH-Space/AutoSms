@@ -6,6 +6,7 @@ import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
+import com.gmail.nthai.domain.usecase.DetectVietnameseCarrierUseCase
 import com.gmail.nthai.domain.usecase.ImportCustomerExcelUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,18 @@ import javax.inject.Inject
 
 enum class CustomerFilter {
     ALL, PENDING, SENT, FAILED
+}
+
+enum class CustomerCarrierFilter(val label: String, val carrierName: String? = null) {
+    ALL("Mọi nhà mạng"),
+    VIETTEL("Viettel", "Viettel"),
+    VINAPHONE("VinaPhone", "VinaPhone"),
+    MOBIFONE("MobiFone", "MobiFone"),
+    VIETNAMOBILE("Vietnamobile", "Vietnamobile"),
+    GMOBILE("Gmobile", "Gmobile"),
+    WINTEL("Wintel", "Wintel"),
+    ITEL("iTel", "iTel"),
+    UNKNOWN("Không rõ")
 }
 
 data class PendingImportState(
@@ -43,14 +56,36 @@ class CustomerViewModel @Inject constructor(
     private val selectedFilter = MutableStateFlow(CustomerFilter.ALL)
     val filter: StateFlow<CustomerFilter> = selectedFilter
 
+    private val selectedCarrierFilter = MutableStateFlow(CustomerCarrierFilter.ALL)
+    val carrierFilter: StateFlow<CustomerCarrierFilter> = selectedCarrierFilter
+
+    private val selectedSimSlot = MutableStateFlow(1)
+    val simSlot: StateFlow<Int> = selectedSimSlot
+
+    val selectedCustomerCount: StateFlow<Int> = combine(
+        customerRepository.getAllCustomers(),
+        selectedSimSlot
+    ) { customers, simSlot ->
+        customers.count { it.isSelected && it.sendSimSlot == simSlot }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
     private val _pendingImportState = MutableStateFlow<PendingImportState?>(null)
     val pendingImportState: StateFlow<PendingImportState?> = _pendingImportState.asStateFlow()
 
     val customersState: StateFlow<List<Customer>> = combine(
         customerRepository.getAllCustomers(),
         searchQuery,
-        selectedFilter
-    ) { list, query, filter ->
+        selectedFilter,
+        selectedCarrierFilter,
+        selectedSimSlot
+    ) { list, query, filter, carrierFilter, simSlot ->
+        val numbersAssignedToOtherSim = list.asSequence()
+            .filter { it.isSelected && it.sendSimSlot != null && it.sendSimSlot != simSlot }
+            .flatMap { it.phone.split(',').asSequence() }
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .toSet()
+
         list.filter { customer ->
             val matchesQuery = query.isBlank() ||
                     customer.phone.contains(query) ||
@@ -63,7 +98,19 @@ class CustomerViewModel @Inject constructor(
                 CustomerFilter.FAILED -> customer.status == CustomerStatus.FAILED
             }
 
-            matchesQuery && matchesFilter
+            val carrierName = DetectVietnameseCarrierUseCase.detect(customer.phone)
+            val matchesCarrierFilter = when (carrierFilter) {
+                CustomerCarrierFilter.ALL -> true
+                CustomerCarrierFilter.UNKNOWN -> carrierName == null
+                else -> carrierName == carrierFilter.carrierName
+            }
+
+            val recipientNumbers = customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
+            val overlapsOtherSim = recipientNumbers.any { it in numbersAssignedToOtherSim }
+            val matchesSim = (customer.sendSimSlot == null || customer.sendSimSlot == simSlot) &&
+                    !overlapsOtherSim
+
+            matchesQuery && matchesFilter && matchesCarrierFilter && matchesSim
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -73,6 +120,16 @@ class CustomerViewModel @Inject constructor(
 
     fun updateFilter(filter: CustomerFilter) {
         selectedFilter.value = filter
+    }
+
+    fun updateCarrierFilter(filter: CustomerCarrierFilter) {
+        selectedCarrierFilter.value = filter
+    }
+
+    fun selectSimSlot(simSlot: Int) {
+        if (simSlot in 1..2) {
+            selectedSimSlot.value = simSlot
+        }
     }
 
     fun prepareExcelImport(inputStream: InputStream, onHeaderError: (Throwable) -> Unit) {
@@ -144,13 +201,18 @@ class CustomerViewModel @Inject constructor(
 
     fun toggleCustomerSelection(customer: Customer) {
         viewModelScope.launch {
-            customerRepository.updateCustomerSelection(customer.id, !customer.isSelected)
+            customerRepository.updateCustomerSelectionForSim(
+                customer.id,
+                selectedSimSlot.value,
+                !customer.isSelected
+            )
         }
     }
 
     fun selectAll(selectAll: Boolean) {
         viewModelScope.launch {
-            customerRepository.updateAllSelection(selectAll)
+            val visibleCustomerIds = customersState.value.map { it.id }
+            customerRepository.updateSelectionForSim(visibleCustomerIds, selectedSimSlot.value, selectAll)
         }
     }
 }
