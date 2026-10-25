@@ -67,5 +67,5 @@ SMS được gửi qua dịch vụ di động của SIM trên thiết bị. Hãy
 ## Thông tin ứng dụng
 
 - Application ID: `com.gmail.nthai`
-- Phiên bản hiện tại: `1.0` (version code `1`)
+- Phiên bản hiện tại: `0.1.0` (version code `1`)
 - Mã nguồn ứng dụng: `app/src/main/java/com/gmail/nthai`
