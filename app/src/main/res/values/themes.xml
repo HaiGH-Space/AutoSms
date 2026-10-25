@@ -17,4 +17,10 @@
         <!-- Disable system Force Dark to prevent hardware color inversion on Xiaomi/Oppo/Samsung -->
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>
+
+    <style name="Theme.AutoSms.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/autosms_primary</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.AutoSms</item>
+    </style>
 </resources>
