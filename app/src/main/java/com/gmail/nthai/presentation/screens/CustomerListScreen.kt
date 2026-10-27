@@ -22,10 +22,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -94,13 +94,26 @@ fun CustomerListScreen(
                 val inputStream = context.contentResolver.openInputStream(uri)
                 if (inputStream == null) {
                     Toast.makeText(context, "Không thể mở file Excel đã chọn.", Toast.LENGTH_LONG).show()
+                    if (openImportOnStart) {
+                        onBack()
+                    }
                 } else {
                     viewModel.prepareExcelImport(inputStream) { err ->
                         Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                        if (openImportOnStart) {
+                            onBack()
+                        }
                     }
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Khởi tạo file thất bại: ${e.message}", Toast.LENGTH_SHORT).show()
+                if (openImportOnStart) {
+                    onBack()
+                }
+            }
+        } else {
+            if (openImportOnStart) {
+                onBack()
             }
         }
     }
@@ -155,14 +168,7 @@ fun CustomerListScreen(
                     filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 }
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.FileDownload, contentDescription = "Nhập Excel")
-                    Spacer(modifier = Modifier.padding(4.dp))
-                    Text("Nhập Excel")
-                }
+                Icon(Icons.Default.FileDownload, contentDescription = "Nhập Excel")
             }
         }
     ) { innerPadding ->
@@ -175,7 +181,7 @@ fun CustomerListScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp, bottom = 12.dp),
+                    .padding(top = 2.dp, bottom = 6.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -183,13 +189,13 @@ fun CustomerListScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Icon(
                             Icons.Default.People,
@@ -199,12 +205,12 @@ fun CustomerListScreen(
                         Column {
                             Text(
                                 "TỔNG KHÁCH HÀNG",
-                                style = MaterialTheme.typography.labelMedium,
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
                                 customers.size.toString(),
-                                style = MaterialTheme.typography.headlineSmall,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -214,12 +220,12 @@ fun CustomerListScreen(
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             "ĐÃ CHỌN GỬI",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
                             "$selectedCustomerCount khách",
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -237,13 +243,13 @@ fun CustomerListScreen(
                 shape = MaterialTheme.shapes.large
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 FilterChip(
                     selected = selectedFilter == CustomerFilter.ALL,
@@ -267,18 +273,12 @@ fun CustomerListScreen(
                 )
             }
 
-            Text(
-                text = "Nhà mạng",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-            )
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .horizontalScroll(rememberScrollState())
+                    .padding(vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 CustomerCarrierFilter.entries.forEach { carrierFilter ->
                     FilterChip(
@@ -289,30 +289,12 @@ fun CustomerListScreen(
                 }
             }
 
-            Text(
-                text = "Bộ lọc chỉ thay đổi danh sách đang xem, không làm mất lựa chọn gửi.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = if (selectedSimSlot == 1) {
-                    "Chọn số cho SIM 1. Khi chuyển sang SIM 2, các số đã gán cho SIM 1 sẽ được ẩn."
-                } else {
-                    "Chọn số cho SIM 2. Các số đã gán cho SIM 1 không xuất hiện trong danh sách này."
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             if (customers.isNotEmpty()) {
                 val allSelected = customers.all { it.isSelected }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -332,19 +314,21 @@ fun CustomerListScreen(
                     }
 
                     Text(
-                        text = "Đã chọn cho SIM $selectedSimSlot: $selectedCustomerCount khách",
+                        text = "Đã chọn (SIM $selectedSimSlot): $selectedCustomerCount",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-
-                Spacer(modifier = Modifier.height(4.dp))
             }
+
+            Spacer(modifier = Modifier.height(2.dp))
 
             if (customers.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -355,7 +339,9 @@ fun CustomerListScreen(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(customers, key = { it.id }) { customer ->
@@ -385,7 +371,12 @@ fun CustomerListScreen(
                     }
                 }
             },
-            onDismiss = { viewModel.cancelImport() }
+            onDismiss = {
+                viewModel.cancelImport()
+                if (openImportOnStart) {
+                    onBack()
+                }
+            }
         )
     }
 
