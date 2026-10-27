@@ -1,15 +1,28 @@
 package com.gmail.nthai.domain.usecase
 
+import java.util.concurrent.ConcurrentHashMap
+
 object DetectVietnameseCarrierUseCase {
 
+    private val cache = ConcurrentHashMap<String, String>()
+    private const val NULL_MARKER = "__NULL__"
+
     fun detect(phone: String): String? {
+        val cached = cache[phone]
+        if (cached != null) {
+            return if (cached == NULL_MARKER) null else cached
+        }
+
         var digits = phone.filter(Char::isDigit)
         if (digits.startsWith("84") && digits.length == 11) {
             digits = "0${digits.drop(2)}"
         }
-        if (digits.length != 10 || !digits.startsWith("0")) return null
+        if (digits.length != 10 || !digits.startsWith("0")) {
+            cache[phone] = NULL_MARKER
+            return null
+        }
 
-        return when (digits.take(3)) {
+        val result = when (digits.take(3)) {
             in viettelPrefixes -> "Viettel"
             in vinaPhonePrefixes -> "VinaPhone"
             in mobiFonePrefixes -> "MobiFone"
@@ -19,6 +32,9 @@ object DetectVietnameseCarrierUseCase {
             "087" -> "iTel"
             else -> null
         }
+
+        cache[phone] = result ?: NULL_MARKER
+        return result
     }
 
     private val viettelPrefixes = (32..39).map { "0$it" }.toSet() +

@@ -33,6 +33,15 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_customers_status` ON `customers` (`status`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_customers_isSelected` ON `customers` (`isSelected`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_customers_sendSimSlot` ON `customers` (`sendSimSlot`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_customers_isSelected_sendSimSlot` ON `customers` (`isSelected`, `sendSimSlot`)")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -40,7 +49,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "auto_sms_database"
-        ).addMigrations(MIGRATION_1_2, MIGRATION_4_5).fallbackToDestructiveMigration().build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_4_5, MIGRATION_5_6).fallbackToDestructiveMigration().build()
     }
 
     @Provides

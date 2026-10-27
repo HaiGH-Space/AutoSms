@@ -351,11 +351,15 @@ fun CustomerListScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(customers, key = { it.id }) { customer ->
+                        val onToggle = remember(customer.id) { { viewModel.toggleCustomerSelection(customer) } }
+                        val onDelete = remember(customer.id) { { viewModel.deleteCustomer(customer) } }
+                        val onClick = remember(customer.id) { { selectedCustomer = customer } }
+
                         CustomerItemCard(
                             customer = customer,
-                            onToggleSelection = { viewModel.toggleCustomerSelection(customer) },
-                            onDelete = { viewModel.deleteCustomer(customer) },
-                            onClick = { selectedCustomer = customer }
+                            onToggleSelection = onToggle,
+                            onDelete = onDelete,
+                            onClick = onClick
                         )
                     }
                 }

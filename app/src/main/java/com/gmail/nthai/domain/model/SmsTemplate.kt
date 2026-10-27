@@ -1,5 +1,8 @@
 package com.gmail.nthai.domain.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class SmsTemplate(
     val id: Long = 1,
     val title: String = "Mẫu tin nhắn nhắc nợ",
