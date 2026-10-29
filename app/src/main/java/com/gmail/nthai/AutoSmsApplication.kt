@@ -10,6 +10,13 @@ import javax.inject.Inject
 @HiltAndroidApp
 class AutoSmsApplication : Application(), Configuration.Provider {
 
+    companion object {
+        init {
+            // Force Apache POI to use NullLogger on Android to avoid Log4j2 initialization crash
+            System.setProperty("org.apache.poi.util.POILogger", "org.apache.poi.util.NullLogger")
+        }
+    }
+
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 

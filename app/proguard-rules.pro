@@ -1,5 +1,8 @@
 # Project specific ProGuard / R8 rules
 
+# Keep Attributes for Reflection & Annotations required by Apache POI, Log4j & Room
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,Exceptions
+
 # Apache POI & dependencies optional class ignores
 -dontwarn aQute.bnd.annotation.spi.**
 -dontwarn java.awt.**
@@ -12,10 +15,33 @@
 -dontwarn org.apache.poi.**
 -dontwarn org.apache.xmlbeans.**
 
-# Keep Apache POI models and XmlBeans reflection
+# Ignore missing optional schemas referenced in POI OOXML
+-dontwarn com.microsoft.schemas.**
+-dontwarn org.etsi.uri.**
+-dontwarn org.openxmlformats.schemas.**
+-dontwarn org.w3.x2000.x09.xmldsig.**
+
+# Keep Apache POI models, XmlBeans, OpenXMLFormats & dependencies reflection
 -keep class org.apache.poi.** { *; }
+-keepclassmembers class org.apache.poi.** { *; }
+
 -keep class org.apache.xmlbeans.** { *; }
--keep class openxmlformats.** { *; }
+-keepclassmembers class org.apache.xmlbeans.** { *; }
+
+-keep class org.openxmlformats.** { *; }
+-keepclassmembers class org.openxmlformats.** { *; }
+
+-keep class org.etsi.uri.** { *; }
+-keepclassmembers class org.etsi.uri.** { *; }
+
+-keep class com.microsoft.schemas.** { *; }
+-keepclassmembers class com.microsoft.schemas.** { *; }
+
+-keep class org.apache.commons.** { *; }
+-keepclassmembers class org.apache.commons.** { *; }
+
+-keep class org.apache.logging.log4j.** { *; }
+-keepclassmembers class org.apache.logging.log4j.** { *; }
 
 # Room database entities and DAOs
 -keep class * extends androidx.room.RoomDatabase
