@@ -25,7 +25,7 @@ class UpdateRepositoryImpl @Inject constructor(
 
     companion object {
         const val KEY_UPDATE_URL = "custom_update_url"
-        const val DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/nthai/AutoSms/main/update.json"
+        const val DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/HaiGH-Space/AutoSms/pre-release/v0.1.1/update.json"
     }
 
     override fun getUpdateUrl(): String {
