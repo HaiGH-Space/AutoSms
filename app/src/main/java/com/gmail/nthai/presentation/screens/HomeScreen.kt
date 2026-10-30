@@ -20,16 +20,97 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gmail.nthai.domain.model.UpdateState
+import com.gmail.nthai.presentation.components.DownloadProgressDialog
+import com.gmail.nthai.presentation.components.DownloadedInstallDialog
+import com.gmail.nthai.presentation.components.NoUpdateAvailableDialog
+import com.gmail.nthai.presentation.components.UpdateAvailableDialog
+import com.gmail.nthai.presentation.components.UpdateErrorDialog
+import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 
 @Composable
 fun HomeScreen(
     onImportExcel: () -> Unit,
-    onSelectSim: (Int) -> Unit
+    onSelectSim: (Int) -> Unit,
+    updateViewModel: UpdateViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    val updateState by updateViewModel.updateState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        updateViewModel.checkForUpdate(isManualCheck = false)
+    }
+
+    when (val state = updateState) {
+        is UpdateState.UpdateAvailable -> {
+            UpdateAvailableDialog(
+                updateInfo = state.updateInfo,
+                onUpdateConfirm = {
+                    updateViewModel.startDownload(context, state.updateInfo)
+                },
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.Downloading -> {
+            DownloadProgressDialog(
+                progressPercent = state.progressPercent,
+                bytesDownloaded = state.bytesDownloaded,
+                totalBytes = state.totalBytes,
+                onCancel = {
+                    updateViewModel.cancelDownload()
+                }
+            )
+        }
+
+        is UpdateState.Downloaded -> {
+            DownloadedInstallDialog(
+                apkFile = state.apkFile,
+                updateInfo = state.updateInfo,
+                onInstall = { file ->
+                    val installed = updateViewModel.installApk(context, file)
+                    if (installed) {
+                        updateViewModel.dismissState()
+                    }
+                },
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.NoUpdateAvailable -> {
+            NoUpdateAvailableDialog(
+                currentVersionName = state.currentVersionName,
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.Error -> {
+            UpdateErrorDialog(
+                errorMessage = state.message,
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        else -> {}
+    }
+
     Scaffold(
         topBar = {
             Row(

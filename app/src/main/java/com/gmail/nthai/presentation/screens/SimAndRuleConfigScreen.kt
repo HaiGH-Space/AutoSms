@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -51,13 +51,21 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gmail.nthai.domain.model.UpdateState
+import com.gmail.nthai.presentation.components.DownloadProgressDialog
+import com.gmail.nthai.presentation.components.DownloadedInstallDialog
+import com.gmail.nthai.presentation.components.NoUpdateAvailableDialog
+import com.gmail.nthai.presentation.components.UpdateAvailableDialog
+import com.gmail.nthai.presentation.components.UpdateErrorDialog
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
+import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 import com.gmail.nthai.util.PermissionUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SimAndRuleConfigScreen(
-    viewModel: ConfigViewModel = hiltViewModel()
+    viewModel: ConfigViewModel = hiltViewModel(),
+    updateViewModel: UpdateViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     var hasPhonePermission by remember {
@@ -78,6 +86,71 @@ fun SimAndRuleConfigScreen(
     val simConfigs by viewModel.simConfigs.collectAsStateWithLifecycle()
     val rule by viewModel.sendingRule.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val currentUpdateUrl by updateViewModel.updateUrl.collectAsStateWithLifecycle()
+    var updateUrlText by remember(currentUpdateUrl) { mutableStateOf(currentUpdateUrl) }
+    val updateState by updateViewModel.updateState.collectAsStateWithLifecycle()
+
+    when (val state = updateState) {
+        is UpdateState.UpdateAvailable -> {
+            UpdateAvailableDialog(
+                updateInfo = state.updateInfo,
+                onUpdateConfirm = {
+                    updateViewModel.startDownload(context, state.updateInfo)
+                },
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.Downloading -> {
+            DownloadProgressDialog(
+                progressPercent = state.progressPercent,
+                bytesDownloaded = state.bytesDownloaded,
+                totalBytes = state.totalBytes,
+                onCancel = {
+                    updateViewModel.cancelDownload()
+                }
+            )
+        }
+
+        is UpdateState.Downloaded -> {
+            DownloadedInstallDialog(
+                apkFile = state.apkFile,
+                updateInfo = state.updateInfo,
+                onInstall = { file ->
+                    val installed = updateViewModel.installApk(context, file)
+                    if (installed) {
+                        updateViewModel.dismissState()
+                    }
+                },
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.NoUpdateAvailable -> {
+            NoUpdateAvailableDialog(
+                currentVersionName = state.currentVersionName,
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.Error -> {
+            UpdateErrorDialog(
+                errorMessage = state.message,
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        else -> {}
+    }
 
     LaunchedEffect(Unit) {
         if (hasPhonePermission && hasSmsPermission) {
@@ -327,6 +400,63 @@ fun SimAndRuleConfigScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Cập nhật ứng dụng",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Phiên bản hiện tại: v${updateViewModel.getCurrentVersionName()} (Build ${updateViewModel.getCurrentVersionCode()})",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    OutlinedTextField(
+                        value = updateUrlText,
+                        onValueChange = { updateUrlText = it },
+                        label = { Text("URL cấu hình kiểm tra cập nhật (JSON)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                updateViewModel.saveUpdateUrl(updateUrlText)
+                                updateViewModel.checkForUpdate(
+                                    isManualCheck = true,
+                                    urlOverride = updateUrlText
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = updateState !is UpdateState.Checking
+                        ) {
+                            if (updateState is UpdateState.Checking) {
+                                Text("Đang kiểm tra...")
+                            } else {
+                                Text("Kiểm tra cập nhật ngay")
+                            }
+                        }
+                    }
                 }
             }
         }
