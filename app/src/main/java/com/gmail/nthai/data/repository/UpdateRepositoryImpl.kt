@@ -3,6 +3,7 @@ package com.gmail.nthai.data.repository
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.edit
 import com.gmail.nthai.domain.model.UpdateInfo
 import com.gmail.nthai.domain.repository.UpdateRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 
 @Singleton
 class UpdateRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
 ) : UpdateRepository {
 
     private val prefs = context.getSharedPreferences("app_update_prefs", Context.MODE_PRIVATE)
@@ -34,7 +35,7 @@ class UpdateRepositoryImpl @Inject constructor(
 
     override suspend fun saveUpdateUrl(url: String) {
         withContext(Dispatchers.IO) {
-            prefs.edit().putString(KEY_UPDATE_URL, url.trim()).apply()
+            prefs.edit { putString(KEY_UPDATE_URL, url.trim()) }
         }
     }
 
@@ -200,13 +201,17 @@ class UpdateRepositoryImpl @Inject constructor(
             )
 
             val code = connection.responseCode
-            if (code == HttpURLConnection.HTTP_MOVED_PERM ||
-                code == HttpURLConnection.HTTP_MOVED_TEMP ||
-                code == HttpURLConnection.HTTP_SEE_OTHER ||
-                code == 307 || code == 308
-            ) {
+            val isRedirect = when (code) {
+                HttpURLConnection.HTTP_MOVED_PERM,
+                HttpURLConnection.HTTP_MOVED_TEMP,
+                HttpURLConnection.HTTP_SEE_OTHER,
+                307,
+                308 -> true
+                else -> false
+            }
+            if (isRedirect) {
                 val loc = connection.getHeaderField("Location")
-                if (!loc.isNull_or_blank()) {
+                if (!loc.isNullOrBlank()) {
                     currentUrl = loc
                     redirects++
                     connection.disconnect()
@@ -218,6 +223,4 @@ class UpdateRepositoryImpl @Inject constructor(
         val finalUrl = URL(currentUrl)
         return finalUrl.openConnection() as HttpURLConnection
     }
-
-    private fun String?.isNull_or_blank(): Boolean = this == null || this.trim().isEmpty()
 }

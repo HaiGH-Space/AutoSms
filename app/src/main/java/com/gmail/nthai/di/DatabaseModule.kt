@@ -18,6 +18,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("unused")
 object DatabaseModule {
 
     private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -49,7 +50,10 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "auto_sms_database"
-        ).addMigrations(MIGRATION_1_2, MIGRATION_4_5, MIGRATION_5_6).fallbackToDestructiveMigration().build()
+        )
+            .addMigrations(MIGRATION_1_2, MIGRATION_4_5, MIGRATION_5_6)
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
     }
 
     @Provides
