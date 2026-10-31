@@ -85,6 +85,9 @@ fun CustomerListScreen(
     val selectedFilter by viewModel.filter.collectAsStateWithLifecycle()
     val selectedCarrierFilter by viewModel.carrierFilter.collectAsStateWithLifecycle()
     val selectedSimSlot by viewModel.simSlot.collectAsStateWithLifecycle()
+    val simConfigs by viewModel.simConfigs.collectAsStateWithLifecycle()
+    val currentSimConfig = simConfigs.find { it.simSlot == selectedSimSlot }
+    val simCarrierName = currentSimConfig?.carrierName?.trim()?.takeIf { it.isNotEmpty() }
     val selectedCustomerCount by viewModel.selectedCustomerCount.collectAsStateWithLifecycle()
     val pendingImportState by viewModel.pendingImportState.collectAsStateWithLifecycle()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
@@ -153,7 +156,7 @@ fun CustomerListScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "Danh sách gửi bằng SIM $simSlot",
+                            if (simCarrierName != null) "Danh sách gửi bằng SIM $simSlot ($simCarrierName)" else "Danh sách gửi bằng SIM $simSlot",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -320,7 +323,11 @@ fun CustomerListScreen(
                     }
 
                     Text(
-                        text = "Đã chọn (SIM $selectedSimSlot): $selectedCustomerCount",
+                        text = if (simCarrierName != null) {
+                            "Đã chọn (SIM $selectedSimSlot - $simCarrierName): $selectedCustomerCount"
+                        } else {
+                            "Đã chọn (SIM $selectedSimSlot): $selectedCustomerCount"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -351,11 +358,15 @@ fun CustomerListScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(customers, key = { it.id }) { customer ->
+                        val onToggle = remember(customer.id) { { viewModel.toggleCustomerSelection(customer) } }
+                        val onDelete = remember(customer.id) { { viewModel.deleteCustomer(customer) } }
+                        val onClick = remember(customer.id) { { selectedCustomer = customer } }
+
                         CustomerItemCard(
                             customer = customer,
-                            onToggleSelection = { viewModel.toggleCustomerSelection(customer) },
-                            onDelete = { viewModel.deleteCustomer(customer) },
-                            onClick = { selectedCustomer = customer }
+                            onToggleSelection = onToggle,
+                            onDelete = onDelete,
+                            onClick = onClick
                         )
                     }
                 }

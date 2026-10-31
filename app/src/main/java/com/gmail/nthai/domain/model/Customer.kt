@@ -1,11 +1,14 @@
 package com.gmail.nthai.domain.model
 
+import androidx.compose.runtime.Immutable
+
 enum class CustomerStatus {
     PENDING,
     SENT,
     FAILED
 }
 
+@Immutable
 data class Customer(
     val id: Long = 0,
     val phone: String,

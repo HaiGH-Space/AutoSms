@@ -9,5 +9,6 @@ data class SimConfigEntity(
     val subscriptionId: Int,
     val dailyLimit: Int,
     val sentCountToday: Int,
-    val lastResetDate: String
+    val lastResetDate: String,
+    val carrierName: String = ""
 )

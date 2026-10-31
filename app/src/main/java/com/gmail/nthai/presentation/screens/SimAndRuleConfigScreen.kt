@@ -14,13 +14,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SimCard
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -51,13 +52,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gmail.nthai.domain.model.UpdateState
+import com.gmail.nthai.presentation.components.DownloadProgressDialog
+import com.gmail.nthai.presentation.components.DownloadedInstallDialog
+import com.gmail.nthai.presentation.components.NoUpdateAvailableDialog
+import com.gmail.nthai.presentation.components.UpdateAvailableDialog
+import com.gmail.nthai.presentation.components.UpdateErrorDialog
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
+import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 import com.gmail.nthai.util.PermissionUtils
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SimAndRuleConfigScreen(
-    viewModel: ConfigViewModel = hiltViewModel()
+fun SimManagementTab(
+    viewModel: ConfigViewModel = hiltViewModel(),
+    showTopBar: Boolean = false
 ) {
     val context = LocalContext.current
     var hasPhonePermission by remember {
@@ -76,7 +84,6 @@ fun SimAndRuleConfigScreen(
     }
 
     val simConfigs by viewModel.simConfigs.collectAsStateWithLifecycle()
-    val rule by viewModel.sendingRule.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
@@ -99,87 +106,63 @@ fun SimAndRuleConfigScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    var minDelayText by remember(rule) { mutableStateOf(rule.minDelaySec.toString()) }
-    var maxDelayText by remember(rule) { mutableStateOf(rule.maxDelaySec.toString()) }
-    var startHourText by remember(rule) { mutableStateOf(rule.startHour.toString()) }
-    var endHourText by remember(rule) { mutableStateOf(rule.endHour.toString()) }
-    var phoneColumnNameText by remember(rule) { mutableStateOf(rule.phoneColumnName) }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Cấu hình SIM",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                actions = {
-                    Button(
-                        onClick = {
-                            val min = minDelayText.toIntOrNull() ?: 10
-                            val max = maxDelayText.toIntOrNull() ?: 30
-                            val start = startHourText.toIntOrNull() ?: 8
-                            val end = endHourText.toIntOrNull() ?: 17
-
-                            viewModel.updateRule(min, max, start, end, phoneColumnNameText)
-                            Toast.makeText(context, "Đã lưu cài đặt!", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Save, contentDescription = null)
-                        Spacer(modifier = Modifier.padding(4.dp))
-                        Text("Lưu quy tắc")
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
+    val content: @Composable (Modifier) -> Unit = { modifier ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Quản lý Hạn mức SIM",
+                text = "Quản lý Hạn mức & Trạng thái SIM",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
-            Text(
-                text = "Trạng thái quyền:\n" +
-                    "• Quyền Điện thoại (đọc SIM): ${if (hasPhonePermission) "Đã cấp" else "Chưa cấp"}\n" +
-                    "• Quyền Gửi SMS: ${if (hasSmsPermission) "Đã cấp" else "Chưa cấp"}"
-            )
-
-            if (!hasPhonePermission || !hasSmsPermission) {
-                Text(
-                    text = "Cần đầy đủ quyền Điện thoại & Gửi SMS để ứng dụng nhận diện 2 SIM và phát tin.",
-                    color = MaterialTheme.colorScheme.error
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = {
-                            permissionsLauncher.launch(PermissionUtils.getRequiredPermissions())
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Trạng thái quyền hệ thống:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text("• Quyền Điện thoại (đọc SIM): ${if (hasPhonePermission) "Đã cấp" else "Chưa cấp"}")
+                    Text("• Quyền Gửi SMS: ${if (hasSmsPermission) "Đã cấp" else "Chưa cấp"}")
+
+                    if (!hasPhonePermission || !hasSmsPermission) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Cần đầy đủ quyền Điện thoại & Gửi SMS để ứng dụng nhận diện 2 SIM và phát tin.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = {
+                                    permissionsLauncher.launch(PermissionUtils.getRequiredPermissions())
+                                }
+                            ) {
+                                Text("Cấp quyền ngay")
+                            }
+                            TextButton(
+                                onClick = {
+                                    context.startActivity(
+                                        Intent(
+                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            Uri.fromParts("package", context.packageName, null)
+                                        )
+                                    )
+                                }
+                            ) {
+                                Text("Mở Cài đặt")
+                            }
                         }
-                    ) {
-                        Text("Cấp quyền ngay")
-                    }
-                    TextButton(
-                        onClick = {
-                            context.startActivity(
-                                Intent(
-                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                    Uri.fromParts("package", context.packageName, null)
-                                )
-                            )
-                        }
-                    ) {
-                        Text("Mở Cài đặt ứng dụng")
                     }
                 }
             }
@@ -245,11 +228,113 @@ fun SimAndRuleConfigScreen(
                     }
                 }
             }
+        }
+    }
 
-            Spacer(modifier = Modifier.height(8.dp))
+    if (showTopBar) {
+        @OptIn(ExperimentalMaterial3Api::class)
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Quản lý SIM", fontWeight = FontWeight.Bold) }
+                )
+            }
+        ) { innerPadding ->
+            content(Modifier.padding(innerPadding))
+        }
+    } else {
+        content(Modifier)
+    }
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RuleAndUpdateTab(
+    viewModel: ConfigViewModel = hiltViewModel(),
+    updateViewModel: UpdateViewModel = hiltViewModel(),
+    showTopBar: Boolean = false
+) {
+    val context = LocalContext.current
+    val rule by viewModel.sendingRule.collectAsStateWithLifecycle()
+    val updateState by updateViewModel.updateState.collectAsStateWithLifecycle()
+
+    when (val state = updateState) {
+        is UpdateState.UpdateAvailable -> {
+            UpdateAvailableDialog(
+                updateInfo = state.updateInfo,
+                onUpdateConfirm = {
+                    updateViewModel.startDownload(context, state.updateInfo)
+                },
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.Downloading -> {
+            DownloadProgressDialog(
+                progressPercent = state.progressPercent,
+                bytesDownloaded = state.bytesDownloaded,
+                totalBytes = state.totalBytes,
+                onCancel = {
+                    updateViewModel.cancelDownload()
+                }
+            )
+        }
+
+        is UpdateState.Downloaded -> {
+            DownloadedInstallDialog(
+                apkFile = state.apkFile,
+                updateInfo = state.updateInfo,
+                onInstall = { file ->
+                    val installed = updateViewModel.installApk(context, file)
+                    if (installed) {
+                        updateViewModel.dismissState()
+                    }
+                },
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.NoUpdateAvailable -> {
+            NoUpdateAvailableDialog(
+                currentVersionName = state.currentVersionName,
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        is UpdateState.Error -> {
+            UpdateErrorDialog(
+                errorMessage = state.message,
+                onDismiss = {
+                    updateViewModel.dismissState()
+                }
+            )
+        }
+
+        else -> {}
+    }
+
+    var minDelayText by remember(rule) { mutableStateOf(rule.minDelaySec.toString()) }
+    var maxDelayText by remember(rule) { mutableStateOf(rule.maxDelaySec.toString()) }
+    var startHourText by remember(rule) { mutableStateOf(rule.startHour.toString()) }
+    var endHourText by remember(rule) { mutableStateOf(rule.endHour.toString()) }
+    var phoneColumnNameText by remember(rule) { mutableStateOf(rule.phoneColumnName) }
+
+    val content: @Composable (Modifier) -> Unit = { modifier ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             Text(
-                text = "Quy tắc khoảng trễ & Khung giờ",
+                text = "Quy tắc Gửi tin & Khung giờ",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -327,8 +412,107 @@ fun SimAndRuleConfigScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+
+                    Button(
+                        onClick = {
+                            val min = minDelayText.toIntOrNull() ?: 10
+                            val max = maxDelayText.toIntOrNull() ?: 30
+                            val start = startHourText.toIntOrNull() ?: 8
+                            val end = endHourText.toIntOrNull() ?: 17
+
+                            viewModel.updateRule(min, max, start, end, phoneColumnNameText)
+                            Toast.makeText(context, "Đã lưu cài đặt quy tắc!", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Save, contentDescription = null)
+                        Spacer(modifier = Modifier.padding(4.dp))
+                        Text("Lưu quy tắc gửi")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Hệ thống & Cập nhật ứng dụng",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.SystemUpdate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Column {
+                            Text(
+                                text = "AutoSms v${updateViewModel.getCurrentVersionName()}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Build code: ${updateViewModel.getCurrentVersionCode()}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            updateViewModel.checkForUpdate(isManualCheck = true)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = updateState !is UpdateState.Checking
+                    ) {
+                        if (updateState is UpdateState.Checking) {
+                            Text("Đang kiểm tra cập nhật...")
+                        } else {
+                            Text("Kiểm tra cập nhật ngay")
+                        }
+                    }
                 }
             }
         }
     }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Quy định & Cập nhật", fontWeight = FontWeight.Bold) }
+                )
+            }
+        ) { innerPadding ->
+            content(Modifier.padding(innerPadding))
+        }
+    } else {
+        content(Modifier)
+    }
+}
+
+// Backward compatibility wrapper if needed
+@Composable
+fun SimAndRuleConfigScreen(
+    viewModel: ConfigViewModel = hiltViewModel(),
+    updateViewModel: UpdateViewModel = hiltViewModel(),
+    showTopBar: Boolean = true
+) {
+    updateViewModel.getCurrentVersionName()
+    SimManagementTab(viewModel = viewModel, showTopBar = showTopBar)
 }

@@ -1,5 +1,8 @@
 package com.gmail.nthai.domain.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class SimConfig(
     val subscriptionId: Int,
     val simSlot: Int, // 1 for SIM 1, 2 for SIM 2

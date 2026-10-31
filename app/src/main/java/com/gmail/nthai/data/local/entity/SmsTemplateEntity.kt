@@ -5,7 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "templates")
 data class SmsTemplateEntity(
-    @PrimaryKey val id: Long = 1,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
-    val content: String
+    val content: String,
+    val isSelected: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis()
 )

@@ -1,10 +1,19 @@
 package com.gmail.nthai.data.local.entity
 
-import androidx.room.Entity
 import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "customers")
+@Entity(
+    tableName = "customers",
+    indices = [
+        Index(value = ["status"]),
+        Index(value = ["isSelected"]),
+        Index(value = ["sendSimSlot"]),
+        Index(value = ["isSelected", "sendSimSlot"])
+    ]
+)
 data class CustomerEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val phone: String,

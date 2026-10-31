@@ -47,13 +47,17 @@ fun Customer.toEntity(): CustomerEntity = CustomerEntity(
 fun SmsTemplateEntity.toDomain(): SmsTemplate = SmsTemplate(
     id = id,
     title = title,
-    content = content
+    content = content,
+    isSelected = isSelected,
+    updatedAt = updatedAt
 )
 
 fun SmsTemplate.toEntity(): SmsTemplateEntity = SmsTemplateEntity(
     id = id,
     title = title,
-    content = content
+    content = content,
+    isSelected = isSelected,
+    updatedAt = updatedAt
 )
 
 // SimConfig Mappers
@@ -62,7 +66,8 @@ fun SimConfigEntity.toDomain(): SimConfig = SimConfig(
     simSlot = simSlot,
     dailyLimit = dailyLimit,
     sentCountToday = sentCountToday,
-    lastResetDate = lastResetDate
+    lastResetDate = lastResetDate,
+    carrierName = carrierName
 )
 
 fun SimConfig.toEntity(): SimConfigEntity = SimConfigEntity(
@@ -70,7 +75,8 @@ fun SimConfig.toEntity(): SimConfigEntity = SimConfigEntity(
     subscriptionId = subscriptionId,
     dailyLimit = dailyLimit,
     sentCountToday = sentCountToday,
-    lastResetDate = lastResetDate
+    lastResetDate = lastResetDate,
+    carrierName = carrierName
 )
 
 // SendingRule Mappers

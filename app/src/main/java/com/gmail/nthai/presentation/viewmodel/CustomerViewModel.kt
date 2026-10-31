@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
+import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
 import com.gmail.nthai.domain.usecase.DetectVietnameseCarrierUseCase
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,12 +66,23 @@ class CustomerViewModel @Inject constructor(
     private val selectedSimSlot = MutableStateFlow(1)
     val simSlot: StateFlow<Int> = selectedSimSlot
 
+    val simConfigs: StateFlow<List<SimConfig>> = simConfigRepository.getSimConfigs()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val selectedCustomerCount: StateFlow<Int> = combine(
         customerRepository.getAllCustomers(),
         selectedSimSlot
     ) { customers, simSlot ->
-        customers.count { it.isSelected && it.sendSimSlot == simSlot }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+        var count = 0
+        for (i in 0 until customers.size) {
+            val c = customers[i]
+            if (c.isSelected && c.sendSimSlot == simSlot) {
+                count++
+            }
+        }
+        count
+    }.flowOn(Dispatchers.Default)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     private val _pendingImportState = MutableStateFlow<PendingImportState?>(null)
     val pendingImportState: StateFlow<PendingImportState?> = _pendingImportState.asStateFlow()
@@ -87,17 +100,31 @@ class CustomerViewModel @Inject constructor(
         selectedCarrierFilter,
         selectedSimSlot
     ) { list, query, filter, carrierFilter, simSlot ->
-        val numbersAssignedToOtherSim = list.asSequence()
-            .filter { it.isSelected && it.sendSimSlot != null && it.sendSimSlot != simSlot }
-            .flatMap { it.phone.split(',').asSequence() }
-            .map(String::trim)
-            .filter(String::isNotBlank)
-            .toSet()
+        if (list.isEmpty()) return@combine emptyList()
+
+        val numbersAssignedToOtherSim = HashSet<String>()
+        for (i in 0 until list.size) {
+            val customer = list[i]
+            if (customer.isSelected && customer.sendSimSlot != null && customer.sendSimSlot != simSlot) {
+                val phones = customer.phone.split(',')
+                for (j in 0 until phones.size) {
+                    val trimmed = phones[j].trim()
+                    if (trimmed.isNotEmpty()) {
+                        numbersAssignedToOtherSim.add(trimmed)
+                    }
+                }
+            }
+        }
+
+        val hasQuery = query.isNotBlank()
+        val trimmedQuery = if (hasQuery) query.trim() else ""
 
         list.filter { customer ->
-            val matchesQuery = query.isBlank() ||
-                    customer.phone.contains(query) ||
-                    customer.customFields.values.any { it.contains(query, ignoreCase = true) }
+            val matchesQuery = if (!hasQuery) true else {
+                customer.phone.contains(trimmedQuery, ignoreCase = true) ||
+                        customer.customFields.values.any { it.contains(trimmedQuery, ignoreCase = true) }
+            }
+            if (!matchesQuery) return@filter false
 
             val matchesFilter = when (filter) {
                 CustomerFilter.ALL -> true
@@ -105,6 +132,7 @@ class CustomerViewModel @Inject constructor(
                 CustomerFilter.SENT -> customer.status == CustomerStatus.SENT
                 CustomerFilter.FAILED -> customer.status == CustomerStatus.FAILED
             }
+            if (!matchesFilter) return@filter false
 
             val carrierName = DetectVietnameseCarrierUseCase.detect(customer.phone)
             val matchesCarrierFilter = when (carrierFilter) {
@@ -112,15 +140,28 @@ class CustomerViewModel @Inject constructor(
                 CustomerCarrierFilter.UNKNOWN -> carrierName == null
                 else -> carrierName == carrierFilter.carrierName
             }
+            if (!matchesCarrierFilter) return@filter false
 
-            val recipientNumbers = customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
-            val overlapsOtherSim = recipientNumbers.any { it in numbersAssignedToOtherSim }
-            val matchesSim = (customer.sendSimSlot == null || customer.sendSimSlot == simSlot) &&
-                    !overlapsOtherSim
+            val matchesSim = if (customer.sendSimSlot != null && customer.sendSimSlot != simSlot) {
+                false
+            } else if (numbersAssignedToOtherSim.isNotEmpty()) {
+                val recipientNumbers = customer.phone.split(',')
+                var overlaps = false
+                for (k in 0 until recipientNumbers.size) {
+                    if (recipientNumbers[k].trim() in numbersAssignedToOtherSim) {
+                        overlaps = true
+                        break
+                    }
+                }
+                !overlaps
+            } else {
+                true
+            }
 
-            matchesQuery && matchesFilter && matchesCarrierFilter && matchesSim
+            matchesSim
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun updateSearchQuery(query: String) {
         searchQuery.value = query

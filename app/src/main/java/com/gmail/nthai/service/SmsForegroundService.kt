@@ -181,7 +181,9 @@ class SmsForegroundService : Service() {
                 sentCounts[simSlot] = 0
             }
 
-            val template = templateRepository.getTemplate().first() ?: SmsTemplate()
+            val template = templateRepository.getSelectedTemplate().first()
+                ?: templateRepository.getAllTemplates().first().firstOrNull()
+                ?: SmsTemplate()
             val rule = simConfigRepository.getSendingRule().first()
             val error = sendCustomersForSim(
                 simSlot = simSlot,
