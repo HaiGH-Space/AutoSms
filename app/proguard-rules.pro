@@ -14,6 +14,7 @@
 -dontwarn com.sun.javadoc.**
 -dontwarn org.apache.poi.**
 -dontwarn org.apache.xmlbeans.**
+-dontwarn org.apache.poi.xslf.draw.SVGUserAgent
 
 # Ignore missing optional schemas referenced in POI OOXML
 -dontwarn com.microsoft.schemas.**
