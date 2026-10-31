@@ -21,18 +21,16 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.gmail.nthai.presentation.screens.CustomerListScreen
 import com.gmail.nthai.presentation.screens.HomeScreen
+import com.gmail.nthai.presentation.screens.ManagementScreen
 import com.gmail.nthai.presentation.screens.ReportScreen
 import com.gmail.nthai.presentation.screens.SendingProgressScreen
-import com.gmail.nthai.presentation.screens.SimAndRuleConfigScreen
-import com.gmail.nthai.presentation.screens.TemplateEditorScreen
 
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
     val screens = listOf(
         Screen.Home,
-        Screen.Template,
-        Screen.Config,
+        Screen.Management,
         Screen.Progress,
         Screen.Report
     )
@@ -86,8 +84,7 @@ fun AppNavHost() {
                     onSelectSim = { slot -> navController.navigate(Screen.Customers.route(slot)) }
                 )
             }
-            composable(
-                route = Screen.Customers.route,
+            composable(Screen.Customers.route,
                 arguments = listOf(
                     navArgument("simSlot") { type = NavType.IntType },
                     navArgument("importExcel") {
@@ -102,11 +99,8 @@ fun AppNavHost() {
                     onBack = { navController.popBackStack() }
                 )
             }
-            composable(Screen.Template.route) {
-                TemplateEditorScreen()
-            }
-            composable(Screen.Config.route) {
-                SimAndRuleConfigScreen()
+            composable(Screen.Management.route) {
+                ManagementScreen()
             }
             composable(Screen.Progress.route) {
                 SendingProgressScreen()

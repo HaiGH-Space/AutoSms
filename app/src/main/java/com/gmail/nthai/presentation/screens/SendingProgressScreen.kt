@@ -6,7 +6,6 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -64,8 +61,8 @@ fun SendingProgressScreen(
 ) {
     val context = LocalContext.current
     val serviceStates by viewModel.serviceStates.collectAsStateWithLifecycle()
-    val logs by viewModel.logs.collectAsStateWithLifecycle()
     val plannedMessageCounts by viewModel.plannedMessageCounts.collectAsStateWithLifecycle()
+    val simConfigs by viewModel.simConfigs.collectAsStateWithLifecycle()
     var permissionSimSlot by remember { mutableIntStateOf(1) }
     var showPermissionSettingsDialog by remember { mutableStateOf(false) }
 
@@ -135,8 +132,10 @@ fun SendingProgressScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             (1..2).forEach { simSlot ->
+                val carrierName = simConfigs.find { it.simSlot == simSlot }?.carrierName?.trim().orEmpty()
                 SimSendingCard(
                     simSlot = simSlot,
+                    carrierName = carrierName,
                     state = serviceStates[simSlot] ?: SendingServiceState.Idle,
                     plannedCount = plannedMessageCounts[simSlot] ?: 0,
                     onStart = {
@@ -152,30 +151,6 @@ fun SendingProgressScreen(
                     onStop = { viewModel.stopSending(context, simSlot) }
                 )
             }
-
-            Text(
-                text = "Nhật ký gửi thời gian thực:",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            if (logs.isEmpty()) {
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Chưa có nhật ký phát tin.")
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(logs, key = { it.id }) { log ->
-                        LogItemCard(log)
-                    }
-                }
-            }
         }
     }
 }
@@ -183,6 +158,7 @@ fun SendingProgressScreen(
 @Composable
 private fun SimSendingCard(
     simSlot: Int,
+    carrierName: String = "",
     state: SendingServiceState,
     plannedCount: Int,
     onStart: () -> Unit,
@@ -205,6 +181,9 @@ private fun SimSendingCard(
         is SendingServiceState.Error -> "Lỗi: ${state.message}"
     }
 
+    val simHeader = if (carrierName.isNotBlank()) "SIM $simSlot ($carrierName)" else "SIM $simSlot"
+    val buttonText = "Gửi bằng SIM $simSlot"
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -213,7 +192,7 @@ private fun SimSendingCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("SIM $simSlot", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(simHeader, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(title, style = MaterialTheme.typography.titleMedium)
             LinearProgressIndicator(
                 progress = { if (total > 0) sent.toFloat() / total else 0f },
@@ -226,7 +205,7 @@ private fun SimSendingCard(
                         Button(onClick = onStart, enabled = plannedCount > 0) {
                             Icon(Icons.Default.PlayArrow, contentDescription = null)
                             Spacer(modifier = Modifier.padding(4.dp))
-                            Text("Gửi bằng SIM $simSlot")
+                            Text(buttonText)
                         }
                     }
                     is SendingServiceState.Running -> {

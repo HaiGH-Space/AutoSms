@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
+import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
 import com.gmail.nthai.domain.usecase.DetectVietnameseCarrierUseCase
@@ -64,6 +65,9 @@ class CustomerViewModel @Inject constructor(
 
     private val selectedSimSlot = MutableStateFlow(1)
     val simSlot: StateFlow<Int> = selectedSimSlot
+
+    val simConfigs: StateFlow<List<SimConfig>> = simConfigRepository.getSimConfigs()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val selectedCustomerCount: StateFlow<Int> = combine(
         customerRepository.getAllCustomers(),

@@ -12,11 +12,29 @@ class TemplateRepositoryImpl(
     private val smsTemplateDao: SmsTemplateDao
 ) : TemplateRepository {
 
-    override fun getTemplate(): Flow<SmsTemplate?> {
-        return smsTemplateDao.getTemplate().map { it?.toDomain() }
+    override fun getAllTemplates(): Flow<List<SmsTemplate>> {
+        return smsTemplateDao.getAllTemplates().map { entities ->
+            entities.map { it.toDomain() }
+        }
     }
 
-    override suspend fun saveTemplate(template: SmsTemplate) {
-        smsTemplateDao.saveTemplate(template.toEntity())
+    override fun getSelectedTemplate(): Flow<SmsTemplate?> {
+        return smsTemplateDao.getSelectedTemplate().map { it?.toDomain() }
+    }
+
+    override fun getTemplateById(id: Long): Flow<SmsTemplate?> {
+        return smsTemplateDao.getTemplateById(id).map { it?.toDomain() }
+    }
+
+    override suspend fun saveTemplate(template: SmsTemplate): Long {
+        return smsTemplateDao.saveTemplate(template.toEntity())
+    }
+
+    override suspend fun deleteTemplate(id: Long) {
+        smsTemplateDao.deleteTemplateById(id)
+    }
+
+    override suspend fun setSelectedTemplate(id: Long) {
+        smsTemplateDao.setSelectedTemplate(id)
     }
 }

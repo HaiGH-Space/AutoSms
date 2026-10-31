@@ -7,8 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.LogRecord
+import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
+import com.gmail.nthai.domain.repository.SimConfigRepository
 import com.gmail.nthai.service.SendingServiceState
 import com.gmail.nthai.service.SmsForegroundService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,8 +23,12 @@ import javax.inject.Inject
 @HiltViewModel
 class ProgressViewModel @Inject constructor(
     customerRepository: CustomerRepository,
-    sendingLogRepository: SendingLogRepository
+    sendingLogRepository: SendingLogRepository,
+    simConfigRepository: SimConfigRepository
 ) : ViewModel() {
+
+    val simConfigs: StateFlow<List<SimConfig>> = simConfigRepository.getSimConfigs()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val serviceStates: StateFlow<Map<Int, SendingServiceState>> = SmsForegroundService.serviceStates
 

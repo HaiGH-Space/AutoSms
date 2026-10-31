@@ -65,7 +65,8 @@ import com.gmail.nthai.util.PermissionUtils
 @Composable
 fun SimAndRuleConfigScreen(
     viewModel: ConfigViewModel = hiltViewModel(),
-    updateViewModel: UpdateViewModel = hiltViewModel()
+    updateViewModel: UpdateViewModel = hiltViewModel(),
+    showTopBar: Boolean = true
 ) {
     val context = LocalContext.current
     var hasPhonePermission by remember {
@@ -178,41 +179,10 @@ fun SimAndRuleConfigScreen(
     var endHourText by remember(rule) { mutableStateOf(rule.endHour.toString()) }
     var phoneColumnNameText by remember(rule) { mutableStateOf(rule.phoneColumnName) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Cấu hình SIM",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                actions = {
-                    Button(
-                        onClick = {
-                            val min = minDelayText.toIntOrNull() ?: 10
-                            val max = maxDelayText.toIntOrNull() ?: 30
-                            val start = startHourText.toIntOrNull() ?: 8
-                            val end = endHourText.toIntOrNull() ?: 17
-
-                            viewModel.updateRule(min, max, start, end, phoneColumnNameText)
-                            Toast.makeText(context, "Đã lưu cài đặt!", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        Icon(Icons.Default.Save, contentDescription = null)
-                        Spacer(modifier = Modifier.padding(4.dp))
-                        Text("Lưu quy tắc")
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
+    val contentBody: @Composable (Modifier) -> Unit = { modifier ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -400,6 +370,23 @@ fun SimAndRuleConfigScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+
+                    Button(
+                        onClick = {
+                            val min = minDelayText.toIntOrNull() ?: 10
+                            val max = maxDelayText.toIntOrNull() ?: 30
+                            val start = startHourText.toIntOrNull() ?: 8
+                            val end = endHourText.toIntOrNull() ?: 17
+
+                            viewModel.updateRule(min, max, start, end, phoneColumnNameText)
+                            Toast.makeText(context, "Đã lưu cài đặt!", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Save, contentDescription = null)
+                        Spacer(modifier = Modifier.padding(4.dp))
+                        Text("Lưu quy tắc")
+                    }
                 }
             }
 
@@ -460,5 +447,43 @@ fun SimAndRuleConfigScreen(
                 }
             }
         }
+    }
+
+    if (showTopBar) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "Cấu hình SIM",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    actions = {
+                        Button(
+                            onClick = {
+                                val min = minDelayText.toIntOrNull() ?: 10
+                                val max = maxDelayText.toIntOrNull() ?: 30
+                                val start = startHourText.toIntOrNull() ?: 8
+                                val end = endHourText.toIntOrNull() ?: 17
+
+                                viewModel.updateRule(min, max, start, end, phoneColumnNameText)
+                                Toast.makeText(context, "Đã lưu cài đặt!", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Icon(Icons.Default.Save, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            Text("Lưu quy tắc")
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            contentBody(Modifier.padding(innerPadding))
+        }
+    } else {
+        contentBody(Modifier)
     }
 }

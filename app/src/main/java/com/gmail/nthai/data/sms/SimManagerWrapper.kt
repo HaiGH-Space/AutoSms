@@ -147,27 +147,43 @@ class SimManagerWrapper(
     @SuppressLint("MissingPermission")
     private fun getCarrierName(subscriptionId: Int, info: SubscriptionInfo? = null): String {
         val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
-        val simOperatorName = telephonyManager
-            ?.createForSubscriptionId(subscriptionId)
-            ?.simOperatorName
+        val subTelephony = telephonyManager?.createForSubscriptionId(subscriptionId)
+        val simOperatorName = subTelephony?.simOperatorName
+        val networkOperatorName = subTelephony?.networkOperatorName
 
-        return sequenceOf(simOperatorName, info?.carrierName?.toString())
+        val candidates = sequenceOf(
+            info?.carrierName?.toString(),
+            info?.displayName?.toString(),
+            simOperatorName,
+            networkOperatorName
+        )
             .filterNotNull()
             .map(String::trim)
-            .firstOrNull { it.isNotEmpty() }
-            ?.normalizeCarrierName()
-            .orEmpty()
+            .filter { it.isNotEmpty() && !it.equals("UNKNOWN", ignoreCase = true) }
+
+        for (candidate in candidates) {
+            val normalized = candidate.normalizeCarrierName()
+            if (normalized.isNotBlank() && !normalized.contains("SIM", ignoreCase = true)) {
+                return normalized
+            }
+        }
+        return candidates.firstOrNull()?.normalizeCarrierName().orEmpty()
     }
 
     private fun String.normalizeCarrierName(): String {
         val normalized = trim()
         return when {
             normalized.contains("viettel", ignoreCase = true) -> "Viettel"
-            normalized.contains("vinaphone", ignoreCase = true) -> "VinaPhone"
-            normalized.contains("mobifone", ignoreCase = true) -> "MobiFone"
+            normalized.contains("vinaphone", ignoreCase = true) ||
+                normalized.contains("vina", ignoreCase = true) -> "VinaPhone"
+            normalized.contains("mobifone", ignoreCase = true) ||
+                normalized.contains("mobi", ignoreCase = true) -> "MobiFone"
             normalized.contains("vietnamobile", ignoreCase = true) -> "Vietnamobile"
             normalized.contains("gmobile", ignoreCase = true) ||
                 normalized.contains("beeline", ignoreCase = true) -> "Gmobile"
+            normalized.contains("wintel", ignoreCase = true) ||
+                normalized.contains("reddi", ignoreCase = true) -> "Wintel"
+            normalized.contains("itel", ignoreCase = true) -> "iTel"
             else -> normalized
         }
     }
