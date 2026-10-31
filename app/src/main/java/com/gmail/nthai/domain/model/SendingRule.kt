@@ -4,8 +4,8 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 data class SendingRule(
-    val minDelaySec: Int = 10,
-    val maxDelaySec: Int = 30,
+    val minDelaySec: Int = 50,
+    val maxDelaySec: Int = 50,
     val startHour: Int = 8,
     val endHour: Int = 17,
     val phoneColumnName: String = "sdt"

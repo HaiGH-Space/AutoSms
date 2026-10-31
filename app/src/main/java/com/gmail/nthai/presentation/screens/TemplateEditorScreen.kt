@@ -314,6 +314,21 @@ fun TemplateEditorScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    viewModel.saveTemplate { msg ->
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Save, contentDescription = null)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Lưu mẫu tin", fontWeight = FontWeight.Bold)
+            }
         }
     }
 

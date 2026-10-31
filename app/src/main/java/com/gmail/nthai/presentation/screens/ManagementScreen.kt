@@ -18,12 +18,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
+import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManagementScreen() {
+fun ManagementScreen(
+    configViewModel: ConfigViewModel = hiltViewModel(),
+    updateViewModel: UpdateViewModel = hiltViewModel()
+) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Mẫu tin nhắn", "Cài đặt SIM & Quy định")
+    val tabs = listOf("Mẫu tin nhắn", "Quản lý SIM", "Quy định & Cập nhật")
 
     Scaffold(
         topBar = {
@@ -63,7 +69,8 @@ fun ManagementScreen() {
 
             when (selectedTab) {
                 0 -> TemplateEditorScreen(showTopBar = false)
-                1 -> SimAndRuleConfigScreen(showTopBar = false)
+                1 -> SimManagementTab(viewModel = configViewModel, showTopBar = false)
+                2 -> RuleAndUpdateTab(viewModel = configViewModel, updateViewModel = updateViewModel, showTopBar = false)
             }
         }
     }
