@@ -1,7 +1,7 @@
 {
   "versionCode": 2,
   "versionName": "0.1.1",
-  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/v0.1.0/auto-sms-release.apk",
+  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.1/app-release.apk",
   "releaseNotes": "- Sửa lỗi gửi tin nhắn qua SIM 2\n- Thêm tính năng tự động cập nhật APK",
   "forceUpdate": false
 }
