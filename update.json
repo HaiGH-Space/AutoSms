@@ -2,6 +2,6 @@
   "versionCode": 2,
   "versionName": "0.1.1",
   "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.1/app-release.apk",
-  "releaseNotes": "- Sửa lỗi gửi tin nhắn qua SIM 2\n- Thêm tính năng tự động cập nhật APK",
+  "releaseNotes": "- Thêm tính năng tự động kiểm tra và cập nhật APK trực tiếp trong ứng dụng\n- Thêm tính năng quản lý SIM, cấu hình SIM và quản lý mẫu tin nhắn SMS\n- Tối ưu hóa hiệu năng cơ sở dữ liệu (Room DB indices, R8 code shrinking, Compose Immutable)\n- Thêm dialog loading khi import danh sách khách hàng từ file Excel\n- Cải thiện giao diện, trải nghiệm người dùng và sửa lỗi gửi tin nhắn qua SIM 2",
   "forceUpdate": false
 }
