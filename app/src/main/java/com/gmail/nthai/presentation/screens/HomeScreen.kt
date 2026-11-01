@@ -3,21 +3,29 @@ package com.gmail.nthai.presentation.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,6 +43,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.model.UpdateState
 import com.gmail.nthai.presentation.components.DownloadProgressDialog
 import com.gmail.nthai.presentation.components.DownloadedInstallDialog
@@ -42,6 +51,8 @@ import com.gmail.nthai.presentation.components.NoUpdateAvailableDialog
 import com.gmail.nthai.presentation.components.UpdateAvailableDialog
 import com.gmail.nthai.presentation.components.UpdateErrorDialog
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
+import com.gmail.nthai.presentation.viewmodel.HomeDashboardStats
+import com.gmail.nthai.presentation.viewmodel.HomeDashboardViewModel
 import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 
 @Composable
@@ -49,11 +60,13 @@ fun HomeScreen(
     onImportExcel: () -> Unit,
     onSelectSim: (Int) -> Unit,
     configViewModel: ConfigViewModel = hiltViewModel(),
+    dashboardViewModel: HomeDashboardViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val updateState by updateViewModel.updateState.collectAsStateWithLifecycle()
     val simConfigs by configViewModel.simConfigs.collectAsStateWithLifecycle()
+    val dashboardStats by dashboardViewModel.stats.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
@@ -133,24 +146,7 @@ fun HomeScreen(
     }
 
     val sim1Config = simConfigs.find { it.simSlot == 1 }
-    val sim1Carrier = sim1Config?.carrierName?.trim()?.takeIf { it.isNotEmpty() }
-    val sim1Title = if (sim1Carrier != null) "Danh sách gửi SIM 1 - $sim1Carrier" else "Danh sách gửi SIM 1"
-    val sim1Subtitle = if (sim1Carrier != null) {
-        "Chọn khách hàng và số điện thoại dành riêng cho SIM 1 ($sim1Carrier)"
-    } else {
-        "Chọn khách hàng và số điện thoại dành riêng cho SIM 1"
-    }
-    val sim1Badge = sim1Carrier ?: if (sim1Config?.subscriptionId == -1) "Chưa phát hiện SIM" else null
-
     val sim2Config = simConfigs.find { it.simSlot == 2 }
-    val sim2Carrier = sim2Config?.carrierName?.trim()?.takeIf { it.isNotEmpty() }
-    val sim2Title = if (sim2Carrier != null) "Danh sách gửi SIM 2 - $sim2Carrier" else "Danh sách gửi SIM 2"
-    val sim2Subtitle = if (sim2Carrier != null) {
-        "Chọn khách hàng và số điện thoại dành riêng cho SIM 2 ($sim2Carrier)"
-    } else {
-        "Chọn khách hàng và số điện thoại dành riêng cho SIM 2"
-    }
-    val sim2Badge = sim2Carrier ?: if (sim2Config?.subscriptionId == -1) "Chưa phát hiện SIM" else null
 
     Scaffold(
         topBar = {
@@ -166,6 +162,12 @@ fun HomeScreen(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Tổng quan",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     ) { innerPadding ->
@@ -177,73 +179,238 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            HomeActionCard(
-                title = "Nhập danh sách Excel",
-                subtitle = "Thêm khách hàng và số điện thoại từ file Excel",
-                onClick = onImportExcel,
-                icon = { Icon(Icons.Default.FileUpload, contentDescription = null) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SimStatusCard(
+                    simSlot = 1,
+                    config = sim1Config,
+                    modifier = Modifier.weight(1f)
+                )
+                SimStatusCard(
+                    simSlot = 2,
+                    config = sim2Config,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            ExcelImportCard(
+                totalCustomers = dashboardStats.totalCustomers,
+                readyCount = dashboardStats.sim1ReadyCount + dashboardStats.sim2ReadyCount,
+                onClick = onImportExcel
             )
-            HomeActionCard(
-                title = sim1Title,
-                subtitle = sim1Subtitle,
-                badgeText = sim1Badge,
-                onClick = { onSelectSim(1) },
-                icon = { Icon(Icons.Default.SimCard, contentDescription = null) }
+
+            Text(
+                text = "Điều phối theo SIM",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
-            HomeActionCard(
-                title = sim2Title,
-                subtitle = sim2Subtitle,
-                badgeText = sim2Badge,
-                onClick = { onSelectSim(2) },
-                icon = { Icon(Icons.Default.SimCard, contentDescription = null) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                SimDispatchCard(
+                    simSlot = 1,
+                    config = sim1Config,
+                    assignedCount = dashboardStats.sim1AssignedCount,
+                    readyCount = dashboardStats.sim1ReadyCount,
+                    onClick = { onSelectSim(1) },
+                    modifier = Modifier.weight(1f)
+                )
+                SimDispatchCard(
+                    simSlot = 2,
+                    config = sim2Config,
+                    assignedCount = dashboardStats.sim2AssignedCount,
+                    readyCount = dashboardStats.sim2ReadyCount,
+                    onClick = { onSelectSim(2) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            TodayAnalyticsCard(
+                stats = dashboardStats,
+                isCheckingForUpdate = updateState is UpdateState.Checking,
+                onCheckForUpdate = { updateViewModel.checkForUpdate(isManualCheck = true) }
             )
         }
     }
 }
 
 @Composable
-private fun HomeActionCard(
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit,
-    icon: @Composable () -> Unit,
-    badgeText: String? = null
+private fun SimStatusCard(
+    simSlot: Int,
+    config: SimConfig?,
+    modifier: Modifier = Modifier
+) {
+    val detected = config?.subscriptionId != null && config.subscriptionId != -1
+    ElevatedCard(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(36.dp),
+                shape = CircleShape,
+                color = if (detected) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Icon(
+                    imageVector = if (detected) Icons.Default.CheckCircle else Icons.Default.SimCard,
+                    contentDescription = null,
+                    modifier = Modifier.padding(8.dp),
+                    tint = if (detected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text("SIM $simSlot", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (config == null) "Đang kiểm tra"
+                    else if (detected) config.carrierName.ifBlank { "Đã nhận diện" }
+                    else "Chưa phát hiện SIM",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExcelImportCard(
+    totalCustomers: Int,
+    readyCount: Int,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    Icons.Default.FileUpload,
+                    contentDescription = null,
+                    modifier = Modifier.padding(12.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+            Text("Nhập danh sách Excel", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = "$totalCustomers khách hàng trong danh sách · $readyCount sẵn sàng",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+                Text("Chọn tệp Excel")
+            }
+        }
+    }
+}
+
+@Composable
+private fun SimDispatchCard(
+    simSlot: Int,
+    config: SimConfig?,
+    assignedCount: Int,
+    readyCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.SimCard,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("SIM $simSlot", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+            Text(
+                config?.carrierName?.takeIf { it.isNotBlank() } ?: "Danh sách được gán",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+            Text("$assignedCount đã gán", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "$readyCount sẵn sàng",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+            OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+                Text("Quản lý")
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodayAnalyticsCard(
+    stats: HomeDashboardStats,
+    isCheckingForUpdate: Boolean,
+    onCheckForUpdate: () -> Unit
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text("Thống kê hôm nay", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                icon()
-                if (!badgeText.isNullOrBlank()) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text = badgeText,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                Column {
+                    Text(
+                        stats.sentToday.toString(),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text("Tin gửi thành công", style = MaterialTheme.typography.bodySmall)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        stats.successRateToday?.let { String.format("%.1f%%", it) } ?: "—",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text("Tỷ lệ thành công", style = MaterialTheme.typography.bodySmall)
                 }
             }
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-                Text("Mở")
+            OutlinedButton(
+                onClick = onCheckForUpdate,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isCheckingForUpdate
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(if (isCheckingForUpdate) "Đang kiểm tra..." else "Kiểm tra cập nhật")
             }
         }
     }
