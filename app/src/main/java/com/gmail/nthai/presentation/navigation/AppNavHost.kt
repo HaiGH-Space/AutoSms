@@ -80,22 +80,16 @@ fun AppNavHost() {
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
-                    onImportExcel = { navController.navigate(Screen.Customers.route(1, importExcel = true)) },
                     onSelectSim = { slot -> navController.navigate(Screen.Customers.route(slot)) }
                 )
             }
             composable(Screen.Customers.route,
                 arguments = listOf(
-                    navArgument("simSlot") { type = NavType.IntType },
-                    navArgument("importExcel") {
-                        type = NavType.BoolType
-                        defaultValue = false
-                    }
+                    navArgument("simSlot") { type = NavType.IntType }
                 )
             ) { entry ->
                 CustomerListScreen(
                     simSlot = entry.arguments?.getInt("simSlot") ?: 1,
-                    openImportOnStart = entry.arguments?.getBoolean("importExcel") ?: false,
                     onBack = { navController.popBackStack() }
                 )
             }

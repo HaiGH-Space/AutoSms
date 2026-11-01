@@ -1,5 +1,9 @@
 package com.gmail.nthai.presentation.screens
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,26 +50,52 @@ import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.model.UpdateState
 import com.gmail.nthai.presentation.components.DownloadProgressDialog
 import com.gmail.nthai.presentation.components.DownloadedInstallDialog
+import com.gmail.nthai.presentation.components.LoadingDialog
 import com.gmail.nthai.presentation.components.NoUpdateAvailableDialog
+import com.gmail.nthai.presentation.components.SelectPhoneColumnDialog
 import com.gmail.nthai.presentation.components.UpdateAvailableDialog
 import com.gmail.nthai.presentation.components.UpdateErrorDialog
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
+import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
 import com.gmail.nthai.presentation.viewmodel.HomeDashboardViewModel
 import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 
 @Composable
 fun HomeScreen(
-    onImportExcel: () -> Unit,
     onSelectSim: (Int) -> Unit,
     configViewModel: ConfigViewModel = hiltViewModel(),
     dashboardViewModel: HomeDashboardViewModel = hiltViewModel(),
-    updateViewModel: UpdateViewModel = hiltViewModel()
+    updateViewModel: UpdateViewModel = hiltViewModel(),
+    customerViewModel: CustomerViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val updateState by updateViewModel.updateState.collectAsStateWithLifecycle()
     val simConfigs by configViewModel.simConfigs.collectAsStateWithLifecycle()
     val dashboardStats by dashboardViewModel.stats.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val pendingImportState by customerViewModel.pendingImportState.collectAsStateWithLifecycle()
+    val isImporting by customerViewModel.isImporting.collectAsStateWithLifecycle()
+    val importLoadingMessage by customerViewModel.importLoadingMessage.collectAsStateWithLifecycle()
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                if (inputStream == null) {
+                    Toast.makeText(context, "Không thể mở file Excel đã chọn.", Toast.LENGTH_LONG).show()
+                } else {
+                    customerViewModel.prepareExcelImport(inputStream) { err ->
+                        Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Khởi tạo file thất bại: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         configViewModel.loadSims()
@@ -196,7 +226,9 @@ fun HomeScreen(
             ExcelImportCard(
                 totalCustomers = dashboardStats.totalCustomers,
                 readyCount = dashboardStats.sim1ReadyCount + dashboardStats.sim2ReadyCount,
-                onClick = onImportExcel
+                onClick = {
+                    filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                }
             )
 
             Text(
@@ -226,6 +258,30 @@ fun HomeScreen(
                 )
             }
         }
+    }
+
+    pendingImportState?.let { state ->
+        SelectPhoneColumnDialog(
+            headers = state.headers,
+            selectedHeader = state.selectedHeader,
+            onSelectHeader = { customerViewModel.updateSelectedImportHeader(it) },
+            onConfirm = {
+                customerViewModel.confirmImport { result ->
+                    result.onSuccess { count ->
+                        Toast.makeText(context, "Đã nhập $count khách hàng", Toast.LENGTH_SHORT).show()
+                    }.onFailure { err ->
+                        Toast.makeText(context, "Lỗi đọc file Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            },
+            onDismiss = {
+                customerViewModel.cancelImport()
+            }
+        )
+    }
+
+    if (isImporting) {
+        LoadingDialog(message = importLoadingMessage)
     }
 }
 
