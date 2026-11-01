@@ -7,6 +7,7 @@ import com.gmail.nthai.domain.model.SendingRule
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.repository.SimConfigRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,15 +31,11 @@ class ConfigViewModel @Inject constructor(
     val simConfigs: StateFlow<List<SimConfig>> = _simConfigs
     private var loadSimsJob: Job? = null
 
-    init {
-        loadSims()
-    }
-
     fun loadSims() {
         loadSimsJob?.cancel()
         loadSimsJob = viewModelScope.launch {
             val detectedSims = try {
-                simManagerWrapper.getActiveSims()
+                withContext(Dispatchers.IO) { simManagerWrapper.getActiveSims() }
             } catch (_: SecurityException) {
                 emptyList()
             }
@@ -68,7 +66,9 @@ class ConfigViewModel @Inject constructor(
                 )
 
                 merged.add(config)
-                simConfigRepository.saveSimConfig(config)
+                if (config != saved) {
+                    simConfigRepository.saveSimConfig(config)
+                }
             }
 
             _simConfigs.value = merged

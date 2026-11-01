@@ -2,10 +2,12 @@ package com.gmail.nthai.domain.repository
 
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
+import com.gmail.nthai.domain.model.HomeDashboardStats
 import kotlinx.coroutines.flow.Flow
 
 interface CustomerRepository {
     fun getAllCustomers(): Flow<List<Customer>>
+    fun observeDashboardStats(): Flow<HomeDashboardStats>
     fun getSelectedCustomersForSending(): Flow<List<Customer>>
     suspend fun getCustomerById(id: Long): Customer?
     suspend fun insertCustomers(customers: List<Customer>)

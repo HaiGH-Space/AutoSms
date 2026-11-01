@@ -98,7 +98,6 @@ fun HomeScreen(
     }
 
     LaunchedEffect(Unit) {
-        configViewModel.loadSims()
         updateViewModel.checkForUpdate(isManualCheck = false)
     }
 

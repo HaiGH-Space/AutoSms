@@ -7,11 +7,24 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.gmail.nthai.data.local.entity.CustomerDashboardStatsEntity
 import com.gmail.nthai.data.local.entity.CustomerEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CustomerDao {
+    @Query(
+        """
+        SELECT COUNT(*) AS totalCustomers,
+            COALESCE(SUM(CASE WHEN isSelected = 1 AND sendSimSlot = 1 THEN 1 ELSE 0 END), 0) AS sim1AssignedCount,
+            COALESCE(SUM(CASE WHEN isSelected = 1 AND sendSimSlot = 1 AND status = 'PENDING' THEN 1 ELSE 0 END), 0) AS sim1ReadyCount,
+            COALESCE(SUM(CASE WHEN isSelected = 1 AND sendSimSlot = 2 THEN 1 ELSE 0 END), 0) AS sim2AssignedCount,
+            COALESCE(SUM(CASE WHEN isSelected = 1 AND sendSimSlot = 2 AND status = 'PENDING' THEN 1 ELSE 0 END), 0) AS sim2ReadyCount
+        FROM customers
+        """
+    )
+    fun observeDashboardStats(): Flow<CustomerDashboardStatsEntity>
+
     @Query("SELECT * FROM customers ORDER BY id ASC")
     fun getAllCustomers(): Flow<List<CustomerEntity>>
 
