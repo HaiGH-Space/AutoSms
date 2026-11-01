@@ -55,6 +55,7 @@ class SmsStatusReceiver : BroadcastReceiver() {
                             else -> "Lỗi gửi SMS (Mã: $resultCode)"
                         }
                         sendingLogRepository.updateLogStatus(logId, LogStatus.FAILED, errorMsg)
+                        SmsForegroundService.reportSmsFailure(simSlot, logId)
                     }
 
                     val customer = customerRepository.getCustomerById(customerId)
