@@ -17,7 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -51,7 +50,6 @@ import com.gmail.nthai.presentation.components.NoUpdateAvailableDialog
 import com.gmail.nthai.presentation.components.UpdateAvailableDialog
 import com.gmail.nthai.presentation.components.UpdateErrorDialog
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
-import com.gmail.nthai.presentation.viewmodel.HomeDashboardStats
 import com.gmail.nthai.presentation.viewmodel.HomeDashboardViewModel
 import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 
@@ -227,12 +225,6 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
-
-            TodayAnalyticsCard(
-                stats = dashboardStats,
-                isCheckingForUpdate = updateState is UpdateState.Checking,
-                onCheckForUpdate = { updateViewModel.checkForUpdate(isManualCheck = true) }
-            )
         }
     }
 }
@@ -362,55 +354,6 @@ private fun SimDispatchCard(
             )
             OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
                 Text("Quản lý")
-            }
-        }
-    }
-}
-
-@Composable
-private fun TodayAnalyticsCard(
-    stats: HomeDashboardStats,
-    isCheckingForUpdate: Boolean,
-    onCheckForUpdate: () -> Unit
-) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text("Thống kê hôm nay", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        stats.sentToday.toString(),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text("Tin gửi thành công", style = MaterialTheme.typography.bodySmall)
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        stats.successRateToday?.let { String.format("%.1f%%", it) } ?: "—",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text("Tỷ lệ thành công", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            OutlinedButton(
-                onClick = onCheckForUpdate,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isCheckingForUpdate
-            ) {
-                Icon(Icons.Default.Refresh, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (isCheckingForUpdate) "Đang kiểm tra..." else "Kiểm tra cập nhật")
             }
         }
     }
