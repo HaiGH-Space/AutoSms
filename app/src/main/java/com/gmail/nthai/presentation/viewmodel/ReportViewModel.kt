@@ -11,7 +11,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import javax.inject.Inject
 
@@ -48,12 +50,10 @@ class ReportViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReportStats())
 
-    fun exportExcel(outputStream: OutputStream, onResult: (Result<Unit>) -> Unit) {
-        viewModelScope.launch {
-            val result = exportReportExcelUseCase(logs.value, outputStream)
-            onResult(result)
+    suspend fun exportExcel(logs: List<LogRecord>, outputStream: OutputStream): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            exportReportExcelUseCase(logs, outputStream)
         }
-    }
 
     fun clearLogs() {
         viewModelScope.launch {

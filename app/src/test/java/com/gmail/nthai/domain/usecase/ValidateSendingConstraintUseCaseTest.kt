@@ -42,6 +42,22 @@ class ValidateSendingConstraintUseCaseTest {
     }
 
     @Test
+    fun `respects minute precision at the start of the sending window`() {
+        val minuteRule = rule.copy(startHour = 8, startMinute = 30)
+
+        assertTrue(useCase(minuteRule, 8, validSim, currentMinute = 29) is ValidationResult.OutsideTimeFrame)
+        assertTrue(useCase(minuteRule, 8, validSim, currentMinute = 30) is ValidationResult.Valid)
+    }
+
+    @Test
+    fun `treats the end minute as exclusive`() {
+        val minuteRule = rule.copy(endHour = 17, endMinute = 30)
+
+        assertTrue(useCase(minuteRule, 17, validSim, currentMinute = 29) is ValidationResult.Valid)
+        assertTrue(useCase(minuteRule, 17, validSim, currentMinute = 30) is ValidationResult.OutsideTimeFrame)
+    }
+
+    @Test
     fun `returns ExceededLimit when sent count reaches daily limit`() {
         val maxedSim = validSim.copy(sentCountToday = 100)
         val result = useCase(rule, currentHour = 10, simConfig = maxedSim)

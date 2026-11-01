@@ -84,7 +84,9 @@ fun SendingRuleEntity.toDomain(): SendingRule = SendingRule(
     minDelaySec = minDelaySec,
     maxDelaySec = maxDelaySec,
     startHour = startHour,
+    startMinute = startMinute,
     endHour = endHour,
+    endMinute = endMinute,
     phoneColumnName = phoneColumnName
 )
 
@@ -93,7 +95,9 @@ fun SendingRule.toEntity(): SendingRuleEntity = SendingRuleEntity(
     minDelaySec = minDelaySec,
     maxDelaySec = maxDelaySec,
     startHour = startHour,
+    startMinute = startMinute,
     endHour = endHour,
+    endMinute = endMinute,
     phoneColumnName = phoneColumnName
 )
 

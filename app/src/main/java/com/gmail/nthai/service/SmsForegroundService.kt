@@ -48,10 +48,29 @@ import javax.inject.Inject
 
 sealed class SendingServiceState {
     data object Idle : SendingServiceState()
-    data class Running(val sentCount: Int, val totalCount: Int, val currentCustomerName: String) : SendingServiceState()
-    data class Paused(val sentCount: Int, val totalCount: Int) : SendingServiceState()
-    data class Finished(val sentCount: Int, val totalCount: Int) : SendingServiceState()
-    data class Error(val message: String, val sentCount: Int = 0, val totalCount: Int = 0) : SendingServiceState()
+    data class Running(
+        val sentCount: Int,
+        val totalCount: Int,
+        val currentCustomerName: String,
+        val secondsUntilNext: Int? = null,
+        val failedCount: Int = 0
+    ) : SendingServiceState()
+    data class Paused(
+        val sentCount: Int,
+        val totalCount: Int,
+        val failedCount: Int = 0
+    ) : SendingServiceState()
+    data class Finished(
+        val sentCount: Int,
+        val totalCount: Int,
+        val failedCount: Int = 0
+    ) : SendingServiceState()
+    data class Error(
+        val message: String,
+        val sentCount: Int = 0,
+        val totalCount: Int = 0,
+        val failedCount: Int = 0
+    ) : SendingServiceState()
 }
 
 @AndroidEntryPoint
@@ -119,7 +138,10 @@ class SmsForegroundService : Service() {
             val counts = synchronized(progressLock) {
                 (sentCounts[slot] ?: 0) to (totalCounts[slot] ?: 0)
             }
-            updateSimState(slot, SendingServiceState.Paused(counts.first, counts.second))
+            updateSimState(
+                slot,
+                SendingServiceState.Paused(counts.first, counts.second, currentFailedCount(slot))
+            )
             updateAggregateNotification("Đang tạm dừng SIM $slot")
         }
     }
@@ -129,7 +151,15 @@ class SmsForegroundService : Service() {
             val counts = synchronized(progressLock) {
                 (sentCounts[slot] ?: 0) to (totalCounts[slot] ?: 0)
             }
-            updateSimState(slot, SendingServiceState.Running(counts.first, counts.second, ""))
+            updateSimState(
+                slot,
+                SendingServiceState.Running(
+                    counts.first,
+                    counts.second,
+                    "",
+                    failedCount = currentFailedCount(slot)
+                )
+            )
             updateAggregateNotification("Đang tiếp tục SIM $slot")
         }
     }
@@ -149,6 +179,9 @@ class SmsForegroundService : Service() {
         synchronized(progressLock) {
             sentCounts[simSlot] = 0
             totalCounts[simSlot] = 0
+        }
+        synchronized(failureCountLock) {
+            failedLogIdsBySlot[simSlot] = mutableSetOf()
         }
         updateSimState(simSlot, SendingServiceState.Running(0, 0, "Đang chuẩn bị"))
         val job = serviceScope.launch(start = CoroutineStart.LAZY) {
@@ -197,9 +230,9 @@ class SmsForegroundService : Service() {
                     (sentCounts[simSlot] ?: 0) to (totalCounts[simSlot] ?: 0)
                 }
                 val state = error?.let {
-                    SendingServiceState.Error(it, counts.first, counts.second)
+                    SendingServiceState.Error(it, counts.first, counts.second, currentFailedCount(simSlot))
                 }
-                    ?: SendingServiceState.Finished(counts.first, counts.second)
+                    ?: SendingServiceState.Finished(counts.first, counts.second, currentFailedCount(simSlot))
                 updateSimState(simSlot, state)
             }
           } catch (e: Exception) {
@@ -209,7 +242,12 @@ class SmsForegroundService : Service() {
                 }
                 updateSimState(
                     simSlot,
-                    SendingServiceState.Error(e.message ?: "Gửi SMS thất bại.", counts.first, counts.second)
+                    SendingServiceState.Error(
+                        e.message ?: "Gửi SMS thất bại.",
+                        counts.first,
+                        counts.second,
+                        currentFailedCount(simSlot)
+                    )
                 )
             }
           } finally {
@@ -265,13 +303,15 @@ class SmsForegroundService : Service() {
                         .also { simConfigRepository.saveSimConfig(it) }
                     else -> config
                 }
+                val currentTime = Calendar.getInstance()
                 when (val constraint = validateConstraintUseCase(
                     rule,
-                    Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
-                    currentConfig
+                    currentTime.get(Calendar.HOUR_OF_DAY),
+                    currentConfig,
+                    currentMinute = currentTime.get(Calendar.MINUTE)
                 )) {
                     is ValidationResult.OutsideTimeFrame -> {
-                        return "Ngoài khung giờ làm việc (${rule.startHour}h - ${rule.endHour}h)."
+                        return "Ngoài khung giờ làm việc (${rule.startHour.toString().padStart(2, '0')}:${rule.startMinute.toString().padStart(2, '0')} - ${rule.endHour.toString().padStart(2, '0')}:${rule.endMinute.toString().padStart(2, '0')})."
                     }
                     is ValidationResult.ExceededLimit -> {
                         return "SIM $simSlot đã đạt hạn mức gửi ${constraint.dailyLimit} tin/ngày."
@@ -335,13 +375,46 @@ class SmsForegroundService : Service() {
                     sent to total
                 }
                 if (sent >= total) {
-                    updateSimState(simSlot, SendingServiceState.Finished(sent, total))
+                    updateSimState(
+                        simSlot,
+                        SendingServiceState.Finished(sent, total, currentFailedCount(simSlot))
+                    )
                 } else {
-                    updateSimState(simSlot, SendingServiceState.Running(sent, total, displayName))
+                    updateSimState(
+                        simSlot,
+                        SendingServiceState.Running(
+                            sent,
+                            total,
+                            displayName,
+                            failedCount = currentFailedCount(simSlot)
+                        )
+                    )
                 }
                 updateAggregateNotification("Đang gửi SIM $simSlot: $displayName")
                 if (sent < total) {
-                    delay(calculateNextDelayUseCase(rule.minDelaySec, rule.maxDelaySec))
+                    var secondsRemaining = (calculateNextDelayUseCase(
+                        rule.minDelaySec,
+                        rule.maxDelaySec
+                    ) / 1000L).toInt()
+                    while (secondsRemaining > 0) {
+                        while (pausedSlots.contains(simSlot) && !stoppedSlots.contains(simSlot)) {
+                            delay(250L)
+                        }
+                        if (stoppedSlots.contains(simSlot)) break
+
+                        updateSimState(
+                            simSlot,
+                            SendingServiceState.Running(
+                                sent,
+                                total,
+                                displayName,
+                                secondsRemaining,
+                                currentFailedCount(simSlot)
+                            )
+                        )
+                        delay(1000L)
+                        secondsRemaining--
+                    }
                 }
             }
         }
@@ -357,6 +430,10 @@ class SmsForegroundService : Service() {
 
     private fun updateSimState(simSlot: Int, newState: SendingServiceState) {
         _serviceStates.update { it + (simSlot to newState) }
+    }
+
+    private fun currentFailedCount(simSlot: Int): Int = synchronized(failureCountLock) {
+        failedLogIdsBySlot[simSlot]?.size ?: 0
     }
 
     private fun updateAggregateNotification(title: String) {
@@ -459,6 +536,27 @@ class SmsForegroundService : Service() {
         const val ACTION_RESUME = "com.gmail.nthai.ACTION_RESUME"
         const val ACTION_STOP = "com.gmail.nthai.ACTION_STOP"
         const val EXTRA_SIM_SLOT = "com.gmail.nthai.EXTRA_SIM_SLOT"
+
+        fun reportSmsFailure(simSlot: Int, logId: Long) {
+            val failedCount = synchronized(failureCountLock) {
+                val failedLogIds = failedLogIdsBySlot.getOrPut(simSlot) { mutableSetOf() }
+                failedLogIds.add(logId)
+                failedLogIds.size
+            }
+            _serviceStates.update { states ->
+                val updatedState = when (val state = states[simSlot]) {
+                    is SendingServiceState.Running -> state.copy(failedCount = failedCount)
+                    is SendingServiceState.Paused -> state.copy(failedCount = failedCount)
+                    is SendingServiceState.Finished -> state.copy(failedCount = failedCount)
+                    is SendingServiceState.Error -> state.copy(failedCount = failedCount)
+                    SendingServiceState.Idle, null -> return@update states
+                }
+                states + (simSlot to updatedState)
+            }
+        }
+
+        private val failureCountLock = Any()
+        private val failedLogIdsBySlot = mutableMapOf(1 to mutableSetOf<Long>(), 2 to mutableSetOf<Long>())
 
         private val _serviceStates = MutableStateFlow<Map<Int, SendingServiceState>>(
             mapOf(1 to SendingServiceState.Idle, 2 to SendingServiceState.Idle)

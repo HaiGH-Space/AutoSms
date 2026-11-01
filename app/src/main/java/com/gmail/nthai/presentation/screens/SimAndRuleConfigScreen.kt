@@ -3,6 +3,7 @@ package com.gmail.nthai.presentation.screens
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.app.TimePickerDialog
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,12 +23,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Shuffle
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -123,17 +132,32 @@ fun SimManagementTab(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    containerColor = if (hasPhonePermission && hasSmsPermission) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.errorContainer
+                    }
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            if (hasPhonePermission && hasSmsPermission) Icons.Outlined.CheckCircle else Icons.Outlined.ErrorOutline,
+                            contentDescription = null
+                        )
+                        Text(
+                            text = if (hasPhonePermission && hasSmsPermission) "Quyền hệ thống đã sẵn sàng" else "Cần hoàn tất quyền hệ thống",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Text(
-                        text = "Trạng thái quyền hệ thống:",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        "Đọc SIM: ${if (hasPhonePermission) "Đã cấp" else "Chưa cấp"}  ·  Gửi SMS: ${if (hasSmsPermission) "Đã cấp" else "Chưa cấp"}",
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    Text("• Quyền Điện thoại (đọc SIM): ${if (hasPhonePermission) "Đã cấp" else "Chưa cấp"}")
-                    Text("• Quyền Gửi SMS: ${if (hasSmsPermission) "Đã cấp" else "Chưa cấp"}")
 
                     if (!hasPhonePermission || !hasSmsPermission) {
                         Spacer(modifier = Modifier.height(4.dp))
@@ -171,7 +195,7 @@ fun SimManagementTab(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                     )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -205,26 +229,66 @@ fun SimManagementTab(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        Text("Đã gửi hôm nay: ${config.sentCountToday} tin")
+                        val safeLimit = config.dailyLimit.coerceAtLeast(1)
+                        val progress = (config.sentCountToday.toFloat() / safeLimit).coerceIn(0f, 1f)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Hạn mức hôm nay", style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                "${config.sentCountToday} / ${config.dailyLimit} tin",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = if (progress >= 1f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            "Điều chỉnh hạn mức",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
                         var limitText by remember(config.dailyLimit) { mutableStateOf(config.dailyLimit.toString()) }
+                        val parsedLimit = limitText.toIntOrNull()
+                        val isLimitValid = parsedLimit != null && parsedLimit > 0
 
                         OutlinedTextField(
                             value = limitText,
-                            onValueChange = {
-                                limitText = it
-                                val limit = it.toIntOrNull() ?: 100
-                                viewModel.updateSimLimit(config.simSlot, limit)
+                            onValueChange = { limitText = it.filter(Char::isDigit) },
+                            label = { Text("Giới hạn tin nhắn mỗi ngày") },
+                            supportingText = {
+                                Text(if (isLimitValid) "Áp dụng riêng cho SIM ${config.simSlot}." else "Nhập số lớn hơn 0.")
                             },
-                            label = { Text("Giới hạn tin / ngày (Mặc định 100)") },
+                            isError = !isLimitValid,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
+                        Button(
+                            onClick = {
+                                parsedLimit?.let { limit ->
+                                    viewModel.updateSimLimit(config.simSlot, limit)
+                                    Toast.makeText(context, "Đã cập nhật hạn mức SIM ${config.simSlot}", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            enabled = isLimitValid && parsedLimit != config.dailyLimit,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Save, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(4.dp))
+                            Text("Lưu hạn mức")
+                        }
                     }
                 }
             }
@@ -321,9 +385,27 @@ fun RuleAndUpdateTab(
 
     var minDelayText by remember(rule) { mutableStateOf(rule.minDelaySec.toString()) }
     var maxDelayText by remember(rule) { mutableStateOf(rule.maxDelaySec.toString()) }
-    var startHourText by remember(rule) { mutableStateOf(rule.startHour.toString()) }
-    var endHourText by remember(rule) { mutableStateOf(rule.endHour.toString()) }
+    var startHour by remember(rule) { mutableStateOf(rule.startHour) }
+    var startMinute by remember(rule) { mutableStateOf(rule.startMinute) }
+    var endHour by remember(rule) { mutableStateOf(rule.endHour) }
+    var endMinute by remember(rule) { mutableStateOf(rule.endMinute) }
     var phoneColumnNameText by remember(rule) { mutableStateOf(rule.phoneColumnName) }
+    val minDelay = minDelayText.toIntOrNull()
+    val maxDelay = maxDelayText.toIntOrNull()
+    val startTime = startHour * 60 + startMinute
+    val endTime = endHour * 60 + endMinute
+    val ruleError = when {
+        minDelay == null || maxDelay == null ->
+            "Vui lòng nhập đầy đủ khoảng nghỉ."
+        minDelay < 0 -> "Thời gian trễ tối thiểu không được âm."
+        maxDelay < minDelay -> "Thời gian trễ tối đa phải lớn hơn hoặc bằng tối thiểu."
+        startHour !in 0..23 || startMinute !in 0..59 -> "Giờ bắt đầu không hợp lệ."
+        endHour !in 0..24 || endMinute !in 0..59 || endHour == 24 && endMinute != 0 ->
+            "Giờ kết thúc không hợp lệ."
+        endTime <= startTime -> "Giờ kết thúc phải sau giờ bắt đầu."
+        phoneColumnNameText.isBlank() -> "Tên cột số điện thoại không được để trống."
+        else -> null
+    }
 
     val content: @Composable (Modifier) -> Unit = { modifier ->
         Column(
@@ -334,7 +416,7 @@ fun RuleAndUpdateTab(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Quy tắc Gửi tin & Khung giờ",
+                text = "Lịch gửi & khoảng nghỉ",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -342,14 +424,29 @@ fun RuleAndUpdateTab(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                 )
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Khoảng trễ ngẫu nhiên giữa 2 tin nhắn (giây):")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Outlined.Shuffle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Text(
+                            "Khoảng nghỉ ngẫu nhiên",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Text(
+                        "Ứng dụng chọn thời gian chờ trong khoảng này giữa các tin nhắn.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -359,6 +456,7 @@ fun RuleAndUpdateTab(
                             value = minDelayText,
                             onValueChange = { minDelayText = it },
                             label = { Text("Trễ tối thiểu (s)") },
+                            isError = minDelay == null || minDelay < 0,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f),
                             singleLine = true
@@ -368,66 +466,177 @@ fun RuleAndUpdateTab(
                             value = maxDelayText,
                             onValueChange = { maxDelayText = it },
                             label = { Text("Trễ tối đa (s)") },
+                            isError = maxDelay == null || minDelay != null && maxDelay < minDelay,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f),
                             singleLine = true
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    FilterChip(
+                        selected = minDelayText == "40" && maxDelayText == "50",
+                        onClick = {
+                            minDelayText = "40"
+                            maxDelayText = "50"
+                        },
+                        label = { Text("Dùng khoảng gợi ý 40–50 giây") }
+                    )
 
-                    Text("Khung giờ cho phép gửi tin nhắn trong ngày (Giờ):")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Outlined.AccessTime, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Text(
+                            "Khung giờ gửi trong ngày",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Text(
+                        "Ngoài khung giờ này, ứng dụng sẽ không gửi tin.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        OutlinedTextField(
-                            value = startHourText,
-                            onValueChange = { startHourText = it },
-                            label = { Text("Giờ bắt đầu (VD: 8)") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
-                        )
+                        OutlinedButton(
+                            onClick = {
+                                TimePickerDialog(
+                                    context,
+                                    { _, hour, minute ->
+                                        startHour = hour
+                                        startMinute = minute
+                                    },
+                                    startHour,
+                                    startMinute,
+                                    true
+                                ).show()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(72.dp)
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Bắt đầu", style = MaterialTheme.typography.labelMedium)
+                                Text(
+                                    "${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
 
-                        OutlinedTextField(
-                            value = endHourText,
-                            onValueChange = { endHourText = it },
-                            label = { Text("Giờ kết thúc (VD: 17)") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
-                        )
+                        OutlinedButton(
+                            onClick = {
+                                TimePickerDialog(
+                                    context,
+                                    { _, hour, minute ->
+                                        if (hour == 0 && minute == 0) {
+                                            endHour = 24
+                                            endMinute = 0
+                                        } else {
+                                            endHour = hour
+                                            endMinute = minute
+                                        }
+                                    },
+                                    if (endHour == 24) 0 else endHour,
+                                    endMinute,
+                                    true
+                                ).show()
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(72.dp)
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Kết thúc", style = MaterialTheme.typography.labelMedium)
+                                Text(
+                                    "${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Khung giờ gửi", style = MaterialTheme.typography.labelLarge)
+                            Text(
+                                "${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} – ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                    AssistChip(
+                        onClick = {
+                            startHour = 8
+                            startMinute = 0
+                            endHour = 17
+                            endMinute = 0
+                        },
+                        label = { Text("Áp dụng khung giờ gợi ý 08:00–17:00") }
+                    )
 
-                    Text("Tên cột Số điện thoại trong file Excel:")
+                    Text(
+                        "Cột số điện thoại trong Excel",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
 
                     OutlinedTextField(
                         value = phoneColumnNameText,
                         onValueChange = { phoneColumnNameText = it },
-                        label = { Text("Tên tiêu đề cột SĐT (Mặc định: sdt)") },
+                        label = { Text("Tên tiêu đề cột SĐT") },
+                        supportingText = { Text("Phải khớp với tên cột trong tệp Excel, ví dụ: sdt.") },
+                        isError = phoneColumnNameText.isBlank(),
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
 
                     Button(
                         onClick = {
-                            val min = minDelayText.toIntOrNull() ?: 10
-                            val max = maxDelayText.toIntOrNull() ?: 30
-                            val start = startHourText.toIntOrNull() ?: 8
-                            val end = endHourText.toIntOrNull() ?: 17
-
-                            viewModel.updateRule(min, max, start, end, phoneColumnNameText)
-                            Toast.makeText(context, "Đã lưu cài đặt quy tắc!", Toast.LENGTH_SHORT).show()
+                            if (ruleError == null) {
+                                viewModel.updateRule(
+                                    minDelay!!,
+                                    maxDelay!!,
+                                    startHour,
+                                    startMinute,
+                                    endHour,
+                                    endMinute,
+                                    phoneColumnNameText
+                                )
+                                Toast.makeText(context, "Đã lưu cài đặt quy tắc!", Toast.LENGTH_SHORT).show()
+                            }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = ruleError == null
                     ) {
                         Icon(Icons.Default.Save, contentDescription = null)
                         Spacer(modifier = Modifier.padding(4.dp))
                         Text("Lưu quy tắc gửi")
+                    }
+                    if (ruleError != null) {
+                        Text(
+                            ruleError,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
             }
@@ -504,15 +713,4 @@ fun RuleAndUpdateTab(
     } else {
         content(Modifier)
     }
-}
-
-// Backward compatibility wrapper if needed
-@Composable
-fun SimAndRuleConfigScreen(
-    viewModel: ConfigViewModel = hiltViewModel(),
-    updateViewModel: UpdateViewModel = hiltViewModel(),
-    showTopBar: Boolean = true
-) {
-    updateViewModel.getCurrentVersionName()
-    SimManagementTab(viewModel = viewModel, showTopBar = showTopBar)
 }

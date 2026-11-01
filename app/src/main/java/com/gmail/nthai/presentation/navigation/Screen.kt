@@ -10,9 +10,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Trang chủ", Icons.Default.Home)
-    data object Customers : Screen("customers/{simSlot}?importExcel={importExcel}", "Danh sách", Icons.Default.People) {
-        fun route(simSlot: Int, importExcel: Boolean = false) =
-            "customers/$simSlot?importExcel=$importExcel"
+    data object Customers : Screen("customers/{simSlot}", "Danh sách", Icons.Default.People) {
+        fun route(simSlot: Int) = "customers/$simSlot"
     }
     data object Management : Screen("management", "Quản lý", Icons.Default.Tune)
     data object Progress : Screen("progress", "Gửi tin", Icons.AutoMirrored.Filled.Send)

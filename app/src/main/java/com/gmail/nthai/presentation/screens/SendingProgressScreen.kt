@@ -5,6 +5,24 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Surface
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +45,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -124,13 +141,63 @@ fun SendingProgressScreen(
             )
         }
     ) { innerPadding ->
+        val activeSimCount = serviceStates.values.count {
+            it is SendingServiceState.Running || it is SendingServiceState.Paused
+        }
+        val plannedCount = plannedMessageCounts.values.sum()
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            "Trung tâm gửi tin",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            if (activeSimCount > 0) "$activeSimCount SIM đang hoạt động"
+                            else "Theo dõi và điều khiển từng SIM",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            plannedCount.toString(),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            "tin cần gửi",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+
             (1..2).forEach { simSlot ->
                 val carrierName = simConfigs.find { it.simSlot == simSlot }?.carrierName?.trim().orEmpty()
                 SimSendingCard(
@@ -173,73 +240,314 @@ private fun SimSendingCard(
         SendingServiceState.Idle -> 0 to plannedCount
         is SendingServiceState.Error -> state.sentCount to state.totalCount
     }
-    val title = when (state) {
-        SendingServiceState.Idle -> if (plannedCount > 0) "Sẵn sàng gửi $plannedCount tin" else "Chưa có số được chọn"
-        is SendingServiceState.Running -> "Đang gửi: ${state.currentCustomerName}"
-        is SendingServiceState.Paused -> "Đã tạm dừng"
-        is SendingServiceState.Finished -> "Hoàn thành"
-        is SendingServiceState.Error -> "Lỗi: ${state.message}"
+    val failedCount = when (state) {
+        is SendingServiceState.Running -> state.failedCount
+        is SendingServiceState.Paused -> state.failedCount
+        is SendingServiceState.Finished -> state.failedCount
+        is SendingServiceState.Error -> state.failedCount
+        SendingServiceState.Idle -> 0
+    }
+    val statusText = when (state) {
+        SendingServiceState.Idle -> if (plannedCount > 0) "Sẵn sàng" else "Chưa có liên hệ"
+        is SendingServiceState.Running -> if (failedCount > 0) "Đang gửi · $failedCount lỗi" else "Đang gửi"
+        is SendingServiceState.Paused -> if (failedCount > 0) "Tạm dừng · $failedCount lỗi" else "Tạm dừng"
+        is SendingServiceState.Finished -> if (failedCount > 0) "Hoàn tất · $failedCount lỗi" else "Hoàn tất"
+        is SendingServiceState.Error -> "Có lỗi"
+    }
+    val statusColor = when (state) {
+        is SendingServiceState.Running -> if (failedCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        is SendingServiceState.Paused -> if (failedCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
+        is SendingServiceState.Finished -> if (failedCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        is SendingServiceState.Error -> MaterialTheme.colorScheme.error
+        SendingServiceState.Idle -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val simHeader = if (carrierName.isNotBlank()) "SIM $simSlot ($carrierName)" else "SIM $simSlot"
+    val progress = if (total > 0) (sent.toFloat() / total).coerceIn(0f, 1f) else 0f
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 600),
+        label = "SIM $simSlot progress"
+    )
+    var showStopConfirmation by remember(simSlot) { mutableStateOf(false) }
+
+    if (showStopConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showStopConfirmation = false },
+            title = { Text("Dừng gửi bằng SIM $simSlot?") },
+            text = {
+                Text("Tiến trình hiện tại sẽ kết thúc. Các tin chưa gửi vẫn có thể được gửi sau.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showStopConfirmation = false
+                        onStop()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Dừng gửi")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStopConfirmation = false }) {
+                    Text("Tiếp tục")
+                }
+            }
+        )
     }
 
-    val simHeader = if (carrierName.isNotBlank()) "SIM $simSlot ($carrierName)" else "SIM $simSlot"
-    val buttonText = "Gửi bằng SIM $simSlot"
-
-    Card(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp)
         ) {
-            Text(simHeader, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        simHeader,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        when (state) {
+                            is SendingServiceState.Running -> "Tiến trình gửi tin"
+                            is SendingServiceState.Paused -> "Có thể tiếp tục bất cứ lúc nào"
+                            is SendingServiceState.Finished -> "Đã xử lý xong danh sách"
+                            is SendingServiceState.Error -> state.message
+                            SendingServiceState.Idle -> if (plannedCount > 0) {
+                                "$plannedCount tin sẵn sàng gửi"
+                            } else {
+                                "Chưa có tin nhắn trong hàng đợi"
+                            }
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                SendingStatusBadge(
+                    text = statusText,
+                    color = statusColor,
+                    isPulsing = state is SendingServiceState.Running
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier.size(64.dp),
+                        strokeWidth = 6.dp,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        color = statusColor
+                    )
+                    Text(
+                        "${(progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        "Tin đã xử lý",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "$sent / $total",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        if (failedCount > 0) "$failedCount tin gửi lỗi"
+                        else "${(total - sent).coerceAtLeast(0)} tin còn lại",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (failedCount > 0) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (failedCount > 0) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
+            }
+
             LinearProgressIndicator(
-                progress = { if (total > 0) sent.toFloat() / total else 0f },
-                modifier = Modifier.fillMaxWidth().height(10.dp)
+                progress = { animatedProgress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp),
+                color = statusColor,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
-            Text("Tiến độ: $sent / $total tin nhắn")
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+
+            if (state is SendingServiceState.Running) {
+                Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text(
+                        if (state.secondsUntilNext != null) "Vừa gửi tới" else "Đang gửi tới",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        state.currentCustomerName.ifBlank { "Đang chuẩn bị tin nhắn..." },
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    state.secondsUntilNext?.let { seconds ->
+                        Text(
+                            "Tin tiếp theo sau $seconds giây",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 when (state) {
                     SendingServiceState.Idle, is SendingServiceState.Finished, is SendingServiceState.Error -> {
-                        Button(onClick = onStart, enabled = plannedCount > 0) {
+                        Button(
+                            onClick = onStart,
+                            enabled = plannedCount > 0,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(minHeight = 44.dp)
+                        ) {
                             Icon(Icons.Default.PlayArrow, contentDescription = null)
-                            Spacer(modifier = Modifier.padding(4.dp))
-                            Text(buttonText)
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(
+                                if (state is SendingServiceState.Error) "Thử lại SIM $simSlot"
+                                else "Gửi bằng SIM $simSlot"
+                            )
                         }
                     }
                     is SendingServiceState.Running -> {
-                        OutlinedButton(onClick = onPause) {
+                        Button(
+                            onClick = onPause,
+                            modifier = Modifier
+                                .weight(1f)
+                                .defaultMinSize(minHeight = 44.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        ) {
                             Icon(Icons.Default.Pause, contentDescription = null)
-                            Spacer(modifier = Modifier.padding(4.dp))
+                            Spacer(modifier = Modifier.size(6.dp))
                             Text("Tạm dừng")
                         }
                         Button(
-                            onClick = onStop,
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            onClick = { showStopConfirmation = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .defaultMinSize(minHeight = 44.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            )
                         ) {
                             Icon(Icons.Default.Stop, contentDescription = null)
-                            Spacer(modifier = Modifier.padding(4.dp))
-                            Text("Dừng")
+                            Spacer(modifier = Modifier.size(6.dp))
+                            Text("Dừng gửi")
                         }
                     }
                     is SendingServiceState.Paused -> {
-                        Button(onClick = onResume) {
+                        Button(
+                            onClick = onResume,
+                            modifier = Modifier
+                                .weight(1f)
+                                .defaultMinSize(minHeight = 44.dp)
+                        ) {
                             Icon(Icons.Default.PlayArrow, contentDescription = null)
-                            Spacer(modifier = Modifier.padding(4.dp))
+                            Spacer(modifier = Modifier.size(6.dp))
                             Text("Tiếp tục")
                         }
                         Button(
-                            onClick = onStop,
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            onClick = { showStopConfirmation = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .defaultMinSize(minHeight = 44.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            )
                         ) {
                             Icon(Icons.Default.Stop, contentDescription = null)
-                            Spacer(modifier = Modifier.padding(4.dp))
-                            Text("Dừng")
+                            Spacer(modifier = Modifier.size(6.dp))
+                            Text("Dừng gửi")
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SendingStatusBadge(
+    text: String,
+    color: androidx.compose.ui.graphics.Color,
+    isPulsing: Boolean
+) {
+    val transition = rememberInfiniteTransition(label = "sending status pulse")
+    val pulseAlpha by transition.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "sending status alpha"
+    )
+    Surface(
+        color = color.copy(alpha = 0.12f),
+        shape = CircleShape
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .alpha(if (isPulsing) pulseAlpha else 1f)
+                    .background(color, CircleShape)
+            )
+            Text(
+                text,
+                color = color,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1
+            )
         }
     }
 }

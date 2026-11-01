@@ -5,6 +5,7 @@ import com.gmail.nthai.data.local.mapper.toDomain
 import com.gmail.nthai.data.local.mapper.toEntity
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
+import com.gmail.nthai.domain.model.HomeDashboardStats
 import com.gmail.nthai.domain.repository.CustomerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -15,6 +16,18 @@ class CustomerRepositoryImpl(
 
     override fun getAllCustomers(): Flow<List<Customer>> {
         return customerDao.getAllCustomers().map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun observeDashboardStats(): Flow<HomeDashboardStats> {
+        return customerDao.observeDashboardStats().map { stats ->
+            HomeDashboardStats(
+                totalCustomers = stats.totalCustomers,
+                sim1AssignedCount = stats.sim1AssignedCount,
+                sim1ReadyCount = stats.sim1ReadyCount,
+                sim2AssignedCount = stats.sim2AssignedCount,
+                sim2ReadyCount = stats.sim2ReadyCount
+            )
+        }
     }
 
     override fun getSelectedCustomersForSending(): Flow<List<Customer>> {
