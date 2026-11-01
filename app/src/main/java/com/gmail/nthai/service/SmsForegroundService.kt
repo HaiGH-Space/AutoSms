@@ -303,13 +303,15 @@ class SmsForegroundService : Service() {
                         .also { simConfigRepository.saveSimConfig(it) }
                     else -> config
                 }
+                val currentTime = Calendar.getInstance()
                 when (val constraint = validateConstraintUseCase(
                     rule,
-                    Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
-                    currentConfig
+                    currentTime.get(Calendar.HOUR_OF_DAY),
+                    currentConfig,
+                    currentMinute = currentTime.get(Calendar.MINUTE)
                 )) {
                     is ValidationResult.OutsideTimeFrame -> {
-                        return "Ngoài khung giờ làm việc (${rule.startHour}h - ${rule.endHour}h)."
+                        return "Ngoài khung giờ làm việc (${rule.startHour.toString().padStart(2, '0')}:${rule.startMinute.toString().padStart(2, '0')} - ${rule.endHour.toString().padStart(2, '0')}:${rule.endMinute.toString().padStart(2, '0')})."
                     }
                     is ValidationResult.ExceededLimit -> {
                         return "SIM $simSlot đã đạt hạn mức gửi ${constraint.dailyLimit} tin/ngày."

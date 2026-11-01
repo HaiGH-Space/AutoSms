@@ -9,6 +9,8 @@ data class SendingRuleEntity(
     val minDelaySec: Int,
     val maxDelaySec: Int,
     val startHour: Int,
+    val startMinute: Int = 0,
     val endHour: Int,
+    val endMinute: Int = 0,
     val phoneColumnName: String = "sdt"
 )
