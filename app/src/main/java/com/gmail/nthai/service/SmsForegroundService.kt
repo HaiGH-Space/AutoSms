@@ -444,17 +444,15 @@ class SmsForegroundService : Service() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Tiến trình gửi SMS tự động",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Hiển thị tiến độ phát tin nhắn SMS ngầm"
-            }
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Tiến trình gửi SMS tự động",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Hiển thị tiến độ phát tin nhắn SMS ngầm"
         }
+        val manager = getSystemService(NotificationManager::class.java)
+        manager?.createNotificationChannel(channel)
     }
 
     @SuppressLint("ForegroundServiceType")
