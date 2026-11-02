@@ -266,6 +266,24 @@ class SmsForegroundService : Service() {
         template: SmsTemplate,
         rule: SendingRule,
     ): String? {
+        val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(simSlot)
+        if (currentSubId == null || currentSubId == -1) {
+            return "Không tìm thấy SIM $simSlot đang hoạt động."
+        }
+
+        var config = simConfigRepository.getSimConfigBySlot(simSlot)
+        if (config == null) {
+            config = SimConfig(
+                subscriptionId = currentSubId,
+                simSlot = simSlot,
+                dailyLimit = 100
+            )
+            simConfigRepository.saveSimConfig(config)
+        } else if (config.subscriptionId != currentSubId) {
+            config = config.copy(subscriptionId = currentSubId)
+            simConfigRepository.saveSimConfig(config)
+        }
+
         worker@ for (customer in customers) {
             if (stoppedSlots.contains(simSlot)) break
 
@@ -287,22 +305,7 @@ class SmsForegroundService : Service() {
                     continue
                 }
 
-                val config = simConfigRepository.getSimConfigBySlot(simSlot)
-                val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(simSlot)
-                if (currentSubId == null || currentSubId == -1) {
-                    return "Không tìm thấy SIM $simSlot đang hoạt động."
-                }
-
-                val currentConfig = when {
-                    config == null -> SimConfig(
-                        subscriptionId = currentSubId,
-                        simSlot = simSlot,
-                        dailyLimit = 100
-                    ).also { simConfigRepository.saveSimConfig(it) }
-                    config.subscriptionId != currentSubId -> config.copy(subscriptionId = currentSubId)
-                        .also { simConfigRepository.saveSimConfig(it) }
-                    else -> config
-                }
+                val currentConfig = simConfigRepository.getSimConfigBySlot(simSlot) ?: config
                 val currentTime = Calendar.getInstance()
                 when (val constraint = validateConstraintUseCase(
                     rule,

@@ -1,14 +1,24 @@
 package com.gmail.nthai.domain.usecase
 
-import java.util.concurrent.ConcurrentHashMap
+import android.util.LruCache
 
 object DetectVietnameseCarrierUseCase {
 
-    private val cache = ConcurrentHashMap<String, String>()
+    private val cache = LruCache<String, String>(2000)
     private const val NULL_MARKER = "__NULL__"
 
+    private val viettelPrefixes = (32..39).map { "0$it" }.toSet() +
+        setOf("086", "096", "097", "098")
+    private val vinaPhonePrefixes = (81..85).map { "0$it" }.toSet() +
+        setOf("088", "091", "094")
+    private val mobiFonePrefixes = setOf(
+        "070", "076", "077", "078", "079", "089", "090", "093"
+    )
+    private val vietnamobilePrefixes = setOf("052", "056", "058", "092")
+    private val gmobilePrefixes = setOf("059", "099")
+
     fun detect(phone: String): String? {
-        val cached = cache[phone]
+        val cached = synchronized(cache) { cache.get(phone) }
         if (cached != null) {
             return if (cached == NULL_MARKER) null else cached
         }
@@ -18,7 +28,7 @@ object DetectVietnameseCarrierUseCase {
             digits = "0${digits.drop(2)}"
         }
         if (digits.length != 10 || !digits.startsWith("0")) {
-            cache[phone] = NULL_MARKER
+            synchronized(cache) { cache.put(phone, NULL_MARKER) }
             return null
         }
 
@@ -33,17 +43,8 @@ object DetectVietnameseCarrierUseCase {
             else -> null
         }
 
-        cache[phone] = result ?: NULL_MARKER
+        val valueToCache = result ?: NULL_MARKER
+        synchronized(cache) { cache.put(phone, valueToCache) }
         return result
     }
-
-    private val viettelPrefixes = (32..39).map { "0$it" }.toSet() +
-        setOf("086", "096", "097", "098")
-    private val vinaPhonePrefixes = (81..85).map { "0$it" }.toSet() +
-        setOf("088", "091", "094")
-    private val mobiFonePrefixes = setOf(
-        "070", "076", "077", "078", "079", "089", "090", "093"
-    )
-    private val vietnamobilePrefixes = setOf("052", "056", "058", "092")
-    private val gmobilePrefixes = setOf("059", "099")
 }
