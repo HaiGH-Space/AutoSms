@@ -272,16 +272,48 @@ class SmsForegroundService : Service() {
         }
 
         var config = simConfigRepository.getSimConfigBySlot(simSlot)
+        val carrier = simManagerWrapper.getActiveSims().find { it.simSlot == simSlot }?.carrierName.orEmpty()
+        val defaultCarrierLimit = SimConfig.getDefaultDailyLimit(carrier)
+
         if (config == null) {
             config = SimConfig(
                 subscriptionId = currentSubId,
                 simSlot = simSlot,
-                dailyLimit = 100
+                carrierName = carrier,
+                dailyLimit = defaultCarrierLimit
             )
             simConfigRepository.saveSimConfig(config)
-        } else if (config.subscriptionId != currentSubId) {
-            config = config.copy(subscriptionId = currentSubId)
-            simConfigRepository.saveSimConfig(config)
+        } else {
+            val isSimSwapped = config.subscriptionId != -1 && config.subscriptionId != currentSubId
+            var updatedConfig = config
+            var needsUpdate = false
+
+            if (isSimSwapped) {
+                updatedConfig = updatedConfig.copy(
+                    subscriptionId = currentSubId,
+                    carrierName = carrier,
+                    dailyLimit = defaultCarrierLimit,
+                    sentCountToday = 0
+                )
+                needsUpdate = true
+            } else {
+                if (config.subscriptionId != currentSubId) {
+                    updatedConfig = updatedConfig.copy(subscriptionId = currentSubId)
+                    needsUpdate = true
+                }
+                if (carrier.isNotBlank() && updatedConfig.carrierName != carrier) {
+                    updatedConfig = updatedConfig.copy(carrierName = carrier)
+                    needsUpdate = true
+                }
+                if (updatedConfig.dailyLimit == 100 && defaultCarrierLimit != 100) {
+                    updatedConfig = updatedConfig.copy(dailyLimit = defaultCarrierLimit)
+                    needsUpdate = true
+                }
+            }
+            if (needsUpdate) {
+                config = updatedConfig
+                simConfigRepository.saveSimConfig(config)
+            }
         }
 
         worker@ for (customer in customers) {

@@ -1,11 +1,15 @@
 package com.gmail.nthai.domain.usecase
 
-import android.util.LruCache
-
 object DetectVietnameseCarrierUseCase {
 
-    private val cache = LruCache<String, String>(2000)
+    private const val MAX_CACHE_SIZE = 2000
     private const val NULL_MARKER = "__NULL__"
+
+    private val cache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
+            return size > MAX_CACHE_SIZE
+        }
+    }
 
     private val viettelPrefixes = (32..39).map { "0$it" }.toSet() +
         setOf("086", "096", "097", "098")

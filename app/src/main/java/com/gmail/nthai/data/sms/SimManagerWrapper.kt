@@ -32,12 +32,13 @@ class SimManagerWrapper(
             val slot = info.simSlotIndex + 1
             if (slot in 1..2 && slot !in takenSlots) {
                 takenSlots.add(slot)
+                val carrier = getCarrierName(info.subscriptionId, info)
                 result.add(
                     SimConfig(
                         subscriptionId = info.subscriptionId,
                         simSlot = slot,
-                        dailyLimit = 100,
-                        carrierName = getCarrierName(info.subscriptionId, info)
+                        carrierName = carrier,
+                        dailyLimit = SimConfig.getDefaultDailyLimit(carrier)
                     )
                 )
             }
@@ -50,12 +51,13 @@ class SimManagerWrapper(
                 val availableSlot = (1..2).firstOrNull { it !in takenSlots }
                 if (availableSlot != null) {
                     takenSlots.add(availableSlot)
+                    val carrier = getCarrierName(info.subscriptionId, info)
                     result.add(
                         SimConfig(
                             subscriptionId = info.subscriptionId,
                             simSlot = availableSlot,
-                            dailyLimit = 100,
-                            carrierName = getCarrierName(info.subscriptionId, info)
+                            carrierName = carrier,
+                            dailyLimit = SimConfig.getDefaultDailyLimit(carrier)
                         )
                     )
                 }
@@ -73,12 +75,13 @@ class SimManagerWrapper(
                 }
                 if (info != null && info.subscriptionId != SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
                     takenSlots.add(simSlot)
+                    val carrier = getCarrierName(info.subscriptionId, info)
                     result.add(
                         SimConfig(
                             subscriptionId = info.subscriptionId,
                             simSlot = simSlot,
-                            dailyLimit = 100,
-                            carrierName = getCarrierName(info.subscriptionId, info)
+                            carrierName = carrier,
+                            dailyLimit = SimConfig.getDefaultDailyLimit(carrier)
                         )
                     )
                 }
@@ -97,15 +100,16 @@ class SimManagerWrapper(
                     }
                     if (subIds != null && subIds.isNotEmpty() && subIds[0] != SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
                         takenSlots.add(simSlot)
+                        val carrier = getCarrierName(
+                            subIds[0],
+                            infoList.find { it.subscriptionId == subIds[0] }
+                        )
                         result.add(
                             SimConfig(
                                 subscriptionId = subIds[0],
                                 simSlot = simSlot,
-                                dailyLimit = 100,
-                                carrierName = getCarrierName(
-                                    subIds[0],
-                                    infoList.find { it.subscriptionId == subIds[0] }
-                                )
+                                carrierName = carrier,
+                                dailyLimit = SimConfig.getDefaultDailyLimit(carrier)
                             )
                         )
                     }
@@ -124,12 +128,13 @@ class SimManagerWrapper(
             }
 
             if (validSubId != -1) {
+                val carrier = getCarrierName(validSubId)
                 result.add(
                     SimConfig(
                         subscriptionId = validSubId,
                         simSlot = 1,
-                        dailyLimit = 100,
-                        carrierName = getCarrierName(validSubId)
+                        carrierName = carrier,
+                        dailyLimit = SimConfig.getDefaultDailyLimit(carrier)
                     )
                 )
             }

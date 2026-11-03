@@ -51,18 +51,32 @@ class ConfigViewModel @Inject constructor(
                 val detected = detectedSims.find { it.simSlot == slot }
                 val saved = savedSims.find { it.simSlot == slot }
 
-                val targetSubId = detected?.subscriptionId ?: saved?.subscriptionId ?: -1
-                val targetLimit = saved?.dailyLimit ?: detected?.dailyLimit ?: 100
-                val sentToday = saved?.sentCountToday ?: 0
-                val lastReset = saved?.lastResetDate ?: ""
+                val isSimSwapped = detected != null && saved != null &&
+                    saved.subscriptionId != -1 &&
+                    detected.subscriptionId != saved.subscriptionId
+
+                val targetSubId = detected?.subscriptionId ?: -1
+                val carrier = detected?.carrierName.orEmpty().ifBlank {
+                    if (!isSimSwapped && detected != null) saved?.carrierName.orEmpty() else ""
+                }
+                val defaultCarrierLimit = SimConfig.getDefaultDailyLimit(carrier)
+
+                val targetLimit = when {
+                    isSimSwapped -> defaultCarrierLimit
+                    saved == null -> detected?.dailyLimit ?: defaultCarrierLimit
+                    saved.dailyLimit == 100 && defaultCarrierLimit != 100 -> defaultCarrierLimit
+                    else -> saved.dailyLimit
+                }
+                val sentToday = if (isSimSwapped) 0 else (saved?.sentCountToday ?: 0)
+                val lastReset = if (isSimSwapped) "" else (saved?.lastResetDate ?: "")
 
                 val config = SimConfig(
                     subscriptionId = targetSubId,
                     simSlot = slot,
+                    carrierName = carrier,
                     dailyLimit = targetLimit,
                     sentCountToday = sentToday,
-                    lastResetDate = lastReset,
-                    carrierName = detected?.carrierName.orEmpty()
+                    lastResetDate = lastReset
                 )
 
                 merged.add(config)
