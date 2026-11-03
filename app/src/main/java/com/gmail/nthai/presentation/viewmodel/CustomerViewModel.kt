@@ -134,11 +134,14 @@ class CustomerViewModel @Inject constructor(
             }
             if (!matchesFilter) return@filter false
 
-            val carrierName = DetectVietnameseCarrierUseCase.detect(customer.phone)
-            val matchesCarrierFilter = when (carrierFilter) {
-                CustomerCarrierFilter.ALL -> true
-                CustomerCarrierFilter.UNKNOWN -> carrierName == null
-                else -> carrierName == carrierFilter.carrierName
+            val matchesCarrierFilter = if (carrierFilter == CustomerCarrierFilter.ALL) {
+                true
+            } else {
+                val carrierName = DetectVietnameseCarrierUseCase.detect(customer.phone)
+                when (carrierFilter) {
+                    CustomerCarrierFilter.UNKNOWN -> carrierName == null
+                    else -> carrierName == carrierFilter.carrierName
+                }
             }
             if (!matchesCarrierFilter) return@filter false
 

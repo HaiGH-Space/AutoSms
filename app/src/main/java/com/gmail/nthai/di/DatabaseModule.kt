@@ -64,6 +64,14 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_sending_logs_customerId` ON `sending_logs` (`customerId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_sending_logs_timestamp` ON `sending_logs` (`timestamp`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_sending_logs_status` ON `sending_logs` (`status`)")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -72,7 +80,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "auto_sms_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+            .addMigrations(MIGRATION_1_2, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }

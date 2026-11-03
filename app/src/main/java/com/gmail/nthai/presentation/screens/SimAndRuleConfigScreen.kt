@@ -61,6 +61,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.model.UpdateState
 import com.gmail.nthai.presentation.components.DownloadProgressDialog
 import com.gmail.nthai.presentation.components.DownloadedInstallDialog
@@ -254,6 +255,13 @@ fun SimManagementTab(
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
+                        val defaultCarrierLimit = SimConfig.getDefaultDailyLimit(config.carrierName)
+                        val carrierHintText = if (config.carrierName.isNotBlank()) {
+                            "Mặc định ${config.carrierName}: $defaultCarrierLimit tin/ngày"
+                        } else {
+                            "Khuyến nghị mặc định: $defaultCarrierLimit tin/ngày"
+                        }
+
                         Text(
                             "Điều chỉnh hạn mức",
                             style = MaterialTheme.typography.titleSmall,
@@ -268,26 +276,42 @@ fun SimManagementTab(
                             onValueChange = { limitText = it.filter(Char::isDigit) },
                             label = { Text("Giới hạn tin nhắn mỗi ngày") },
                             supportingText = {
-                                Text(if (isLimitValid) "Áp dụng riêng cho SIM ${config.simSlot}." else "Nhập số lớn hơn 0.")
+                                Text(if (isLimitValid) "Áp dụng cho SIM ${config.simSlot}. $carrierHintText" else "Nhập số lớn hơn 0.")
                             },
                             isError = !isLimitValid,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true
                         )
-                        Button(
-                            onClick = {
-                                parsedLimit?.let { limit ->
-                                    viewModel.updateSimLimit(config.simSlot, limit)
-                                    Toast.makeText(context, "Đã cập nhật hạn mức SIM ${config.simSlot}", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            enabled = isLimitValid && parsedLimit != config.dailyLimit,
-                            modifier = Modifier.fillMaxWidth()
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(Icons.Default.Save, contentDescription = null)
-                            Spacer(modifier = Modifier.padding(4.dp))
-                            Text("Lưu hạn mức")
+                            if (config.carrierName.isNotBlank() && parsedLimit != defaultCarrierLimit) {
+                                OutlinedButton(
+                                    onClick = { limitText = defaultCarrierLimit.toString() },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Đặt theo ${config.carrierName} ($defaultCarrierLimit)")
+                                }
+                            }
+                            Button(
+                                onClick = {
+                                    parsedLimit?.let { limit ->
+                                        viewModel.updateSimLimit(config.simSlot, limit)
+                                        Toast.makeText(context, "Đã cập nhật hạn mức SIM ${config.simSlot}", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                enabled = isLimitValid && parsedLimit != config.dailyLimit,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Save, contentDescription = null)
+                                Spacer(modifier = Modifier.padding(4.dp))
+                                Text("Lưu hạn mức")
+                            }
                         }
                     }
                 }

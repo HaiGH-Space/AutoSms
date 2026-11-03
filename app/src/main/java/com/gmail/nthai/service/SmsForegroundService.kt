@@ -266,6 +266,56 @@ class SmsForegroundService : Service() {
         template: SmsTemplate,
         rule: SendingRule,
     ): String? {
+        val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(simSlot)
+        if (currentSubId == null || currentSubId == -1) {
+            return "Không tìm thấy SIM $simSlot đang hoạt động."
+        }
+
+        var config = simConfigRepository.getSimConfigBySlot(simSlot)
+        val carrier = simManagerWrapper.getActiveSims().find { it.simSlot == simSlot }?.carrierName.orEmpty()
+        val defaultCarrierLimit = SimConfig.getDefaultDailyLimit(carrier)
+
+        if (config == null) {
+            config = SimConfig(
+                subscriptionId = currentSubId,
+                simSlot = simSlot,
+                carrierName = carrier,
+                dailyLimit = defaultCarrierLimit
+            )
+            simConfigRepository.saveSimConfig(config)
+        } else {
+            val isSimSwapped = config.subscriptionId != -1 && config.subscriptionId != currentSubId
+            var updatedConfig = config
+            var needsUpdate = false
+
+            if (isSimSwapped) {
+                updatedConfig = updatedConfig.copy(
+                    subscriptionId = currentSubId,
+                    carrierName = carrier,
+                    dailyLimit = defaultCarrierLimit,
+                    sentCountToday = 0
+                )
+                needsUpdate = true
+            } else {
+                if (config.subscriptionId != currentSubId) {
+                    updatedConfig = updatedConfig.copy(subscriptionId = currentSubId)
+                    needsUpdate = true
+                }
+                if (carrier.isNotBlank() && updatedConfig.carrierName != carrier) {
+                    updatedConfig = updatedConfig.copy(carrierName = carrier)
+                    needsUpdate = true
+                }
+                if (updatedConfig.dailyLimit == 100 && defaultCarrierLimit != 100) {
+                    updatedConfig = updatedConfig.copy(dailyLimit = defaultCarrierLimit)
+                    needsUpdate = true
+                }
+            }
+            if (needsUpdate) {
+                config = updatedConfig
+                simConfigRepository.saveSimConfig(config)
+            }
+        }
+
         worker@ for (customer in customers) {
             if (stoppedSlots.contains(simSlot)) break
 
@@ -287,22 +337,7 @@ class SmsForegroundService : Service() {
                     continue
                 }
 
-                val config = simConfigRepository.getSimConfigBySlot(simSlot)
-                val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(simSlot)
-                if (currentSubId == null || currentSubId == -1) {
-                    return "Không tìm thấy SIM $simSlot đang hoạt động."
-                }
-
-                val currentConfig = when {
-                    config == null -> SimConfig(
-                        subscriptionId = currentSubId,
-                        simSlot = simSlot,
-                        dailyLimit = 100
-                    ).also { simConfigRepository.saveSimConfig(it) }
-                    config.subscriptionId != currentSubId -> config.copy(subscriptionId = currentSubId)
-                        .also { simConfigRepository.saveSimConfig(it) }
-                    else -> config
-                }
+                val currentConfig = simConfigRepository.getSimConfigBySlot(simSlot) ?: config
                 val currentTime = Calendar.getInstance()
                 when (val constraint = validateConstraintUseCase(
                     rule,
@@ -444,17 +479,15 @@ class SmsForegroundService : Service() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Tiến trình gửi SMS tự động",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Hiển thị tiến độ phát tin nhắn SMS ngầm"
-            }
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Tiến trình gửi SMS tự động",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            description = "Hiển thị tiến độ phát tin nhắn SMS ngầm"
         }
+        val manager = getSystemService(NotificationManager::class.java)
+        manager?.createNotificationChannel(channel)
     }
 
     @SuppressLint("ForegroundServiceType")

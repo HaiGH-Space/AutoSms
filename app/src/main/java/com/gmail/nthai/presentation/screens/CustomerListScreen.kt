@@ -501,14 +501,14 @@ private fun CustomerDetailDialog(
 
 @Composable
 private fun CarrierEstimateBadge(phone: String) {
-    val carrierName = DetectVietnameseCarrierUseCase.detect(phone)
+    val carrierName = remember(phone) { DetectVietnameseCarrierUseCase.detect(phone) }
     Surface(
         color = MaterialTheme.colorScheme.tertiaryContainer,
         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
         shape = MaterialTheme.shapes.small
     ) {
         Text(
-            text = carrierName?.let { it } ?: "Không rõ nhà mạng",
+            text = carrierName ?: "Không rõ nhà mạng",
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold
