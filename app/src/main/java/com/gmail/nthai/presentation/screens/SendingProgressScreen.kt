@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
@@ -338,8 +340,9 @@ private fun SimSendingCard(
                             }
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
+                        color = if (state is SendingServiceState.Error) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (state is SendingServiceState.Error) FontWeight.Bold else FontWeight.Normal,
+                        maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -599,7 +602,7 @@ fun LogItemCard(log: LogRecord) {
 
                 val (text, color) = when (log.status) {
                     LogStatus.SENT_SUCCESS -> Pair("Thành công", MaterialTheme.colorScheme.primary)
-                    LogStatus.FAILED -> Pair("Lỗi: ${log.errorMessage ?: ""}", MaterialTheme.colorScheme.error)
+                    LogStatus.FAILED -> Pair("Lỗi", MaterialTheme.colorScheme.error)
                     LogStatus.PENDING -> Pair("Đang xử lý...", MaterialTheme.colorScheme.secondary)
                 }
 
@@ -609,6 +612,33 @@ fun LogItemCard(log: LogRecord) {
                     color = color,
                     fontWeight = FontWeight.Bold
                 )
+            }
+
+            if (log.status == LogStatus.FAILED) {
+                Spacer(modifier = Modifier.height(6.dp))
+                val reason = if (!log.errorMessage.isNullOrBlank()) log.errorMessage else "Lỗi gửi SMS không xác định"
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.extraSmall)
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        Icons.Default.ErrorOutline,
+                        contentDescription = "Chi tiết lỗi",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "Lý do lỗi: $reason",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }

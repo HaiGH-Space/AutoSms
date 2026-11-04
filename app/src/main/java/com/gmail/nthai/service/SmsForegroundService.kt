@@ -14,6 +14,7 @@ import com.gmail.nthai.R
 import com.gmail.nthai.data.sms.SimManagerWrapper
 import com.gmail.nthai.data.sms.SmsSenderEngine
 import com.gmail.nthai.domain.model.Customer
+import com.gmail.nthai.domain.model.CustomerStatus
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.SendingRule
@@ -237,13 +238,25 @@ class SmsForegroundService : Service() {
             }
           } catch (e: Exception) {
             if (!stoppedSlots.contains(simSlot)) {
+                val errorMsg = e.message ?: "Lỗi hệ thống khi gửi SMS bằng SIM $simSlot."
+                try {
+                    val pendingCustomers = customerRepository.getSelectedCustomersForSending().first()
+                        .filter { it.sendSimSlot == simSlot }
+                    if (pendingCustomers.isNotEmpty()) {
+                        val existingLogsByCustomer = pendingCustomers.associate { customer ->
+                            customer.id to sendingLogRepository.getLogsForCustomer(customer.id)
+                        }
+                        recordFailedLogsForSim(simSlot, pendingCustomers, existingLogsByCustomer, null, errorMsg)
+                    }
+                } catch (_: Exception) {}
+
                 val counts = synchronized(progressLock) {
                     (sentCounts[simSlot] ?: 0) to (totalCounts[simSlot] ?: 0)
                 }
                 updateSimState(
                     simSlot,
                     SendingServiceState.Error(
-                        e.message ?: "Gửi SMS thất bại.",
+                        errorMsg,
                         counts.first,
                         counts.second,
                         currentFailedCount(simSlot)
@@ -259,6 +272,57 @@ class SmsForegroundService : Service() {
         job.start()
     }
 
+    private suspend fun recordFailedLogsForSim(
+        simSlot: Int,
+        customers: List<Customer>,
+        existingLogsByCustomer: Map<Long, List<LogRecord>>,
+        template: SmsTemplate?,
+        errorMessage: String
+    ) {
+        for (customer in customers) {
+            val recipients = customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
+            val existingLogs = existingLogsByCustomer[customer.id].orEmpty()
+
+            for (recipient in recipients) {
+                val previousLog = existingLogs
+                    .filter { it.phone == recipient }
+                    .maxByOrNull { it.timestamp }
+
+                if (previousLog?.status == LogStatus.SENT_SUCCESS) {
+                    continue
+                }
+
+                val displayName = customer.customFields.values.firstOrNull { it.isNotBlank() } ?: recipient
+                val content = if (template != null && template.content.isNotBlank()) {
+                    parseSpintaxUseCase(template.content, customer.copy(phone = recipient))
+                } else {
+                    "Chưa chọn mẫu tin nhắn"
+                }
+
+                val logRecord = LogRecord(
+                    id = previousLog?.takeIf { it.status == LogStatus.FAILED }?.id ?: 0,
+                    customerId = customer.id,
+                    customerName = displayName,
+                    phone = recipient,
+                    messageContent = content,
+                    simSlot = simSlot,
+                    timestamp = System.currentTimeMillis(),
+                    status = LogStatus.FAILED,
+                    errorMessage = errorMessage
+                )
+
+                val logId = if (logRecord.id != 0L) {
+                    sendingLogRepository.updateLog(logRecord)
+                    logRecord.id
+                } else {
+                    sendingLogRepository.insertLog(logRecord)
+                }
+                reportSmsFailure(simSlot, logId)
+            }
+            customerRepository.updateCustomerStatus(customer.id, CustomerStatus.FAILED)
+        }
+    }
+
     private suspend fun sendCustomersForSim(
         simSlot: Int,
         customers: List<Customer>,
@@ -268,7 +332,15 @@ class SmsForegroundService : Service() {
     ): String? {
         val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(simSlot)
         if (currentSubId == null || currentSubId == -1) {
-            return "Không tìm thấy SIM $simSlot đang hoạt động."
+            val errorMsg = "Không tìm thấy SIM $simSlot đang hoạt động trên thiết bị."
+            recordFailedLogsForSim(simSlot, customers, existingLogsByCustomer, template, errorMsg)
+            return errorMsg
+        }
+
+        if (template.content.isBlank()) {
+            val errorMsg = "Chưa chọn mẫu tin nhắn hoặc mẫu tin nhắn đang để trống."
+            recordFailedLogsForSim(simSlot, customers, existingLogsByCustomer, template, errorMsg)
+            return errorMsg
         }
 
         var config = simConfigRepository.getSimConfigBySlot(simSlot)
@@ -316,7 +388,8 @@ class SmsForegroundService : Service() {
             }
         }
 
-        worker@ for (customer in customers) {
+        worker@ for (customerIndex in customers.indices) {
+            val customer = customers[customerIndex]
             if (stoppedSlots.contains(simSlot)) break
 
             val recipients = customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
@@ -346,10 +419,16 @@ class SmsForegroundService : Service() {
                     currentMinute = currentTime.get(Calendar.MINUTE)
                 )) {
                     is ValidationResult.OutsideTimeFrame -> {
-                        return "Ngoài khung giờ làm việc (${rule.startHour.toString().padStart(2, '0')}:${rule.startMinute.toString().padStart(2, '0')} - ${rule.endHour.toString().padStart(2, '0')}:${rule.endMinute.toString().padStart(2, '0')})."
+                        val errorMsg = "Ngoài khung giờ làm việc (${rule.startHour.toString().padStart(2, '0')}:${rule.startMinute.toString().padStart(2, '0')} - ${rule.endHour.toString().padStart(2, '0')}:${rule.endMinute.toString().padStart(2, '0')})."
+                        val remainingCustomers = customers.subList(customerIndex, customers.size)
+                        recordFailedLogsForSim(simSlot, remainingCustomers, existingLogsByCustomer, template, errorMsg)
+                        return errorMsg
                     }
                     is ValidationResult.ExceededLimit -> {
-                        return "SIM $simSlot đã đạt hạn mức gửi ${constraint.dailyLimit} tin/ngày."
+                        val errorMsg = "SIM $simSlot đã đạt hạn mức gửi ${constraint.dailyLimit} tin/ngày."
+                        val remainingCustomers = customers.subList(customerIndex, customers.size)
+                        recordFailedLogsForSim(simSlot, remainingCustomers, existingLogsByCustomer, template, errorMsg)
+                        return errorMsg
                     }
                     ValidationResult.Valid -> Unit
                 }
@@ -395,13 +474,30 @@ class SmsForegroundService : Service() {
                     },
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
-                smsSenderEngine.sendSms(
-                    subscriptionId = currentSubId,
-                    destinationAddress = recipient,
-                    text = messageContent,
-                    sentIntent = sentPendingIntent,
-                    deliveryIntent = null
-                )
+
+                try {
+                    smsSenderEngine.sendSms(
+                        subscriptionId = currentSubId,
+                        destinationAddress = recipient,
+                        text = messageContent,
+                        sentIntent = sentPendingIntent,
+                        deliveryIntent = null
+                    )
+                } catch (e: Exception) {
+                    val errorMsg = e.message ?: "Lỗi khởi tạo gửi SMS tới $recipient"
+                    sendingLogRepository.updateLogStatus(logId, LogStatus.FAILED, errorMsg)
+                    reportSmsFailure(simSlot, logId)
+
+                    val customerLogs = sendingLogRepository.getLogsForCustomer(customer.id)
+                    val totalNumbers = customer.phone.split(',').count { it.isNotBlank() }
+                    val finishedLogs = customerLogs.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
+
+                    if (finishedLogs.size >= totalNumbers) {
+                        val hasFailed = finishedLogs.any { it.status == LogStatus.FAILED }
+                        val newStatus = if (hasFailed) CustomerStatus.FAILED else CustomerStatus.SENT
+                        customerRepository.updateCustomerStatus(customer.id, newStatus)
+                    }
+                }
 
                 val (sent, total) = synchronized(progressLock) {
                     val sent = (sentCounts[simSlot] ?: 0) + 1

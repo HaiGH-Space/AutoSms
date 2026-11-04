@@ -51,8 +51,14 @@ class SmsStatusReceiver : BroadcastReceiver() {
                             SmsManager.RESULT_ERROR_GENERIC_FAILURE -> "Lỗi chung hệ thống (Generic Failure)"
                             SmsManager.RESULT_ERROR_NO_SERVICE -> "Không có sóng di động (No Service)"
                             SmsManager.RESULT_ERROR_NULL_PDU -> "PDU tin nhắn rỗng"
-                            SmsManager.RESULT_ERROR_RADIO_OFF -> "Chế độ máy bay / Tắt SIM"
-                            else -> "Lỗi gửi SMS (Mã: $resultCode)"
+                            SmsManager.RESULT_ERROR_RADIO_OFF -> "Chế độ máy bay hoặc đã tắt SIM"
+                            5 -> "Vượt quá giới hạn số lượng tin nhắn SMS của HĐH Android"
+                            6 -> "Lỗi kiểm tra danh sách số cố định FDN"
+                            7 -> "Không hỗ trợ gửi tới đầu số ngắn"
+                            8 -> "Đầu số ngắn bị cấm gửi"
+                            12 -> "Lỗi thử lại gửi SMS (Send Retry Failed)"
+                            23 -> "Tiến trình gửi SMS bị hủy (Cancelled)"
+                            else -> "Lỗi gửi SMS từ nhà mạng/thiết bị (Mã lỗi: $resultCode)"
                         }
                         sendingLogRepository.updateLogStatus(logId, LogStatus.FAILED, errorMsg)
                         SmsForegroundService.reportSmsFailure(simSlot, logId)

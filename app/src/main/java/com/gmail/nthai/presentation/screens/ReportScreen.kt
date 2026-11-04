@@ -648,17 +648,31 @@ private fun ReportLogCard(log: LogRecord) {
                 }
             }
 
-            if (log.status == LogStatus.FAILED && !log.errorMessage.isNullOrBlank()) {
-                Text(
-                    "Lý do: ${log.errorMessage}",
+            if (log.status == LogStatus.FAILED) {
+                Spacer(modifier = Modifier.height(6.dp))
+                val reason = if (!log.errorMessage.isNullOrBlank()) log.errorMessage else "Lỗi gửi SMS không xác định"
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.55f))
-                        .padding(10.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer
-                )
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        Icons.Default.ErrorOutline,
+                        contentDescription = "Chi tiết lỗi",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Lý do lỗi: $reason",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
