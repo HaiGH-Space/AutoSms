@@ -143,4 +143,39 @@ class ExcelParserTest {
         assertEquals("Trần Văn C", imported[0].customFields["Họ và Tên"])
         assertEquals("Khách VIP", imported[0].customFields["Ghi chú"])
     }
+
+    @Test
+    fun `filters out duplicate phone numbers across rows`() {
+        val output = ByteArrayOutputStream()
+        XSSFWorkbook().use { workbook ->
+            val sheet = workbook.createSheet("Khách hàng")
+            val header = sheet.createRow(0)
+            listOf("Tên", "sdt")
+                .forEachIndexed { index, value -> header.createCell(index).setCellValue(value) }
+
+            val row1 = sheet.createRow(1)
+            row1.createCell(0).setCellValue("Nguyễn An")
+            row1.createCell(1).setCellValue("0912345678")
+
+            val row2 = sheet.createRow(2)
+            row2.createCell(0).setCellValue("Trần Bình")
+            row2.createCell(1).setCellValue("0912345678") // Duplicate phone
+
+            val row3 = sheet.createRow(3)
+            row3.createCell(0).setCellValue("Lê Cường")
+            row3.createCell(1).setCellValue("0987654321")
+
+            workbook.write(output)
+        }
+
+        val imported = ExcelParser()
+            .parseCustomers(ByteArrayInputStream(output.toByteArray()))
+            .getOrThrow()
+
+        assertEquals(2, imported.size)
+        assertEquals("0912345678", imported[0].phone)
+        assertEquals("Nguyễn An", imported[0].customFields["Tên"])
+        assertEquals("0987654321", imported[1].phone)
+        assertEquals("Lê Cường", imported[1].customFields["Tên"])
+    }
 }
