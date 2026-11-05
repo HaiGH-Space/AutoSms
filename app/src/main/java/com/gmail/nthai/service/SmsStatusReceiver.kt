@@ -44,8 +44,10 @@ class SmsStatusReceiver : BroadcastReceiver() {
                 if (action == ACTION_SMS_SENT) {
                     val resultCode = pendingResult.resultCode
                     if (resultCode == Activity.RESULT_OK) {
-                        sendingLogRepository.updateLogStatus(logId, LogStatus.SENT_SUCCESS)
-                        simConfigRepository.incrementSentCount(simSlot)
+                        val updatedRows = sendingLogRepository.markLogSuccessIfPending(logId)
+                        if (updatedRows > 0) {
+                            simConfigRepository.incrementSentCount(simSlot)
+                        }
                     } else {
                         val errorMsg = when (resultCode) {
                             SmsManager.RESULT_ERROR_GENERIC_FAILURE -> "Lỗi chung hệ thống (Generic Failure)"
@@ -60,8 +62,13 @@ class SmsStatusReceiver : BroadcastReceiver() {
                             23 -> "Tiến trình gửi SMS bị hủy (Cancelled)"
                             else -> "Lỗi gửi SMS từ nhà mạng/thiết bị (Mã lỗi: $resultCode)"
                         }
-                        sendingLogRepository.updateLogStatus(logId, LogStatus.FAILED, errorMsg)
-                        SmsForegroundService.reportSmsFailure(simSlot, logId)
+                        val previousStatus = sendingLogRepository.markLogFailedAndGetPreviousStatus(logId, errorMsg)
+                        if (previousStatus != null) {
+                            if (previousStatus == LogStatus.SENT_SUCCESS) {
+                                simConfigRepository.decrementSentCount(simSlot)
+                            }
+                            SmsForegroundService.reportSmsFailure(simSlot, logId)
+                        }
                     }
 
                     val customer = customerRepository.getCustomerById(customerId)

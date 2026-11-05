@@ -1,7 +1,7 @@
 {
-  "versionCode": 5,
-  "versionName": "0.1.4",
-  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.4/app-release.apk",
-  "releaseNotes": "- Cải thiện xử lý ngoại lệ và hiển thị chi tiết lý do lỗi gửi SMS\n- Thêm tính năng giới hạn SMS hàng ngày theo từng nhà mạng (Viettel, VinaPhone, MobiFone...)\n- Tự động phát hiện và áp dụng cấu hình khi thay đổi SIM (SIM Swap)\n- Tối ưu hóa hiệu năng đọc/xử lý file Excel dung lượng lớn và giảm mức sử dụng bộ nhớ\n- Đánh chỉ mục Database Room và tối ưu hóa vòng lặp gửi tin nhắn ngầm\n- Cải thiện khởi tạo Notification Channel và chuẩn hóa giao diện Edge-to-Edge",
+  "versionCode": 6,
+  "versionName": "0.1.5",
+  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.5/app-release.apk",
+  "releaseNotes": "- Sửa lỗi nghiêm trọng: Ngăn chặn đếm trùng lặp và xử lý chính xác lỗi gửi tin nhắn dài (multipart SMS)\n- Cải thiện độ ổn định và hiệu năng gửi tin nhắn hàng loạt",
   "forceUpdate": false
 }

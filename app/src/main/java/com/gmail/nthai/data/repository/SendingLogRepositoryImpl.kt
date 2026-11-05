@@ -29,6 +29,23 @@ class SendingLogRepositoryImpl(
         sendingLogDao.updateLogStatus(id, status.name, errorMessage)
     }
 
+    override suspend fun markLogSuccessIfPending(id: Long): Int {
+        return sendingLogDao.markLogSuccessIfPending(id)
+    }
+
+    override suspend fun markLogFailedAndGetPreviousStatus(id: Long, errorMessage: String?): LogStatus? {
+        val previousStatusStr = sendingLogDao.markLogFailedAndGetPreviousStatus(id, errorMessage) ?: return null
+        return try {
+            LogStatus.valueOf(previousStatusStr)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getLogById(id: Long): LogRecord? {
+        return sendingLogDao.getLogById(id)?.toDomain()
+    }
+
     override suspend fun getLogsForCustomer(customerId: Long): List<LogRecord> {
         return sendingLogDao.getLogsForCustomer(customerId).map { it.toDomain() }
     }

@@ -9,6 +9,9 @@ interface SendingLogRepository {
     suspend fun insertLog(log: LogRecord): Long
     suspend fun updateLog(log: LogRecord)
     suspend fun updateLogStatus(id: Long, status: LogStatus, errorMessage: String? = null)
+    suspend fun markLogSuccessIfPending(id: Long): Int
+    suspend fun markLogFailedAndGetPreviousStatus(id: Long, errorMessage: String?): LogStatus?
+    suspend fun getLogById(id: Long): LogRecord?
     suspend fun getLogsForCustomer(customerId: Long): List<LogRecord>
     suspend fun deleteAllLogs()
 }

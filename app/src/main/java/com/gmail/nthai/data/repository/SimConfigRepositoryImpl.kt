@@ -29,6 +29,10 @@ class SimConfigRepositoryImpl(
         simConfigDao.incrementSentCount(simSlot)
     }
 
+    override suspend fun decrementSentCount(simSlot: Int) {
+        simConfigDao.decrementSentCount(simSlot)
+    }
+
     override suspend fun resetDailyCountsIfNewDay(todayDate: String) {
         simConfigDao.resetDailyCountsIfNewDay(todayDate)
     }

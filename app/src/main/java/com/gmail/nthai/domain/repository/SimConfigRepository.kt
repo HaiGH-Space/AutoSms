@@ -9,6 +9,7 @@ interface SimConfigRepository {
     suspend fun getSimConfigBySlot(simSlot: Int): SimConfig?
     suspend fun saveSimConfig(config: SimConfig)
     suspend fun incrementSentCount(simSlot: Int)
+    suspend fun decrementSentCount(simSlot: Int)
     suspend fun resetDailyCountsIfNewDay(todayDate: String)
     fun getSendingRule(): Flow<SendingRule>
     suspend fun saveSendingRule(rule: SendingRule)

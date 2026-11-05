@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Transaction
 import com.gmail.nthai.data.local.entity.SendingLogEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -19,8 +20,24 @@ interface SendingLogDao {
     @Update
     suspend fun updateLog(log: SendingLogEntity)
 
+    @Query("SELECT * FROM sending_logs WHERE id = :id LIMIT 1")
+    suspend fun getLogById(id: Long): SendingLogEntity?
+
     @Query("UPDATE sending_logs SET status = :status, errorMessage = :errorMessage WHERE id = :id")
     suspend fun updateLogStatus(id: Long, status: String, errorMessage: String?)
+
+    @Query("UPDATE sending_logs SET status = 'SENT_SUCCESS', errorMessage = NULL WHERE id = :id AND status = 'PENDING'")
+    suspend fun markLogSuccessIfPending(id: Long): Int
+
+    @Query("UPDATE sending_logs SET status = 'FAILED', errorMessage = :errorMessage WHERE id = :id AND status != 'FAILED'")
+    suspend fun updateLogToFailed(id: Long, errorMessage: String?): Int
+
+    @Transaction
+    suspend fun markLogFailedAndGetPreviousStatus(id: Long, errorMessage: String?): String? {
+        val previousLog = getLogById(id)
+        val updatedRows = updateLogToFailed(id, errorMessage)
+        return if (updatedRows > 0) previousLog?.status else null
+    }
 
     @Query("SELECT * FROM sending_logs WHERE customerId = :customerId")
     suspend fun getLogsForCustomer(customerId: Long): List<SendingLogEntity>
