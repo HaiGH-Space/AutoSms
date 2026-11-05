@@ -23,6 +23,7 @@ class ExcelParser {
                 val sheet = workbook.getSheetAt(0) ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
 
                 val customers = mutableListOf<Customer>()
+                val seenPhones = mutableSetOf<String>()
                 var headerRow: Row? = null
                 var phoneCol = -1
                 var headers = emptyList<String>()
@@ -78,6 +79,9 @@ class ExcelParser {
 
                     // Create a separate customer entry for each phone number
                     for (singlePhone in normalizedPhones) {
+                        if (!seenPhones.add(singlePhone)) {
+                            continue
+                        }
                         val itemCustomFields = rowCustomFields.toMutableMap()
                         headers.forEach { header ->
                             val h = header.lowercase(Locale.ROOT)
