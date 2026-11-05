@@ -22,6 +22,9 @@ interface SimConfigDao {
     @Query("UPDATE sim_configs SET sentCountToday = sentCountToday + 1 WHERE simSlot = :simSlot")
     suspend fun incrementSentCount(simSlot: Int)
 
+    @Query("UPDATE sim_configs SET sentCountToday = CASE WHEN sentCountToday > 0 THEN sentCountToday - 1 ELSE 0 END WHERE simSlot = :simSlot")
+    suspend fun decrementSentCount(simSlot: Int)
+
     @Query("UPDATE sim_configs SET sentCountToday = 0, lastResetDate = :todayDate WHERE lastResetDate != :todayDate")
     suspend fun resetDailyCountsIfNewDay(todayDate: String)
 
