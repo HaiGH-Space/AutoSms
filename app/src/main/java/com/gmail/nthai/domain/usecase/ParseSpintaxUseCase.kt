@@ -61,7 +61,7 @@ class ParseSpintaxUseCase {
 
     companion object {
         private val SPINTAX_REGEX = Regex("\\{([^{}]*\\|[^{}]*)\\}")
-        private val COLUMN_VARIABLE_REGEX = Regex("\\{\\{([^{}]+)\\}\\}")
+        private val COLUMN_VARIABLE_REGEX = Regex("\\{\\{?([^{}|]+)\\}\\}?")
         private val NON_NUMERIC_REGEX = Regex("[^0-9.]")
 
         private val DECIMAL_FORMAT_THREAD_LOCAL = ThreadLocal.withInitial {

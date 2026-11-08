@@ -48,10 +48,10 @@ Chạy unit test:
 1. Cấp các quyền ứng dụng yêu cầu để truy cập thông tin SIM, gửi SMS và hiển thị thông báo.
 2. Từ **Trang chủ**, chọn **Nhập danh sách Excel** và chọn tệp bảng tính. Ứng dụng đọc sheet đầu tiên; hàng tiêu đề cần có cột số điện thoại. Mặc định tên cột là `sdt`; có thể đổi tên cột trong cấu hình gửi. Các tiêu đề như `sđt`, `phone` hoặc có nội dung liên quan đến số điện thoại cũng được nhận diện.
 3. Chọn SIM 1 hoặc SIM 2, sau đó chọn những khách hàng cần gửi.
-4. Trong **Quản lý → Mẫu tin nhắn**, tạo mẫu và chọn mẫu muốn sử dụng. Dùng `{{Tên cột}}` để chèn dữ liệu tương ứng từ Excel, ví dụ:
+4. Trong **Quản lý → Mẫu tin nhắn**, tạo mẫu và chọn mẫu muốn sử dụng. Dùng `{Tên cột}` để chèn dữ liệu tương ứng từ Excel, ví dụ:
 
    ```text
-   Xin chào {{Tên khách hàng}}, mã hồ sơ của bạn là {{Mã hồ sơ}}.
+   Xin chào {Tên khách hàng}, mã hồ sơ của bạn là {Mã hồ sơ}.
    ```
 
    Dùng `{Cách viết thứ nhất|Cách viết thứ hai}` để chọn ngẫu nhiên một phương án khi gửi, ví dụ `{Xin chào|Kính chào}`.

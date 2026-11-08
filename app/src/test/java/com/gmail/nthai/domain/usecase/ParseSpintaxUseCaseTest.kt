@@ -61,6 +61,21 @@ class ParseSpintaxUseCaseTest {
         )
 
         val result = useCase(
+            "Kính gửi {Tên khách hàng}, số tiền {Số tiền}. {Vui lòng|Xin hãy} thanh toán.",
+            customer
+        )
+
+        assertTrue(result.startsWith("Kính gửi Nguyễn An, số tiền 250000. "))
+        assertTrue(result.endsWith(" thanh toán."))
+    }
+
+    @Test
+    fun `parse double brace custom Excel column variables for backwards compatibility`() {
+        val customer = sampleCustomer.copy(
+            customFields = mapOf("Tên khách hàng" to "Nguyễn An", "Số tiền" to "250000")
+        )
+
+        val result = useCase(
             "Kính gửi {{Tên khách hàng}}, số tiền {{Số tiền}}. {Vui lòng|Xin hãy} thanh toán.",
             customer
         )
@@ -71,8 +86,8 @@ class ParseSpintaxUseCaseTest {
 
     @Test
     fun `unknown custom Excel column variable remains in message`() {
-        val result = useCase("Xin chào {{Cột không tồn tại}}", sampleCustomer)
+        val result = useCase("Xin chào {Cột không tồn tại}", sampleCustomer)
 
-        assertEquals("Xin chào {{Cột không tồn tại}}", result)
+        assertEquals("Xin chào {Cột không tồn tại}", result)
     }
 }

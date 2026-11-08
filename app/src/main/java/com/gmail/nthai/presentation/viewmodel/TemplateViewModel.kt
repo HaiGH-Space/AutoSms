@@ -55,7 +55,7 @@ class TemplateViewModel @Inject constructor(
                     val defaultTemplate = SmsTemplate(
                         id = 0,
                         title = "Mẫu tin nhắn nhắc nợ",
-                        content = "Kính gửi {{Tên khách hàng}}, hợp đồng {{Mã hợp đồng}} số tiền {{Số tiền}} đ hạn {{Ngày hạn}}. {Xin vui lòng thanh toán|Vui lòng thanh toán sớm}.",
+                        content = "Kính gửi {Tên khách hàng}, hợp đồng {Mã hợp đồng} số tiền {Số tiền} đ hạn {Ngày hạn}. {Xin vui lòng thanh toán|Vui lòng thanh toán sớm}.",
                         isSelected = true,
                         updatedAt = System.currentTimeMillis()
                     )
