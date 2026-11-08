@@ -184,6 +184,47 @@ class CustomerViewModel @Inject constructor(
         }
     }
 
+    fun prepareExcelImportWithUri(context: android.content.Context, uri: android.net.Uri, onHeaderError: (Throwable) -> Unit) {
+        viewModelScope.launch {
+            _isImporting.value = true
+            _importLoadingMessage.value = "Đang mở file Excel..."
+            try {
+                val (bytes, headersResult) = withContext(Dispatchers.IO) {
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                        ?: throw java.io.IOException("Không thể mở file Excel đã chọn.")
+                    val b = inputStream.use { it.readBytes() }
+                    _importLoadingMessage.value = "Đang phân tích các cột trong file..."
+                    val h = importCustomerExcelUseCase.getExcelHeaders(ByteArrayInputStream(b))
+                    Pair(b, h)
+                }
+                _isImporting.value = false
+                headersResult.onSuccess { headers ->
+                    if (headers.isEmpty()) {
+                        onHeaderError(IllegalArgumentException("File Excel không tìm thấy dòng tiêu đề."))
+                    } else {
+                        val rule = simConfigRepository.getSendingRule().first()
+                        val defaultHeader = rule.phoneColumnName.trim()
+                        val matchedHeader = headers.find {
+                            it.equals(defaultHeader, ignoreCase = true) ||
+                            it.contains("sdt", ignoreCase = true) ||
+                            it.contains("sđt", ignoreCase = true) ||
+                            it.contains("phone", ignoreCase = true)
+                        } ?: headers.first()
+
+                        _pendingImportState.value = PendingImportState(
+                            fileBytes = bytes,
+                            headers = headers,
+                            selectedHeader = matchedHeader
+                        )
+                    }
+                }.onFailure { onHeaderError(it) }
+            } catch (e: Exception) {
+                _isImporting.value = false
+                onHeaderError(e)
+            }
+        }
+    }
+
     fun prepareExcelImport(inputStream: InputStream, onHeaderError: (Throwable) -> Unit) {
         viewModelScope.launch {
             _isImporting.value = true
@@ -244,7 +285,7 @@ class CustomerViewModel @Inject constructor(
                     val parseResult = importCustomerExcelUseCase(inputStream, current.selectedHeader)
                     parseResult.map { importedCustomers ->
                         _importLoadingMessage.value = "Đang lưu ${importedCustomers.size} khách hàng vào cơ sở dữ liệu..."
-                        customerRepository.insertCustomers(importedCustomers)
+                        customerRepository.replaceAllCustomers(importedCustomers)
                         importedCustomers.size
                     }
                 }

@@ -245,7 +245,7 @@ fun TemplateEditorScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
-                placeholder = { Text("Kính gửi {{Tên}}, vui lòng thanh toán hợp đồng {{Mã HD}}...") }
+                placeholder = { Text("Kính gửi {Tên}, vui lòng thanh toán hợp đồng {Mã HD}...") }
             )
 
             // 4. Excel Variables Chips
@@ -261,7 +261,7 @@ fun TemplateEditorScreen(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         availableFields.forEach { field ->
-                            val variable = "{{$field}}"
+                            val variable = "{$field}"
                             AssistChip(
                                 onClick = {
                                     val selection = contentFieldValue.selection

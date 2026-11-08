@@ -85,7 +85,6 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     // Apache POI
-    implementation(libs.poi)
     implementation(libs.poi.ooxml)
 
     // Coroutines

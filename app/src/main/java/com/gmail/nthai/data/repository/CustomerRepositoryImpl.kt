@@ -42,6 +42,10 @@ class CustomerRepositoryImpl(
         customerDao.insertCustomers(customers.map { it.toEntity() })
     }
 
+    override suspend fun replaceAllCustomers(customers: List<Customer>) {
+        customerDao.replaceAllCustomers(customers.map { it.toEntity() })
+    }
+
     override suspend fun updateCustomer(customer: Customer) {
         customerDao.updateCustomer(customer.toEntity())
     }

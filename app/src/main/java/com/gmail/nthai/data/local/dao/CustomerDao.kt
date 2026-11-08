@@ -80,6 +80,12 @@ interface CustomerDao {
     @Query("DELETE FROM customers")
     suspend fun deleteAllCustomers()
 
+    @Transaction
+    suspend fun replaceAllCustomers(customers: List<CustomerEntity>) {
+        deleteAllCustomers()
+        insertCustomers(customers)
+    }
+
     @Delete
     suspend fun deleteCustomer(customer: CustomerEntity)
 }
