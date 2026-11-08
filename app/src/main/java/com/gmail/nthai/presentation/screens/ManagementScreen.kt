@@ -34,6 +34,8 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.gmail.nthai.presentation.components.config.RuleAndUpdateTab
+import com.gmail.nthai.presentation.components.config.SimManagementTab
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
 import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 
