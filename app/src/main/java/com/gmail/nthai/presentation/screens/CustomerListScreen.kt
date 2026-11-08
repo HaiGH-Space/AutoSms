@@ -85,17 +85,8 @@ fun CustomerListScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            try {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                if (inputStream == null) {
-                    Toast.makeText(context, "Không thể mở file Excel đã chọn.", Toast.LENGTH_LONG).show()
-                } else {
-                    viewModel.prepareExcelImport(inputStream) { err ->
-                        Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            } catch (e: Exception) {
-                Toast.makeText(context, "Khởi tạo file thất bại: ${e.message}", Toast.LENGTH_SHORT).show()
+            viewModel.prepareExcelImportWithUri(context, uri) { err ->
+                Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -324,16 +315,16 @@ fun CustomerListScreen(
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(customers, key = { it.id }) { customer ->
-                        val onToggle = remember(customer.id) { { viewModel.toggleCustomerSelection(customer) } }
-                        val onDelete = remember(customer.id) { { viewModel.deleteCustomer(customer) } }
-                        val onClick = remember(customer.id) { { selectedCustomer = customer } }
-
+                    items(
+                        items = customers,
+                        key = { it.id },
+                        contentType = { "customer_item" }
+                    ) { customer ->
                         CustomerItemCard(
                             customer = customer,
-                            onToggleSelection = onToggle,
-                            onDelete = onDelete,
-                            onClick = onClick
+                            onToggleSelection = { viewModel.toggleCustomerSelection(customer) },
+                            onDelete = { viewModel.deleteCustomer(customer) },
+                            onClick = { selectedCustomer = customer }
                         )
                     }
                 }

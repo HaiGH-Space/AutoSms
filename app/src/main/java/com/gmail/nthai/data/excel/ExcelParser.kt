@@ -136,6 +136,7 @@ class ExcelParser {
         // Split by common delimiters (comma, semicolon, newline, slash, tab)
         val tokens = rawPhone.split(DELIMITER_REGEX)
         val result = mutableListOf<String>()
+        val seen = mutableSetOf<String>()
 
         for (token in tokens) {
             val trimmed = token.trim()
@@ -152,7 +153,7 @@ class ExcelParser {
 
             val digitsOnly = NON_DIGITS_REGEX.replace(cleaned, "")
             if (digitsOnly.length in 9..11 && (cleaned.startsWith("0") || cleaned.startsWith("+"))) {
-                if (!result.contains(cleaned)) {
+                if (seen.add(cleaned)) {
                     result.add(cleaned)
                 }
             }

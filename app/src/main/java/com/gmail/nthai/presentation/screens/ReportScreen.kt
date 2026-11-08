@@ -45,7 +45,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,11 +54,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.presentation.components.common.LogRecordCard
 import com.gmail.nthai.presentation.components.report.DateRangePickerDialog
 import com.gmail.nthai.presentation.components.report.ReportMetricHeader
-import com.gmail.nthai.presentation.viewmodel.ReportStats
 import com.gmail.nthai.presentation.viewmodel.ReportViewModel
 import com.gmail.nthai.util.DateTimeUtils
 import kotlinx.coroutines.launch
@@ -73,34 +70,15 @@ fun ReportScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val logs by viewModel.logs.collectAsStateWithLifecycle()
-    var selectedSimSlot by rememberSaveable { mutableStateOf<Int?>(null) }
-    var rangeStartMillis by rememberSaveable { mutableStateOf<Long?>(null) }
-    var rangeEndMillis by rememberSaveable { mutableStateOf<Long?>(null) }
+    val filteredLogs by viewModel.filteredLogs.collectAsStateWithLifecycle()
+    val stats by viewModel.stats.collectAsStateWithLifecycle()
+    val selectedSimSlot by viewModel.selectedSimSlot.collectAsStateWithLifecycle()
+    val rangeStartMillis by viewModel.rangeStartMillis.collectAsStateWithLifecycle()
+    val rangeEndMillis by viewModel.rangeEndMillis.collectAsStateWithLifecycle()
+
     var showDatePicker by remember { mutableStateOf(false) }
     var showClearConfirmation by remember { mutableStateOf(false) }
 
-    val filteredLogs = remember(logs, selectedSimSlot, rangeStartMillis, rangeEndMillis) {
-        val start = rangeStartMillis?.let(DateTimeUtils::localStartOfDay)
-        val endExclusive = rangeEndMillis?.let(DateTimeUtils::localStartOfNextDay)
-        logs.filter { log ->
-            (selectedSimSlot == null || log.simSlot == selectedSimSlot) &&
-                (start == null || log.timestamp >= start) &&
-                (endExclusive == null || log.timestamp < endExclusive)
-        }
-    }
-    val stats = remember(filteredLogs) {
-        val total = filteredLogs.size
-        val success = filteredLogs.count { it.status == LogStatus.SENT_SUCCESS }
-        val failed = filteredLogs.count { it.status == LogStatus.FAILED }
-        val pending = filteredLogs.count { it.status == LogStatus.PENDING }
-        ReportStats(
-            total = total,
-            success = success,
-            failed = failed,
-            pending = pending,
-            successRatePercentage = if (total > 0) success * 100f / total else 0f
-        )
-    }
     val dateRangeLabel = remember(rangeStartMillis, rangeEndMillis) {
         if (rangeStartMillis == null || rangeEndMillis == null) {
             "Khoảng ngày"
@@ -172,7 +150,7 @@ fun ReportScreen(
             contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
+            item(contentType = "header_title") {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         "Hiệu quả gửi tin",
@@ -191,11 +169,11 @@ fun ReportScreen(
                 }
             }
 
-            item {
+            item(contentType = "metrics") {
                 ReportMetricHeader(stats = stats)
             }
 
-            item {
+            item(contentType = "export_card") {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -243,7 +221,7 @@ fun ReportScreen(
                 }
             }
 
-            item {
+            item(contentType = "filters") {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -264,11 +242,7 @@ fun ReportScreen(
                         }
                         if (selectedSimSlot != null || rangeStartMillis != null) {
                             TextButton(
-                                onClick = {
-                                    selectedSimSlot = null
-                                    rangeStartMillis = null
-                                    rangeEndMillis = null
-                                }
+                                onClick = { viewModel.clearFilters() }
                             ) {
                                 Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Text("Xóa lọc")
@@ -284,7 +258,7 @@ fun ReportScreen(
                     ) {
                         FilterChip(
                             selected = selectedSimSlot == null,
-                            onClick = { selectedSimSlot = null },
+                            onClick = { viewModel.setSelectedSimSlot(null) },
                             label = { Text("Tất cả SIM") },
                             leadingIcon = if (selectedSimSlot == null) {
                                 { Icon(Icons.Default.SimCard, contentDescription = null, modifier = Modifier.size(18.dp)) }
@@ -292,12 +266,12 @@ fun ReportScreen(
                         )
                         FilterChip(
                             selected = selectedSimSlot == 1,
-                            onClick = { selectedSimSlot = 1 },
+                            onClick = { viewModel.setSelectedSimSlot(1) },
                             label = { Text("SIM 1") }
                         )
                         FilterChip(
                             selected = selectedSimSlot == 2,
-                            onClick = { selectedSimSlot = 2 },
+                            onClick = { viewModel.setSelectedSimSlot(2) },
                             label = { Text("SIM 2") }
                         )
                         FilterChip(
@@ -313,11 +287,15 @@ fun ReportScreen(
             }
 
             if (filteredLogs.isEmpty()) {
-                item {
+                item(contentType = "empty_state") {
                     EmptyReportState(hasAnyLogs = logs.isNotEmpty())
                 }
             } else {
-                items(filteredLogs, key = { it.id }) { log ->
+                items(
+                    items = filteredLogs,
+                    key = { it.id },
+                    contentType = { "log_item" }
+                ) { log ->
                     LogRecordCard(log = log)
                 }
             }
@@ -333,8 +311,10 @@ fun ReportScreen(
             state = pickerState,
             onDismiss = { showDatePicker = false },
             onApply = {
-                rangeStartMillis = pickerState.selectedStartDateMillis
-                rangeEndMillis = pickerState.selectedEndDateMillis
+                viewModel.setDateRange(
+                    pickerState.selectedStartDateMillis,
+                    pickerState.selectedEndDateMillis
+                )
                 showDatePicker = false
             }
         )
