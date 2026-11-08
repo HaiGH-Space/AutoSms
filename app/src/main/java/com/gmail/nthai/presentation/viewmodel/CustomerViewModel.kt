@@ -244,7 +244,7 @@ class CustomerViewModel @Inject constructor(
                     val parseResult = importCustomerExcelUseCase(inputStream, current.selectedHeader)
                     parseResult.map { importedCustomers ->
                         _importLoadingMessage.value = "Đang lưu ${importedCustomers.size} khách hàng vào cơ sở dữ liệu..."
-                        customerRepository.insertCustomers(importedCustomers)
+                        customerRepository.replaceAllCustomers(importedCustomers)
                         importedCustomers.size
                     }
                 }

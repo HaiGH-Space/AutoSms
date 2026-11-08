@@ -11,6 +11,7 @@ interface CustomerRepository {
     fun getSelectedCustomersForSending(): Flow<List<Customer>>
     suspend fun getCustomerById(id: Long): Customer?
     suspend fun insertCustomers(customers: List<Customer>)
+    suspend fun replaceAllCustomers(customers: List<Customer>)
     suspend fun updateCustomer(customer: Customer)
     suspend fun updateCustomerStatus(id: Long, status: CustomerStatus)
     suspend fun updateCustomerSelection(id: Long, isSelected: Boolean)

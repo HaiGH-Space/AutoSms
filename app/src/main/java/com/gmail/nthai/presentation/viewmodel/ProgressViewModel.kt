@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.SimConfig
@@ -23,7 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProgressViewModel @Inject constructor(
     customerRepository: CustomerRepository,
-    sendingLogRepository: SendingLogRepository,
+    private val sendingLogRepository: SendingLogRepository,
     simConfigRepository: SimConfigRepository
 ) : ViewModel() {
 
@@ -86,5 +87,11 @@ class ProgressViewModel @Inject constructor(
             putExtra(SmsForegroundService.EXTRA_SIM_SLOT, simSlot)
         }
         context.startService(intent)
+    }
+
+    fun clearLogs() {
+        viewModelScope.launch {
+            sendingLogRepository.deleteAllLogs()
+        }
     }
 }
