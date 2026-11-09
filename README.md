@@ -82,5 +82,5 @@ Tin nhắn được gửi qua mạng di động của nhà mạng và có thể 
 ## Thông tin ứng dụng
 
 - Application ID: `com.gmail.nthai`
-- Phiên bản: `0.1.2` (version code `3`)
+- Phiên bản: `0.1.6` (version code `7`)
 - [Các bản phát hành trên GitHub](https://github.com/HaiGH-Space/AutoSms/releases)
