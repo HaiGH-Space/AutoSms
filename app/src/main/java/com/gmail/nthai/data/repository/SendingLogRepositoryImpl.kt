@@ -53,4 +53,10 @@ class SendingLogRepositoryImpl(
     override suspend fun deleteAllLogs() {
         sendingLogDao.deleteAllLogs()
     }
+
+    override suspend fun deleteLogsForCustomers(customerIds: List<Long>) {
+        if (customerIds.isNotEmpty()) {
+            sendingLogDao.deleteLogsForCustomers(customerIds)
+        }
+    }
 }

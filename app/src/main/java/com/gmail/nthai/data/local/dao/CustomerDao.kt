@@ -88,4 +88,21 @@ interface CustomerDao {
 
     @Delete
     suspend fun deleteCustomer(customer: CustomerEntity)
+
+    @Query("UPDATE customers SET status = 'PENDING'")
+    suspend fun resetAllCustomerStatus()
+
+    @Query("UPDATE customers SET status = 'PENDING' WHERE status = :targetStatus")
+    suspend fun resetCustomerStatusByStatus(targetStatus: String)
+
+    @Query("UPDATE customers SET status = 'PENDING' WHERE id IN (:customerIds)")
+    suspend fun resetCustomerStatusByIdsBatch(customerIds: List<Long>)
+
+    @Transaction
+    suspend fun resetCustomerStatusByIds(customerIds: List<Long>) {
+        customerIds.chunked(900).forEach { resetCustomerStatusByIdsBatch(it) }
+    }
+
+    @Query("SELECT phone FROM customers")
+    suspend fun getAllCustomerPhones(): List<String>
 }

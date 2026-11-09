@@ -36,6 +36,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -55,6 +58,7 @@ import com.gmail.nthai.presentation.components.NoUpdateAvailableDialog
 import com.gmail.nthai.presentation.components.SelectPhoneColumnDialog
 import com.gmail.nthai.presentation.components.UpdateAvailableDialog
 import com.gmail.nthai.presentation.components.UpdateErrorDialog
+import com.gmail.nthai.presentation.components.customer.ResetStatusDialog
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
 import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
 import com.gmail.nthai.presentation.viewmodel.HomeDashboardViewModel
@@ -77,6 +81,8 @@ fun HomeScreen(
     val pendingImportState by customerViewModel.pendingImportState.collectAsStateWithLifecycle()
     val isImporting by customerViewModel.isImporting.collectAsStateWithLifecycle()
     val importLoadingMessage by customerViewModel.importLoadingMessage.collectAsStateWithLifecycle()
+    val isSending by customerViewModel.isSending.collectAsStateWithLifecycle()
+    var showResetDialog by remember { mutableStateOf(false) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -218,7 +224,9 @@ fun HomeScreen(
                 readyCount = dashboardStats.sim1ReadyCount + dashboardStats.sim2ReadyCount,
                 onClick = {
                     filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                }
+                },
+                onResetClick = { showResetDialog = true },
+                isResetEnabled = !isSending
             )
 
             Text(
@@ -255,6 +263,8 @@ fun HomeScreen(
             headers = state.headers,
             selectedHeader = state.selectedHeader,
             onSelectHeader = { customerViewModel.updateSelectedImportHeader(it) },
+            selectedImportMode = state.selectedImportMode,
+            onSelectImportMode = { customerViewModel.updateSelectedImportMode(it) },
             onConfirm = {
                 customerViewModel.confirmImport { result ->
                     result.onSuccess { count ->
@@ -267,6 +277,18 @@ fun HomeScreen(
             onDismiss = {
                 customerViewModel.cancelImport()
             }
+        )
+    }
+
+    if (showResetDialog) {
+        ResetStatusDialog(
+            onConfirm = { scope ->
+                customerViewModel.resetCustomerStatus(scope) {
+                    Toast.makeText(context, "Đã đặt lại trạng thái về 'Chưa gửi'", Toast.LENGTH_SHORT).show()
+                }
+                showResetDialog = false
+            },
+            onDismiss = { showResetDialog = false }
         )
     }
 
@@ -323,7 +345,9 @@ private fun SimStatusCard(
 private fun ExcelImportCard(
     totalCustomers: Int,
     readyCount: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onResetClick: (() -> Unit)? = null,
+    isResetEnabled: Boolean = true
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -353,8 +377,18 @@ private fun ExcelImportCard(
                 text = "$totalCustomers khách hàng trong danh sách · $readyCount sẵn sàng",
                 style = MaterialTheme.typography.bodyMedium
             )
-            Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-                Text("Chọn tệp Excel")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(onClick = onClick, modifier = Modifier.weight(1f)) {
+                    Text("Chọn tệp Excel")
+                }
+                if (onResetClick != null && totalCustomers > 0) {
+                    OutlinedButton(onClick = onResetClick, enabled = isResetEnabled, modifier = Modifier.weight(1f)) {
+                        Text("Đặt lại trạng thái")
+                    }
+                }
             }
         }
     }

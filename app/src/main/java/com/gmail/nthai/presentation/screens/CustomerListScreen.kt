@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +34,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -55,6 +57,7 @@ import com.gmail.nthai.presentation.components.LoadingDialog
 import com.gmail.nthai.presentation.components.SelectPhoneColumnDialog
 import com.gmail.nthai.presentation.components.customer.CustomerDetailDialog
 import com.gmail.nthai.presentation.components.customer.CustomerItemCard
+import com.gmail.nthai.presentation.components.customer.ResetStatusDialog
 import com.gmail.nthai.presentation.viewmodel.CustomerCarrierFilter
 import com.gmail.nthai.presentation.viewmodel.CustomerFilter
 import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
@@ -79,7 +82,9 @@ fun CustomerListScreen(
     val pendingImportState by viewModel.pendingImportState.collectAsStateWithLifecycle()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val importLoadingMessage by viewModel.importLoadingMessage.collectAsStateWithLifecycle()
+    val isSending by viewModel.isSending.collectAsStateWithLifecycle()
     var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
+    var showResetDialog by remember { mutableStateOf(false) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -122,6 +127,9 @@ fun CustomerListScreen(
                 },
                 actions = {
                     if (customers.isNotEmpty()) {
+                        IconButton(onClick = { showResetDialog = true }, enabled = !isSending) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Đặt lại trạng thái gửi")
+                        }
                         IconButton(onClick = { viewModel.deleteAllCustomers() }) {
                             Icon(Icons.Default.Delete, contentDescription = "Xóa tất cả")
                         }
@@ -337,6 +345,8 @@ fun CustomerListScreen(
             headers = state.headers,
             selectedHeader = state.selectedHeader,
             onSelectHeader = { viewModel.updateSelectedImportHeader(it) },
+            selectedImportMode = state.selectedImportMode,
+            onSelectImportMode = { viewModel.updateSelectedImportMode(it) },
             onConfirm = {
                 viewModel.confirmImport { result ->
                     result.onSuccess { count ->
@@ -349,6 +359,18 @@ fun CustomerListScreen(
             onDismiss = {
                 viewModel.cancelImport()
             }
+        )
+    }
+
+    if (showResetDialog) {
+        ResetStatusDialog(
+            onConfirm = { scope ->
+                viewModel.resetCustomerStatus(scope) {
+                    Toast.makeText(context, "Đã đặt lại trạng thái về 'Chưa gửi'", Toast.LENGTH_SHORT).show()
+                }
+                showResetDialog = false
+            },
+            onDismiss = { showResetDialog = false }
         )
     }
 

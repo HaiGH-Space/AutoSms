@@ -1,7 +1,7 @@
 {
-  "versionCode": 6,
-  "versionName": "0.1.5",
-  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.5/app-release.apk",
-  "releaseNotes": "- Sửa lỗi nghiêm trọng: Ngăn chặn đếm trùng lặp và xử lý chính xác lỗi gửi tin nhắn dài (multipart SMS)\n- Cải thiện độ ổn định và hiệu năng gửi tin nhắn hàng loạt",
-  "forceUpdate": false
+  "versionCode": 7,
+  "versionName": "0.1.6",
+  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.6/app-release.apk",
+  "releaseNotes": "- Hỗ trợ các chế độ nhập Excel (Thay thế, Thêm nối tiếp, Bỏ qua trùng SĐT)\n- Thêm tính năng đặt lại trạng thái gửi tin nhắn theo phạm vi linh hoạt\n- Tối ưu hóa logic SMS retry và xác định trạng thái gửi theo từng SĐT\n- Hỗ trợ biến mẫu tin nhắn sử dụng dấu ngoặc đơn (single-brace)\n- Cập nhật cơ chế thay thế danh sách khách hàng nhập vào một cách atomic\n- Tối ưu truy vấn cơ sở dữ liệu và nâng cao trải nghiệm người dùng\n- Tính năng gửi tự động Zalo sẽ sớm ra mắt",
+  "forceUpdate": true
 }
