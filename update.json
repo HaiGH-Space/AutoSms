@@ -2,6 +2,6 @@
   "versionCode": 7,
   "versionName": "0.1.6",
   "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.6/app-release.apk",
-  "releaseNotes": "- Cải tiến tính năng nhập Excel và tối ưu hóa logic lọc danh sách khách hàng\n- Hỗ trợ biến mẫu tin nhắn sử dụng dấu ngoặc đơn (single-brace)\n- Cập nhật cơ chế thay thế danh sách khách hàng nhập vào một cách atomic",
+  "releaseNotes": "- Hỗ trợ các chế độ nhập Excel (Thay thế, Thêm nối tiếp, Bỏ qua trùng SĐT)\n- Thêm tính năng đặt lại trạng thái gửi tin nhắn theo phạm vi linh hoạt\n- Tối ưu hóa logic SMS retry và xác định trạng thái gửi theo từng SĐT\n- Hỗ trợ biến mẫu tin nhắn sử dụng dấu ngoặc đơn (single-brace)\n- Cập nhật cơ chế thay thế danh sách khách hàng nhập vào một cách atomic\n- Tối ưu truy vấn cơ sở dữ liệu và nâng cao trải nghiệm người dùng\n- Tính năng gửi tự động Zalo sẽ sớm ra mắt",
   "forceUpdate": true
 }
