@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
+import com.gmail.nthai.domain.model.ImportMode
+
 @Composable
 fun LoadingDialog(message: String) {
     Dialog(
@@ -84,32 +86,40 @@ fun SelectPhoneColumnDialog(
     headers: List<String>,
     selectedHeader: String,
     onSelectHeader: (String) -> Unit,
+    selectedImportMode: ImportMode = ImportMode.REPLACE_ALL,
+    onSelectImportMode: (ImportMode) -> Unit = {},
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Chọn cột Số điện thoại") },
+        title = {
+            Text(
+                "Cấu hình nhập tệp Excel",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column(
                 modifier = Modifier
-                    .heightIn(max = 350.dp)
+                    .heightIn(max = 420.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Vui lòng chọn tiêu đề cột trong file Excel chứa danh sách số điện thoại cần gửi tin:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "1. Chọn cột chứa Số điện thoại trong file:",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.height(8.dp))
 
                 headers.forEach { header ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onSelectHeader(header) }
-                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                            .padding(vertical = 4.dp, horizontal = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
@@ -122,6 +132,56 @@ fun SelectPhoneColumnDialog(
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = if (header == selectedHeader) FontWeight.Bold else FontWeight.Normal
                         )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "2. Chọn chế độ lưu dữ liệu:",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                ImportMode.entries.forEach { mode ->
+                    val isSelected = mode == selectedImportMode
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelectImportMode(mode) },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = { onSelectImportMode(mode) }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = mode.label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = mode.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
                     }
                 }
             }

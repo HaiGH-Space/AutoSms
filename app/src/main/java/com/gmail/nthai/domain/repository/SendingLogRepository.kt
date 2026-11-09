@@ -14,4 +14,5 @@ interface SendingLogRepository {
     suspend fun getLogById(id: Long): LogRecord?
     suspend fun getLogsForCustomer(customerId: Long): List<LogRecord>
     suspend fun deleteAllLogs()
+    suspend fun deleteLogsForCustomers(customerIds: List<Long>)
 }

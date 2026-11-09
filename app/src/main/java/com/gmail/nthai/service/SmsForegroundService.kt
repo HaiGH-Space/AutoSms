@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.gmail.nthai.R
+import com.gmail.nthai.domain.model.CustomerStatus
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.SmsTemplate
 import com.gmail.nthai.domain.repository.CustomerRepository
@@ -169,6 +170,7 @@ class SmsForegroundService : Service() {
             failedLogIdsBySlot[simSlot] = mutableSetOf()
         }
         updateSimState(simSlot, SendingServiceState.Running(0, 0, "Đang chuẩn bị"))
+        val sessionStartTime = System.currentTimeMillis()
         val job = serviceScope.launch(start = CoroutineStart.LAZY) {
             try {
                 val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -184,16 +186,7 @@ class SmsForegroundService : Service() {
                 val existingLogsByCustomer = pendingCustomers.associate { customer ->
                     customer.id to sendingLogRepository.getLogsForCustomer(customer.id)
                 }
-                val currentTotal = pendingCustomers.sumOf { customer ->
-                    val existingLogs = existingLogsByCustomer[customer.id].orEmpty()
-                    customer.phone.split(',').map(String::trim).filter(String::isNotBlank).count { recipient ->
-                        val latestLog = existingLogs
-                            .filter { it.phone == recipient }
-                            .maxByOrNull { it.timestamp }
-                        latestLog?.status != LogStatus.PENDING &&
-                            latestLog?.status != LogStatus.SENT_SUCCESS
-                    }
-                }
+                val currentTotal = processSimSendingUseCase.calculateTotal(pendingCustomers, existingLogsByCustomer, sessionStartTime)
                 synchronized(progressLock) {
                     totalCounts[simSlot] = currentTotal
                     sentCounts[simSlot] = 0
@@ -213,6 +206,7 @@ class SmsForegroundService : Service() {
                     rule = rule,
                     isPaused = { slot -> pausedSlots.contains(slot) },
                     isStopped = { slot -> stoppedSlots.contains(slot) },
+                    sessionStartTime = sessionStartTime,
                     onProgressUpdate = { sent, total, displayName, secondsUntilNext ->
                         synchronized(progressLock) {
                             sentCounts[simSlot] = sent
@@ -255,11 +249,12 @@ class SmsForegroundService : Service() {
                                 customer.id to sendingLogRepository.getLogsForCustomer(customer.id)
                             }
                             processSimSendingUseCase.recordFailedLogsForSim(
-                                simSlot,
-                                pendingCustomers,
-                                existingLogsByCustomer,
-                                null,
-                                errorMsg
+                                simSlot = simSlot,
+                                customers = pendingCustomers,
+                                existingLogsByCustomer = existingLogsByCustomer,
+                                template = null,
+                                errorMessage = errorMsg,
+                                sessionStartTime = sessionStartTime
                             ) { slot, logId -> reportSmsFailure(slot, logId) }
                         }
                     } catch (_: Exception) {}

@@ -73,11 +73,14 @@ class SmsStatusReceiver : BroadcastReceiver() {
 
                     val customer = customerRepository.getCustomerById(customerId)
                     if (customer != null) {
-                        val totalNumbers = customer.phone.split(',').count { it.isNotBlank() }
-                        val customerLogs = sendingLogRepository.getLogsForCustomer(customerId)
-                        val finishedLogs = customerLogs.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
+                        val recipients = customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
+                        val allCustomerLogs = sendingLogRepository.getLogsForCustomer(customerId)
+                        val latestLogsByPhone = recipients.mapNotNull { phone ->
+                            allCustomerLogs.filter { it.phone == phone }.maxByOrNull { it.timestamp }
+                        }
+                        val finishedLogs = latestLogsByPhone.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
 
-                        if (finishedLogs.size >= totalNumbers) {
+                        if (finishedLogs.size >= recipients.size) {
                             val hasFailed = finishedLogs.any { it.status == LogStatus.FAILED }
                             val newStatus = if (hasFailed) CustomerStatus.FAILED else CustomerStatus.SENT
                             customerRepository.updateCustomerStatus(customerId, newStatus)

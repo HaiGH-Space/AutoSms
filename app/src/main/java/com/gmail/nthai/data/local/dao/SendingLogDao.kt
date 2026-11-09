@@ -44,4 +44,12 @@ interface SendingLogDao {
 
     @Query("DELETE FROM sending_logs")
     suspend fun deleteAllLogs()
+
+    @Query("DELETE FROM sending_logs WHERE customerId IN (:customerIds)")
+    suspend fun deleteLogsForCustomersBatch(customerIds: List<Long>)
+
+    @Transaction
+    suspend fun deleteLogsForCustomers(customerIds: List<Long>) {
+        customerIds.chunked(900).forEach { deleteLogsForCustomersBatch(it) }
+    }
 }

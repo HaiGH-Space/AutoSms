@@ -38,20 +38,26 @@ class ProgressViewModel @Inject constructor(
 
     val plannedMessageCounts: StateFlow<Map<Int, Int>> = combine(
         customerRepository.getSelectedCustomersForSending(),
-        sendingLogRepository.getAllLogs()
-    ) { customers, logs ->
+        sendingLogRepository.getAllLogs(),
+        serviceStates
+    ) { customers, logs, states ->
         val latestLogs = logs
             .groupBy { it.customerId to it.phone }
             .mapValues { (_, customerLogs) -> customerLogs.maxBy { it.timestamp } }
 
         (1..2).associateWith { simSlot ->
+            val isSimActive = states[simSlot] is SendingServiceState.Running || states[simSlot] is SendingServiceState.Paused
             customers.filter { it.sendSimSlot == simSlot }.sumOf { customer ->
                 customer.phone.split(',')
                     .map(String::trim)
                     .filter(String::isNotBlank)
                     .count { phone ->
                         val status = latestLogs[customer.id to phone]?.status
-                        status != LogStatus.PENDING && status != LogStatus.SENT_SUCCESS
+                        if (isSimActive) {
+                            status != LogStatus.PENDING && status != LogStatus.SENT_SUCCESS
+                        } else {
+                            status != LogStatus.SENT_SUCCESS
+                        }
                     }
             }
         }

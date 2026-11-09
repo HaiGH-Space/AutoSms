@@ -5,12 +5,12 @@ import android.content.Context
 import android.os.Build
 import android.telephony.SmsManager
 
-class SmsSenderEngine(
-    private val context: Context
+open class SmsSenderEngine(
+    private val context: Context?
 ) {
 
     @Suppress("DEPRECATION")
-    fun sendSms(
+    open fun sendSms(
         subscriptionId: Int,
         destinationAddress: String,
         text: String,
@@ -18,8 +18,9 @@ class SmsSenderEngine(
         deliveryIntent: PendingIntent?
     ) {
         val smsManager: SmsManager = try {
+            val ctx = context ?: throw IllegalStateException("Context is null")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                context.getSystemService(SmsManager::class.java).createForSubscriptionId(subscriptionId)
+                ctx.getSystemService(SmsManager::class.java).createForSubscriptionId(subscriptionId)
             } else {
                 SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
             }

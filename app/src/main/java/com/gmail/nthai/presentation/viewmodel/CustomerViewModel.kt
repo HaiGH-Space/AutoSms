@@ -25,6 +25,13 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import javax.inject.Inject
 
+import com.gmail.nthai.domain.model.ImportMode
+import com.gmail.nthai.domain.model.ResetStatusScope
+import com.gmail.nthai.domain.repository.SendingLogRepository
+import com.gmail.nthai.service.SendingServiceState
+import com.gmail.nthai.service.SmsForegroundService
+import kotlinx.coroutines.flow.map
+
 enum class CustomerFilter {
     ALL, PENDING, SENT, FAILED
 }
@@ -44,13 +51,15 @@ enum class CustomerCarrierFilter(val label: String, val carrierName: String? = n
 data class PendingImportState(
     val fileBytes: ByteArray,
     val headers: List<String>,
-    val selectedHeader: String
+    val selectedHeader: String,
+    val selectedImportMode: ImportMode = ImportMode.REPLACE_ALL
 )
 
 @HiltViewModel
 class CustomerViewModel @Inject constructor(
     private val customerRepository: CustomerRepository,
     private val simConfigRepository: SimConfigRepository,
+    private val sendingLogRepository: SendingLogRepository,
     private val importCustomerExcelUseCase: ImportCustomerExcelUseCase
 ) : ViewModel() {
 
@@ -68,6 +77,12 @@ class CustomerViewModel @Inject constructor(
 
     val simConfigs: StateFlow<List<SimConfig>> = simConfigRepository.getSimConfigs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val isSending: StateFlow<Boolean> = SmsForegroundService.serviceStates
+        .map { states ->
+            states.values.any { it is SendingServiceState.Running || it is SendingServiceState.Paused }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val selectedCustomerCount: StateFlow<Int> = combine(
         customerRepository.getAllCustomers(),
@@ -269,6 +284,11 @@ class CustomerViewModel @Inject constructor(
         _pendingImportState.value = current.copy(selectedHeader = header)
     }
 
+    fun updateSelectedImportMode(mode: ImportMode) {
+        val current = _pendingImportState.value ?: return
+        _pendingImportState.value = current.copy(selectedImportMode = mode)
+    }
+
     fun cancelImport() {
         _pendingImportState.value = null
     }
@@ -285,8 +305,7 @@ class CustomerViewModel @Inject constructor(
                     val parseResult = importCustomerExcelUseCase(inputStream, current.selectedHeader)
                     parseResult.map { importedCustomers ->
                         _importLoadingMessage.value = "Đang lưu ${importedCustomers.size} khách hàng vào cơ sở dữ liệu..."
-                        customerRepository.replaceAllCustomers(importedCustomers)
-                        importedCustomers.size
+                        customerRepository.importCustomers(importedCustomers, current.selectedImportMode)
                     }
                 }
                 _isImporting.value = false
@@ -299,6 +318,42 @@ class CustomerViewModel @Inject constructor(
                 _isImporting.value = false
                 onResult(Result.failure(error))
             }
+        }
+    }
+
+    fun resetCustomerStatus(scope: ResetStatusScope, onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            if (isSending.value) {
+                onComplete()
+                return@launch
+            }
+            val allCustomers = customerRepository.getAllCustomers().first()
+            val selectedIds = if (scope == ResetStatusScope.SELECTED_ONLY) {
+                allCustomers.filter { it.isSelected }.map { it.id }
+            } else {
+                emptyList()
+            }
+            customerRepository.resetCustomerStatus(scope, selectedIds)
+            when (scope) {
+                ResetStatusScope.ALL -> {
+                    sendingLogRepository.deleteAllLogs()
+                }
+                ResetStatusScope.SENT_ONLY -> {
+                    val sentCustomerIds = allCustomers.filter { it.status == CustomerStatus.SENT }.map { it.id }
+                    if (sentCustomerIds.isNotEmpty()) {
+                        sendingLogRepository.deleteLogsForCustomers(sentCustomerIds)
+                    }
+                }
+                ResetStatusScope.SELECTED_ONLY -> {
+                    if (selectedIds.isNotEmpty()) {
+                        sendingLogRepository.deleteLogsForCustomers(selectedIds)
+                    }
+                }
+                ResetStatusScope.FAILED_ONLY -> {
+                    // Keep logs so successfully sent numbers are skipped and failed numbers are retried.
+                }
+            }
+            onComplete()
         }
     }
 

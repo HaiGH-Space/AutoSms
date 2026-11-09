@@ -10,6 +10,9 @@ import com.gmail.nthai.domain.repository.CustomerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+import com.gmail.nthai.domain.model.ImportMode
+import com.gmail.nthai.domain.model.ResetStatusScope
+
 class CustomerRepositoryImpl(
     private val customerDao: CustomerDao
 ) : CustomerRepository {
@@ -44,6 +47,56 @@ class CustomerRepositoryImpl(
 
     override suspend fun replaceAllCustomers(customers: List<Customer>) {
         customerDao.replaceAllCustomers(customers.map { it.toEntity() })
+    }
+
+    override suspend fun importCustomers(customers: List<Customer>, mode: ImportMode): Int {
+        return when (mode) {
+            ImportMode.REPLACE_ALL -> {
+                replaceAllCustomers(customers)
+                customers.size
+            }
+            ImportMode.APPEND -> {
+                insertCustomers(customers)
+                customers.size
+            }
+            ImportMode.SKIP_DUPLICATES -> {
+                val existingPhones = HashSet<String>()
+                customerDao.getAllCustomerPhones().forEach { raw ->
+                    raw.split(',').map(String::trim).filter(String::isNotEmpty).forEach { existingPhones.add(it) }
+                }
+                val filtered = mutableListOf<Customer>()
+                for (customer in customers) {
+                    val customerPhones = customer.phone.split(',').map(String::trim).filter(String::isNotEmpty)
+                    if (customerPhones.isNotEmpty() && customerPhones.none { existingPhones.contains(it) }) {
+                        filtered.add(customer)
+                        existingPhones.addAll(customerPhones)
+                    }
+                }
+                if (filtered.isNotEmpty()) {
+                    insertCustomers(filtered)
+                }
+                filtered.size
+            }
+        }
+    }
+
+    override suspend fun resetCustomerStatus(scope: ResetStatusScope, selectedCustomerIds: List<Long>) {
+        when (scope) {
+            ResetStatusScope.ALL -> {
+                customerDao.resetAllCustomerStatus()
+            }
+            ResetStatusScope.SENT_ONLY -> {
+                customerDao.resetCustomerStatusByStatus(CustomerStatus.SENT.name)
+            }
+            ResetStatusScope.FAILED_ONLY -> {
+                customerDao.resetCustomerStatusByStatus(CustomerStatus.FAILED.name)
+            }
+            ResetStatusScope.SELECTED_ONLY -> {
+                if (selectedCustomerIds.isNotEmpty()) {
+                    customerDao.resetCustomerStatusByIds(selectedCustomerIds)
+                }
+            }
+        }
     }
 
     override suspend fun updateCustomer(customer: Customer) {

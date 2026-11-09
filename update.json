@@ -3,5 +3,5 @@
   "versionName": "0.1.6",
   "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.6/app-release.apk",
   "releaseNotes": "- Cải tiến tính năng nhập Excel và tối ưu hóa logic lọc danh sách khách hàng\n- Hỗ trợ biến mẫu tin nhắn sử dụng dấu ngoặc đơn (single-brace)\n- Cập nhật cơ chế thay thế danh sách khách hàng nhập vào một cách atomic",
-  "forceUpdate": false
+  "forceUpdate": true
 }

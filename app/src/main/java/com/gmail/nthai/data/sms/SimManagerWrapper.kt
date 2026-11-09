@@ -8,14 +8,15 @@ import android.telephony.SubscriptionInfo
 import android.telephony.TelephonyManager
 import com.gmail.nthai.domain.model.SimConfig
 
-class SimManagerWrapper(
-    private val context: Context
+open class SimManagerWrapper(
+    private val context: Context?
 ) {
 
     @SuppressLint("MissingPermission")
     @Suppress("DEPRECATION")
-    fun getActiveSims(): List<SimConfig> {
-        val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+    open fun getActiveSims(): List<SimConfig> {
+        val ctx = context ?: return emptyList()
+        val subscriptionManager = ctx.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
             ?: return emptyList()
 
         val result = mutableListOf<SimConfig>()
@@ -144,14 +145,14 @@ class SimManagerWrapper(
     }
 
     @SuppressLint("MissingPermission")
-    fun getSubscriptionIdForSlot(simSlot: Int): Int? {
+    open fun getSubscriptionIdForSlot(simSlot: Int): Int? {
         val activeSims = getActiveSims()
         return activeSims.find { it.simSlot == simSlot }?.subscriptionId
     }
 
     @SuppressLint("MissingPermission")
     private fun getCarrierName(subscriptionId: Int, info: SubscriptionInfo? = null): String {
-        val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        val telephonyManager = context?.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
         val subTelephony = telephonyManager?.createForSubscriptionId(subscriptionId)
         val simOperatorName = subTelephony?.simOperatorName
         val networkOperatorName = subTelephony?.networkOperatorName
