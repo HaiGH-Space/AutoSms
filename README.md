@@ -1,86 +1,158 @@
 <div align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" alt="AutoSms app icon" width="112">
+  <img src="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" alt="AutoSms Logo" width="100">
   <h1>AutoSms</h1>
-  <p>Quản lý danh sách khách hàng và gửi SMS cá nhân hóa bằng SIM trên thiết bị Android.</p>
+  <p><strong>Ứng dụng Android tự động hóa gửi tin nhắn SMS cá nhân hóa từ Excel qua SIM thiết bị.</strong></p>
 </div>
 
-## Giới thiệu
+---
 
-AutoSms là ứng dụng Android giúp nhập danh sách khách hàng từ Excel, tạo mẫu tin nhắn có nội dung cá nhân hóa, gửi qua SIM 1 hoặc SIM 2 và theo dõi kết quả. Dữ liệu khách hàng, mẫu tin, cấu hình SIM và nhật ký gửi được lưu cục bộ trên thiết bị.
+## Overview
 
-## Tính năng
+**AutoSms** là giải pháp gửi tin nhắn hàng loạt cá nhân hóa trên Android. Ứng dụng đọc dữ liệu khách hàng từ bảng tính Excel (`.xlsx`, `.xls`), tự động điền các thông tin tùy biến vào mẫu tin nhắn, chọn lọc SIM gửi phù hợp (SIM 1 / SIM 2), kiểm soát khoảng trễ ngẫu nhiên nhằm tránh vi phạm quy định chống spam của nhà mạng, và duy trì tiến độ gửi trong nền thông qua Foreground Service.
 
-- Nhập danh sách và thông tin khách hàng từ bảng tính Excel.
-- Tìm kiếm, chọn khách hàng để gửi riêng cho từng SIM.
-- Tạo và quản lý nhiều mẫu tin nhắn; xem trước nội dung sau khi thay biến.
-- Chèn dữ liệu từ cột Excel vào mẫu và dùng Spintax để chọn ngẫu nhiên cách diễn đạt.
-- Cấu hình hạn mức gửi theo ngày cho từng SIM, khoảng trễ ngẫu nhiên và khung giờ gửi.
-- Theo dõi tiến độ, tạm dừng, tiếp tục hoặc dừng quá trình gửi.
-- Xem thống kê và nhật ký; xuất báo cáo kết quả ra tệp Excel.
-- Kiểm tra phiên bản mới và tải APK cập nhật ngay trong ứng dụng.
+> [!NOTE]
+> Toàn bộ dữ liệu khách hàng, nhật ký tin nhắn và cấu hình SIM được lưu trữ cục bộ trên thiết bị thông qua Room Database, bảo đảm tính riêng tư và an toàn thông tin.
 
-## Yêu cầu
+---
 
-- Android 8.0 (API 26) trở lên.
-- Điện thoại có dịch vụ SMS và SIM đang hoạt động. Muốn sử dụng cả hai SIM, thiết bị cần hỗ trợ hai SIM.
-- Để build: Android Studio, Android SDK 35 và JDK 17 trở lên.
+## Key Features
 
-## Build và chạy
+- **Nhập dữ liệu linh hoạt từ Excel**: Đọc tự động các cột từ file bảng tính Excel (`.xlsx` / `.xls`), linh hoạt nhận diện cột số điện thoại (`SDT`, `Phone`, `Mobile`, `Điện thoại`,...) và trích xuất các cột thông tin tùy chọn.
+- **Động hóa nội dung & Spintax**:
+  - Trích xuất dữ liệu Excel vào mẫu tin bằng cú pháp `{Tên_Cột}` hoặc các tham số nhanh như `{Ten_KH}`, `{So_Tien}`, `{Ma_HD}`, `{Ngay_Han}`.
+  - Hỗ trợ công nghệ **Spintax** (`{Cháo bạn|Kính chào|Xin chào}`) giúp đảo ngữ ngẫu nhiên nội dung tin nhắn, hạn chế bị nhà mạng đánh dấu spam.
+  - Tự động định dạng tiền tệ theo tiêu chuẩn Việt Nam (ví dụ: `1.000.000`).
+- **Nhận diện nhà mạng Việt Nam**:
+  - Tự động phân tích đầu số và nhận diện nhà mạng (Viettel, VinaPhone, MobiFone, Vietnamobile, Gmobile, Wintel, iTel).
+  - Tùy chọn gửi tin ưu tiên theo nhà mạng của SIM tương ứng.
+- **Quản lý & Cấu hình 2 SIM**:
+  - Thiết lập hạn mức (quota) gửi SMS tối đa theo ngày riêng cho từng khe SIM.
+  - Cấu hình khoảng trễ ngẫu nhiên (tránh gửi quá nhanh) và khung giờ gửi cho phép trong ngày.
+- **Tiến trình gửi ổn định trong nền**:
+  - Chạy tiến trình gửi qua **Foreground Service**, duy trì hoạt động ngay cả khi ứng dụng bị ẩn hoặc màn hình tắt.
+  - Hỗ trợ theo dõi tiến độ thời gian thực (Đã gửi, Thất bại, Còn lại), hỗ trợ Tạm dừng (Pause), Tiếp tục (Resume) hoặc Hủy bỏ (Stop).
+- **Thống kê & Báo cáo**:
+  - Nhật ký chi tiết trạng thái gửi (`SENT`, `DELIVERED`, `FAILED`).
+  - Lọc báo cáo theo khoảng thời gian và xuất dữ liệu báo cáo ra file Excel.
+- **Cập nhật tự động**: Kiểm tra và tải bản cập nhật APK mới trực tiếp ngay trong ứng dụng.
 
-Mở dự án trong Android Studio, chờ Gradle đồng bộ, kết nối thiết bị Android rồi chạy cấu hình `app`.
+---
 
-Hoặc dùng Gradle Wrapper trong PowerShell:
+## Technical Stack & Architecture
 
+AutoSms được phát triển chuẩn hóa theo định hướng **Clean Architecture** và mô hình **MVVM / MVI**:
+
+| Thành phần | Công nghệ / Thư viện |
+| :--- | :--- |
+| **Ngôn ngữ** | Kotlin |
+| **Giao diện (UI)** | Jetpack Compose, Material 3, Accompanist / Dynamic System Bars |
+| **Kiến trúc** | Clean Architecture (Presentation, Domain, Data), ViewModel, StateFlow |
+| **Dependency Injection** | Hilt (Dagger) |
+| **Cơ sở dữ liệu (Local Storage)** | Room Database |
+| **Tác vụ nền & Lập lịch** | Android Foreground Service, WorkManager |
+| **Xử lý Bảng tính** | Apache POI (`poi-ooxml`) |
+| **Tải & Cài đặt APK** | OkHttp / Ktor Client, FileProvider |
+| **Build System** | Gradle (Kotlin DSL), KSP (Kotlin Symbol Processing) |
+
+---
+
+## Requirements & Permissions
+
+### Yêu cầu hệ thống
+
+- **Hệ điều hành**: Android 8.0 (API Level 26) trở lên.
+- **Phần cứng**: Thiết bị di động có hỗ trợ SIM (1 SIM hoặc Dual SIM) và đang hoạt động dịch vụ viễn thông.
+- **Môi trường phát triển**: Android Studio (Ladybug trở lên), JDK 11+, Android SDK 35.
+
+### Quyền ứng dụng (Permissions)
+
+> [!IMPORTANT]
+> Ứng dụng yêu cầu cấp một số quyền hệ thống để thực thi nhiệm vụ:
+
+- `SEND_SMS`: Quyền trực tiếp gửi tin nhắn qua sóng di động.
+- `READ_PHONE_STATE` & `READ_PHONE_NUMBERS`: Đọc thông tin SIM slot và nhận diện nhà mạng.
+- `POST_NOTIFICATIONS`: Hiển thị thanh thông báo tiến trình gửi khi chạy ngầm.
+- `FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_DATA_SYNC`: Giữ tiến trình gửi SMS không bị hệ điều hành Android giải phóng bộ nhớ.
+- `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: Bỏ qua tối ưu pin nhằm đảm bảo độ trễ gửi tin ổn định.
+- `REQUEST_INSTALL_PACKAGES`: Cho phép cập nhật phiên bản ứng dụng mới từ APK.
+
+---
+
+## Usage Guide
+
+### 1. Nhập danh sách khách hàng từ Excel
+1. Tại màn hình **Trang chủ**, nhấn **Nhập danh sách Excel**.
+2. Chọn file bảng tính (`.xlsx` hoặc `.xls`). Ứng dụng sẽ tự động phân tích các tiêu đề cột.
+3. Kiểm tra danh sách khách hàng đã trích xuất thành công.
+
+### 2. Thiết lập Mẫu tin nhắn & Spintax
+1. Chuyển sang mục **Mẫu tin nhắn**.
+2. Tạo mới mẫu tin nhắn, kết hợp các biến tùy chỉnh từ file Excel:
+   ```text
+   {Xin chào|Kính chào} {Ten_KH}, hợp đồng số {Ma_HD} của anh/chị có số tiền cần thanh toán là {So_Tien} đ. Hạn thanh toán: {Ngay_Han}. Cảm ơn!
+   ```
+3. Xem trước (Preview) nội dung tin nhắn đã thế biến để kiểm tra trước khi gửi.
+
+### 3. Cấu hình SIM & Quy tắc gửi
+1. Chuyển sang tab **Cấu hình**.
+2. Cấu hình cho **SIM 1** và **SIM 2**:
+   - Số tin gửi tối đa / ngày.
+   - Khoảng trễ ngẫu nhiên giữa các lần gửi (ví dụ: `15` - `45` giây).
+   - Khung giờ cho phép gửi tin trong ngày.
+
+### 4. Bắt đầu gửi & Theo dõi tiến độ
+1. Chọn SIM thực hiện gửi và danh sách khách hàng cần gửi.
+2. Bấm **Bắt đầu gửi**. Tiến trình gửi sẽ hiển thị trực quan ở màn hình **Tiến độ gửi**.
+3. Bạn có thể thu nhỏ ứng dụng; thông báo trạng thái sẽ duy trì ở thanh thông báo hệ thống.
+
+### 5. Xuất báo cáo
+1. Truy cập mục **Báo cáo**.
+2. Chọn khoảng thời gian cần thống kê.
+3. Nhấn **Xuất báo cáo Excel** để lưu file nhật ký kết quả gửi.
+
+---
+
+## Building & Development
+
+### Biên dịch dự án qua Gradle Wrapper
+
+Biên dịch bản Debug APK:
 ```powershell
 .\gradlew.bat assembleDebug
 ```
+*File APK đầu ra:* `app/build/outputs/apk/debug/app-debug.apk`
 
-APK debug được tạo tại `app/build/outputs/apk/debug/app-debug.apk`.
+Biên dịch bản Release APK:
+```powershell
+.\gradlew.bat assembleRelease
+```
 
-Chạy unit test:
-
+Chạy Unit Tests:
 ```powershell
 .\gradlew.bat test
 ```
 
-## Cách sử dụng
+---
 
-1. Cấp các quyền ứng dụng yêu cầu để truy cập thông tin SIM, gửi SMS và hiển thị thông báo.
-2. Từ **Trang chủ**, chọn **Nhập danh sách Excel** và chọn tệp bảng tính. Ứng dụng đọc sheet đầu tiên; hàng tiêu đề cần có cột số điện thoại. Mặc định tên cột là `sdt`; có thể đổi tên cột trong cấu hình gửi. Các tiêu đề như `sđt`, `phone` hoặc có nội dung liên quan đến số điện thoại cũng được nhận diện.
-3. Chọn SIM 1 hoặc SIM 2, sau đó chọn những khách hàng cần gửi.
-4. Trong **Quản lý → Mẫu tin nhắn**, tạo mẫu và chọn mẫu muốn sử dụng. Dùng `{Tên cột}` để chèn dữ liệu tương ứng từ Excel, ví dụ:
+## Project Structure
 
-   ```text
-   Xin chào {Tên khách hàng}, mã hồ sơ của bạn là {Mã hồ sơ}.
-   ```
+```text
+AutoSms/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/gmail/nthai/
+│   │   │   │   ├── data/             # Database (Room), Repositories, Excel & SMS Logic
+│   │   │   │   ├── di/               # Hilt Dependency Injection Modules
+│   │   │   │   ├── domain/           # Models, UseCases (Spintax, Carrier Detection, Rules)
+│   │   │   │   ├── presentation/     # UI Layer (Jetpack Compose Screens, ViewModels, Theme)
+│   │   │   │   ├── service/          # Foreground Service & BroadcastReceivers
+│   │   │   │   └── util/             # Utility classes (Permissions, Dates, Installers)
+│   │   │   └── res/                  # Android Resources (Icons, Themes, Values)
+│   │   └── test/                     # Unit Tests for UseCases and Parsers
+│   └── build.gradle.kts
+└── build.gradle.kts
+```
 
-   Dùng `{Cách viết thứ nhất|Cách viết thứ hai}` để chọn ngẫu nhiên một phương án khi gửi, ví dụ `{Xin chào|Kính chào}`.
-5. Trong phần cấu hình, kiểm tra SIM và đặt hạn mức mỗi ngày, khoảng trễ ngẫu nhiên cùng khung giờ cho phép gửi.
-6. Mở **Gửi tin**, bắt đầu gửi bằng SIM mong muốn và theo dõi tiến độ. Xem kết quả, lịch sử hoặc xuất báo cáo trong mục **Báo cáo**.
-
-## Quyền và lưu ý
-
-Ứng dụng cần quyền gửi SMS và quyền đọc thông tin/trạng thái SIM để gửi tin bằng SIM đã chọn. Ứng dụng cũng có thể cần quyền thông báo, chạy dịch vụ nền và quyền cài đặt ứng dụng không rõ nguồn gốc khi tải/cài bản cập nhật. Tên và cách cấp quyền có thể khác nhau tùy phiên bản Android và thiết bị.
-
-Tin nhắn được gửi qua mạng di động của nhà mạng và có thể phát sinh cước phí. Hãy kiểm tra hạn mức, nội dung, sự đồng ý của người nhận và các quy định áp dụng trước khi gửi; chỉ liên hệ những người mà bạn có quyền gửi tin.
-
-## Công nghệ
-
-- Kotlin và Jetpack Compose cho ứng dụng Android.
-- Room để lưu dữ liệu cục bộ.
-- Hilt để tiêm phụ thuộc; WorkManager và foreground service cho tác vụ nền.
-- Apache POI để đọc và xuất bảng tính Excel.
-
-## Cấu trúc dự án
-
-- `app/src/main/java/com/gmail/nthai/presentation` — giao diện Compose, điều hướng và ViewModel.
-- `app/src/main/java/com/gmail/nthai/domain` — mô hình và các use case nghiệp vụ.
-- `app/src/main/java/com/gmail/nthai/data` — cơ sở dữ liệu, repository, xử lý Excel và gửi SMS.
-- `app/src/main/java/com/gmail/nthai/service` — dịch vụ gửi SMS và tác vụ nền.
-- `app/src/test` — unit test cho các xử lý Excel và nghiệp vụ.
-
-## Thông tin ứng dụng
-
-- Application ID: `com.gmail.nthai`
-- Phiên bản: `0.1.6` (version code `7`)
-- [Các bản phát hành trên GitHub](https://github.com/HaiGH-Space/AutoSms/releases)
+> [!WARNING]
+> Tin nhắn SMS được gửi qua hạ tầng mạng di động của SIM trên thiết bị và có thể phát sinh cước phí từ nhà mạng. Vui lòng đảm bảo tuân thủ các quy định hiện hành về tần suất gửi và sự đồng ý của người nhận.
