@@ -19,11 +19,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -41,6 +42,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,6 +70,8 @@ import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 @Composable
 fun HomeScreen(
     onSelectSim: (Int) -> Unit,
+    onNavigateToAutoSms: () -> Unit,
+    onNavigateToAutoZalo: () -> Unit,
     configViewModel: ConfigViewModel = hiltViewModel(),
     dashboardViewModel: HomeDashboardViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel(),
@@ -219,6 +224,35 @@ fun HomeScreen(
                 )
             }
 
+            Text(
+                text = "Kênh gửi tin",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ChannelLauncherCard(
+                    title = "Gửi SMS",
+                    subtitle = "Quản lý & Tiến độ",
+                    icon = Icons.AutoMirrored.Filled.Send,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    onClick = onNavigateToAutoSms,
+                    modifier = Modifier.weight(1f)
+                )
+                ChannelLauncherCard(
+                    title = "Gửi Zalo",
+                    subtitle = "Sắp ra mắt",
+                    icon = Icons.AutoMirrored.Filled.Chat,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    onClick = onNavigateToAutoZalo,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
             ExcelImportCard(
                 totalCustomers = dashboardStats.totalCustomers,
                 readyCount = dashboardStats.sim1ReadyCount + dashboardStats.sim2ReadyCount,
@@ -298,6 +332,51 @@ fun HomeScreen(
 }
 
 @Composable
+private fun ChannelLauncherCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    containerColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier,
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp)
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.8f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun SimStatusCard(
     simSlot: Int,
     config: SimConfig?,
@@ -346,48 +425,76 @@ private fun ExcelImportCard(
     totalCustomers: Int,
     readyCount: Int,
     onClick: () -> Unit,
-    onResetClick: (() -> Unit)? = null,
-    isResetEnabled: Boolean = true
+    onResetClick: () -> Unit,
+    isResetEnabled: Boolean,
+    modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Surface(
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.primary
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Default.FileUpload,
-                    contentDescription = null,
-                    modifier = Modifier.padding(12.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        modifier = Modifier.size(40.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Icon(
+                            Icons.Default.FileUpload,
+                            contentDescription = null,
+                            modifier = Modifier.padding(10.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Column {
+                        Text(
+                            "Quản lý danh sách gửi",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "$totalCustomers khách hàng · $readyCount sẵn sàng",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-            Text("Nhập danh sách Excel", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(
-                text = "$totalCustomers khách hàng trong danh sách · $readyCount sẵn sàng",
-                style = MaterialTheme.typography.bodyMedium
-            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(onClick = onClick, modifier = Modifier.weight(1f)) {
-                    Text("Chọn tệp Excel")
+                Button(
+                    onClick = onClick,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Nhập Excel")
                 }
-                if (onResetClick != null && totalCustomers > 0) {
-                    OutlinedButton(onClick = onResetClick, enabled = isResetEnabled, modifier = Modifier.weight(1f)) {
-                        Text("Đặt lại trạng thái")
-                    }
+                OutlinedButton(
+                    onClick = onResetClick,
+                    enabled = isResetEnabled,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Đặt lại trạng thái")
                 }
             }
         }
@@ -403,38 +510,27 @@ private fun SimDispatchCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(modifier = modifier) {
+    val carrierName = config?.carrierName?.trim().orEmpty()
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.SimCard,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("SIM $simSlot", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            }
             Text(
-                config?.carrierName?.takeIf { it.isNotBlank() } ?: "Danh sách được gán",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-            Text("$assignedCount đã gán", style = MaterialTheme.typography.bodyMedium)
-            Text(
-                "$readyCount sẵn sàng",
+                text = if (carrierName.isNotEmpty()) "SIM $simSlot ($carrierName)" else "SIM $simSlot",
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.Bold
             )
-            OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-                Text("Quản lý")
-            }
+            Text(
+                text = "$assignedCount đã chọn · $readyCount chưa gửi",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

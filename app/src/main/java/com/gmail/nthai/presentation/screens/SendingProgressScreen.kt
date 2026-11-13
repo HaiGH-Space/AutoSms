@@ -46,6 +46,7 @@ import com.gmail.nthai.util.PermissionUtils
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SendingProgressScreen(
+    showTopBar: Boolean = true,
     viewModel: ProgressViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -102,15 +103,17 @@ fun SendingProgressScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Tiến độ gửi SMS",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            )
+            if (showTopBar) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "Tiến độ gửi SMS",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                )
+            }
         }
     ) { innerPadding ->
         val activeSimCount = serviceStates.values.count {

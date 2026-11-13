@@ -19,20 +19,22 @@ import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.gmail.nthai.presentation.screens.AutoSmsScreen
 import com.gmail.nthai.presentation.screens.CustomerListScreen
 import com.gmail.nthai.presentation.screens.HomeScreen
 import com.gmail.nthai.presentation.screens.ManagementScreen
 import com.gmail.nthai.presentation.screens.ReportScreen
 import com.gmail.nthai.presentation.screens.SendingProgressScreen
+import com.gmail.nthai.presentation.screens.ZaloScreen
 
 @Composable
 fun AppNavHost() {
     val navController = rememberNavController()
     val screens = listOf(
         Screen.Home,
-        Screen.Management,
-        Screen.Progress,
-        Screen.Report
+        Screen.AutoSms,
+        Screen.AutoZalo,
+        Screen.Management
     )
 
     Scaffold(
@@ -49,7 +51,18 @@ fun AppNavHost() {
                     NavigationBarItem(
                         selected = currentRoute == screen.route,
                         onClick = {
-                            if (currentRoute != screen.route) {
+                            if (screen == Screen.Home) {
+                                if (currentRoute != Screen.Home.route &&
+                                    !navController.popBackStack(Screen.Home.route, inclusive = false)
+                                ) {
+                                    navController.navigate(Screen.Home.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            inclusive = true
+                                        }
+                                        launchSingleTop = true
+                                    }
+                                }
+                            } else if (currentRoute != screen.route) {
                                 navController.navigate(screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
@@ -80,8 +93,16 @@ fun AppNavHost() {
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
-                    onSelectSim = { slot -> navController.navigate(Screen.Customers.route(slot)) }
+                    onSelectSim = { slot -> navController.navigate(Screen.Customers.route(slot)) },
+                    onNavigateToAutoSms = { navController.navigate(Screen.AutoSms.route) },
+                    onNavigateToAutoZalo = { navController.navigate(Screen.AutoZalo.route) }
                 )
+            }
+            composable(Screen.AutoSms.route) {
+                AutoSmsScreen()
+            }
+            composable(Screen.AutoZalo.route) {
+                ZaloScreen()
             }
             composable(Screen.Customers.route,
                 arguments = listOf(

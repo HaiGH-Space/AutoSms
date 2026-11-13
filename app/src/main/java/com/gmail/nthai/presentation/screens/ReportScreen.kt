@@ -65,6 +65,7 @@ import java.io.IOException
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(
+    showTopBar: Boolean = true,
     viewModel: ReportViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -112,35 +113,37 @@ fun ReportScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            "Báo cáo",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            "Thống kê và lịch sử gửi tin",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            if (showTopBar) {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                "Báo cáo",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Thống kê và lịch sử gửi tin",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { showClearConfirmation = true },
+                            enabled = logs.isNotEmpty()
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Xóa toàn bộ lịch sử",
+                                tint = if (logs.isNotEmpty()) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { showClearConfirmation = true },
-                        enabled = logs.isNotEmpty()
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Xóa toàn bộ lịch sử",
-                            tint = if (logs.isNotEmpty()) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
         LazyColumn(

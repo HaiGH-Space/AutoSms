@@ -65,8 +65,9 @@ import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerListScreen(
-    simSlot: Int,
-    onBack: () -> Unit,
+    simSlot: Int = 1,
+    showTopBar: Boolean = true,
+    onBack: (() -> Unit)? = null,
     viewModel: CustomerViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -102,40 +103,44 @@ fun CustomerListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại trang chủ"
-                        )
-                    }
-                },
-                title = {
-                    Column {
-                        Text(
-                            "Khách hàng",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            if (simCarrierName != null) "Danh sách gửi bằng SIM $simSlot ($simCarrierName)" else "Danh sách gửi bằng SIM $simSlot",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                actions = {
-                    if (customers.isNotEmpty()) {
-                        IconButton(onClick = { showResetDialog = true }, enabled = !isSending) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Đặt lại trạng thái gửi")
+            if (showTopBar) {
+                TopAppBar(
+                    navigationIcon = {
+                        if (onBack != null) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Quay lại trang chủ"
+                                )
+                            }
                         }
-                        IconButton(onClick = { viewModel.deleteAllCustomers() }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Xóa tất cả")
+                    },
+                    title = {
+                        Column {
+                            Text(
+                                "Khách hàng",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                if (simCarrierName != null) "Danh sách gửi bằng SIM $simSlot ($simCarrierName)" else "Danh sách gửi bằng SIM $simSlot",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    actions = {
+                        if (customers.isNotEmpty()) {
+                            IconButton(onClick = { showResetDialog = true }, enabled = !isSending) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Đặt lại trạng thái gửi")
+                            }
+                            IconButton(onClick = { viewModel.deleteAllCustomers() }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Xóa tất cả")
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(

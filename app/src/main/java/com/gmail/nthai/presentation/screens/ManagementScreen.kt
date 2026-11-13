@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SimCard
 import androidx.compose.material.icons.outlined.Sms
@@ -49,6 +50,7 @@ fun ManagementScreen(
     val tabs = listOf(
         Triple("Mẫu tin", "Mẫu tin nhắn", Icons.Outlined.Sms),
         Triple("SIM", "Quản lý SIM", Icons.Outlined.SimCard),
+        Triple("Báo cáo", "Báo cáo gửi tin", Icons.Outlined.Assessment),
         Triple("Quy tắc", "Quy định & Cập nhật", Icons.Outlined.Settings)
     )
 
@@ -125,7 +127,8 @@ fun ManagementScreen(
             when (selectedTab) {
                 0 -> TemplateEditorScreen(showTopBar = false)
                 1 -> SimManagementTab(viewModel = configViewModel, showTopBar = false)
-                2 -> RuleAndUpdateTab(viewModel = configViewModel, updateViewModel = updateViewModel, showTopBar = false)
+                2 -> ReportScreen(showTopBar = false)
+                3 -> RuleAndUpdateTab(viewModel = configViewModel, updateViewModel = updateViewModel, showTopBar = false)
             }
         }
     }

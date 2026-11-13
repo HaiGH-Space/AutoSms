@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
@@ -51,7 +52,7 @@ fun CustomerItemCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -63,31 +64,42 @@ fun CustomerItemCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    val customerName = customer.customFields.values.firstOrNull { it.isNotBlank() }
+                    if (customerName != null) {
+                        Text(
+                            text = customerName.trim(),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                     StatusBadge(customer.status)
-                    CarrierEstimateBadge(customer.phone)
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                if (customer.customFields.isEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     Text(
-                        text = "SĐT: ${customer.phone}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
+                        text = customer.phone,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                } else {
-                    customer.customFields.forEach { (label, value) ->
-                        Text(
-                            text = "$label: ${value.ifBlank { "—" }}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+                    CarrierEstimateBadge(customer.phone)
                 }
             }
 
