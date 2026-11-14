@@ -1,0 +1,361 @@
+
+=== DIRECTORY TREE (max depth 3, source files only) ===
+.agents
+.agents\skills
+.agents\skills\api-and-interface-design
+.agents\skills\api-and-interface-design\SKILL.md
+.agents\skills\browser-testing-with-devtools
+.agents\skills\browser-testing-with-devtools\SKILL.md
+.agents\skills\build-system
+.agents\skills\build-system\agp
+.agents\skills\ci-cd-and-automation
+.agents\skills\ci-cd-and-automation\SKILL.md
+.agents\skills\code-review-and-quality
+.agents\skills\code-review-and-quality\SKILL.md
+.agents\skills\code-simplification
+.agents\skills\code-simplification\SKILL.md
+.agents\skills\constraint-driven-development
+.agents\skills\constraint-driven-development\references
+.agents\skills\constraint-driven-development\scripts
+.agents\skills\constraint-driven-development\SKILL.md
+.agents\skills\context-engineering
+.agents\skills\context-engineering\SKILL.md
+.agents\skills\debugging-and-error-recovery
+.agents\skills\debugging-and-error-recovery\SKILL.md
+.agents\skills\deprecation-and-migration
+.agents\skills\deprecation-and-migration\SKILL.md
+.agents\skills\documentation-and-adrs
+.agents\skills\documentation-and-adrs\SKILL.md
+.agents\skills\doubt-driven-development
+.agents\skills\doubt-driven-development\SKILL.md
+.agents\skills\frontend-ui-engineering
+.agents\skills\frontend-ui-engineering\SKILL.md
+.agents\skills\git-workflow-and-versioning
+.agents\skills\git-workflow-and-versioning\SKILL.md
+.agents\skills\idea-refine
+.agents\skills\idea-refine\examples.md
+.agents\skills\idea-refine\frameworks.md
+.agents\skills\idea-refine\refinement-criteria.md
+.agents\skills\idea-refine\scripts
+.agents\skills\idea-refine\SKILL.md
+.agents\skills\incremental-implementation
+.agents\skills\incremental-implementation\SKILL.md
+.agents\skills\interview-me
+.agents\skills\interview-me\SKILL.md
+.agents\skills\jetpack-compose
+.agents\skills\jetpack-compose\adaptive
+.agents\skills\jetpack-compose\ink
+.agents\skills\jetpack-compose\jetpack-compose-performance
+.agents\skills\jetpack-compose\migration
+.agents\skills\navigation
+.agents\skills\navigation\navigation-3
+.agents\skills\navigation\navigation-event
+.agents\skills\observability-and-instrumentation
+.agents\skills\observability-and-instrumentation\SKILL.md
+.agents\skills\performance
+.agents\skills\performance\anr-audit-and-fix
+.agents\skills\performance\r8-analyzer
+.agents\skills\performance-optimization
+.agents\skills\performance-optimization\references
+.agents\skills\performance-optimization\SKILL.md
+.agents\skills\planning-and-task-breakdown
+.agents\skills\planning-and-task-breakdown\SKILL.md
+.agents\skills\profilers
+.agents\skills\profilers\android-profiler
+.agents\skills\security
+.agents\skills\security\android-intent-security
+.agents\skills\security\android-permissions-security
+.agents\skills\security-and-hardening
+.agents\skills\security-and-hardening\references
+.agents\skills\security-and-hardening\SKILL.md
+.agents\skills\shipping-and-launch
+.agents\skills\shipping-and-launch\SKILL.md
+.agents\skills\source-driven-development
+.agents\skills\source-driven-development\SKILL.md
+.agents\skills\spec-driven-development
+.agents\skills\spec-driven-development\SKILL.md
+.agents\skills\system
+.agents\skills\system\edge-to-edge
+.agents\skills\system\glance-appwidget-updates-and-memory
+.agents\skills\system\glance-canonical-layouts
+.agents\skills\test-driven-development
+.agents\skills\test-driven-development\SKILL.md
+.agents\skills\testing
+.agents\skills\testing\testing-setup
+.agents\skills\using-agent-skills
+.agents\skills\using-agent-skills\SKILL.md
+.gitignore
+app
+app\.gitignore
+app\build.gradle.kts
+app\proguard-rules.pro
+app\release
+app\src
+app\src\androidTest
+app\src\androidTest\java
+app\src\main
+app\src\main\AndroidManifest.xml
+app\src\main\java
+app\src\main\keepRules
+app\src\main\res
+app\src\test
+app\src\test\java
+build.gradle.kts
+docs
+docs\codebase
+docs\codebase\.codebase-scan.txt
+gradle
+gradle\gradle-daemon-jvm.properties
+gradle\libs.versions.toml
+gradle\wrapper
+gradle\wrapper\gradle-wrapper.jar
+gradle\wrapper\gradle-wrapper.properties
+gradle.properties
+gradlew
+gradlew.bat
+local.properties
+README.md
+settings.gradle.kts
+skills-lock.json
+update.json
+
+=== STACK DETECTION (manifest files) ===
+
+--- app/build.gradle.kts ---
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
+}
+
+android {
+    namespace = "com.gmail.nthai"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.gmail.nthai"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 7
+        versionName = "0.1.6"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        compose = true
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
+            excludes += "META-INF/ASL2.0"
+        }
+    }
+}
+
+dependencies {
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+
+    // Compose
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+[TRUNCATED] Showing first 80 of 102 lines.
+--- build.gradle.kts ---
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.compose.compiler) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.hilt) apply false
+}
+
+--- gradle.properties ---
+# Project-wide Gradle settings.
+# IDE (e.g. Android Studio) users:
+# Gradle settings configured through the IDE *will override*
+# any settings specified in this file.
+# For more details on how to configure your build environment visit
+# http://www.gradle.org/docs/current/userguide/build_environment.html
+# Specifies the JVM arguments used for the daemon process.
+# The setting is particularly useful for tweaking memory settings.
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+# When configured, Gradle will run in incubating parallel mode.
+# This option should only be used with decoupled projects. For more details, visit
+# https://developer.android.com/r/tools/gradle-multi-project-decoupled-projects
+# org.gradle.parallel=true
+# When enabled, the Configuration Cache allows Gradle to skip the configuration
+# phase entirely if nothing that affects the build configuration (such as build scripts)
+# has changed. Additionally, Gradle applies performance optimizations to task execution.
+org.gradle.configuration-cache=true
+# Kotlin code style for this project: "official" or "obsolete":
+kotlin.code.style=official
+android.disallowKotlinSourceSets=false
+android.sync.suppressAgpWarnings=UNSUPPORTED_PROJECT_OPTION_USE
+--- settings.gradle.kts ---
+pluginManagement {
+    repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "AutoSms"
+include(":app")
+
+
+=== ENTRY POINTS ===
+Found: app/src/main/AndroidManifest.xml
+
+=== LINTING AND FORMATTING CONFIG ===
+No linting or formatting config files found in project root.
+
+=== ENVIRONMENT VARIABLE TEMPLATES ===
+No .env.example or .env.template found.
+
+=== TODO / FIXME / HACK (production code only, test dirs excluded) ===
+app\src\main\res\xml\data_extraction_rules.xml:8: <!-- TODO: Use <include> and <exclude> to control what is backed up.
+
+=== GIT RECENT COMMITS (last 20) ===
+f3cf961 feat: implement Zalo automation feature with accessibility service and database support
+ae518e3 feat(zalo): implement Zalo UI screens and component tabs
+cb5cdbf feat: refactor bottom navigation, add AutoSmsScreen and ZaloScreen placeholder
+e76f476 chore: add appInsightsSettings.xml to .gitignore
+6797ffe docs: update README.md with project features and setup guide
+0e1329b Merge pull request #8 from HaiGH-Space/0.1.6
+4408c75 feat: update release notes with new Excel import modes and enhanced SMS handling features
+84555bd feat: Hỗ trợ các chế độ nhập Excel, đặt lại trạng thái gửi và tối ưu hóa xử lý SMS retry
+ba82572 chore: update version to 0.1.6 and modify release notes
+73b8185 Merge pull request #7 from HaiGH-Space/0.1.6
+7bfdfa1 feat(excel): enhance Excel import functionality and improve filtering logic
+3f53c8b chore: rename SKILL.md and related files for consistency
+4f5dd61 feat(widget): add skills
+819eb72 Support single-brace template variables
+c8f6d0c Replace imported customers atomically
+9f7385e Merge pull request #6
+9584533 fix(excel): filter out duplicate phone numbers during customer import
+6be2bfc Merge pull request #5 from HaiGH-Space/hotfix/sms-error-handling
+8b9713b chore: bump version to 0.1.5 (versionCode 6) and update release notes
+4c2ef1f fix(sms): prevent duplicate count and handle multipart SMS failures correctly
+
+=== HIGH-CHURN FILES (last 90 days, top 20) ===
+  13 app/src/main/java/com/gmail/nthai/presentation/screens/CustomerListScreen.kt
+  12 app/build.gradle.kts
+  12 app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt
+  11 app/src/main/java/com/gmail/nthai/presentation/screens/HomeScreen.kt
+  10 update.json
+  10 app/src/main/java/com/gmail/nthai/presentation/viewmodel/CustomerViewModel.kt
+   9 app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt
+   9 app/src/main/java/com/gmail/nthai/presentation/screens/SimAndRuleConfigScreen.kt
+   8 app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt
+   8 app/src/main/java/com/gmail/nthai/presentation/screens/ReportScreen.kt
+   8 app/src/main/java/com/gmail/nthai/presentation/screens/SendingProgressScreen.kt
+   7 app/src/main/java/com/gmail/nthai/presentation/navigation/Screen.kt
+   7 README.md
+   6 app/src/main/AndroidManifest.xml
+   6 app/src/main/java/com/gmail/nthai/data/local/mapper/Mappers.kt
+   6 app/src/main/java/com/gmail/nthai/presentation/navigation/AppNavHost.kt
+   6 app/src/main/java/com/gmail/nthai/data/local/dao/CustomerDao.kt
+   6 app/src/main/java/com/gmail/nthai/data/repository/CustomerRepositoryImpl.kt
+   6 app/src/main/java/com/gmail/nthai/domain/repository/CustomerRepository.kt
+   6 app/src/main/java/com/gmail/nthai/service/SmsStatusReceiver.kt
+
+=== MONOREPO SIGNALS ===
+Gradle multi-project build file detected (settings.gradle[.kts])
+
+=== CODE METRICS ===
+Total files scanned: 425
+Total lines of code: 23230
+
+Files by language:
+  Other: 195
+  Kotlin: 161
+  XML: 61
+  Python: 3
+  Kotlin Script: 3
+  JSON: 2
+
+Top 10 largest files:
+gradle\wrapper\gradle-wrapper.jar: 44.4KB
+.agents\skills\security\android-permissions-security\references\android\training\permissions\requesting.md: 37.9KB
+.agents\skills\security\android-permissions-security\SKILL.md: 29.2KB
+.agents\skills\jetpack-compose\jetpack-compose-performance\references\state-and-stability.md: 27.5KB
+.agents\skills\jetpack-compose\jetpack-compose-performance\references\android\develop\ui\compose\custom-modifiers.md: 26.7KB
+.agents\skills\navigation\navigation-3\references\android\guide\navigation\navigation-3\migration-guide.md: 26.5KB
+.agents\skills\system\glance-appwidget-updates-and-memory\references\android\about\versions\17\behavior-changes-17.md: 24.1KB
+.agents\skills\system\glance-canonical-layouts\SKILL.md: 23.9KB
+.agents\skills\security\android-intent-security\SKILL.md: 23.8KB
+.agents\skills\system\glance-appwidget-updates-and-memory\references\android\develop\ui\compose\glance\create-app-widget.md: 22.3KB
+
+=== CI/CD PIPELINES ===
+None found.
+
+=== CONTAINERS & ORCHESTRATION ===
+None found.
+
+=== SECURITY & COMPLIANCE ===
+None found.
+
+=== PERFORMANCE & TESTING ===
+None found.
+
+=== SCAN COMPLETE ===
