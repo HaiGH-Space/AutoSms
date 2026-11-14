@@ -39,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,20 +52,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gmail.nthai.domain.model.LogStatus
+import com.gmail.nthai.domain.model.ZaloRecipient
 import com.gmail.nthai.presentation.components.common.StatusBadge
-
-data class ZaloCustomerItem(
-    val id: String,
-    val name: String,
-    val phone: String,
-    val isZaloFriend: Boolean,
-    val status: LogStatus,
-    val note: String = ""
-)
 
 @Composable
 fun ZaloRecipientTab(
-    onImportExcel: () -> Unit
+    recipients: List<ZaloRecipient> = emptyList(),
+    onAddRecipient: (name: String, phone: String) -> Unit = { _, _ -> },
+    onDeleteRecipient: (id: Long) -> Unit = {},
+    onRetryRecipient: (id: Long) -> Unit = {},
+    onImportExcel: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("ALL") } // "ALL", "PENDING", "SUCCESS", "FAILED"
@@ -75,18 +70,20 @@ fun ZaloRecipientTab(
     var newCustomerName by remember { mutableStateOf("") }
     var newCustomerPhone by remember { mutableStateOf("") }
 
-    val customerList = remember {
-        mutableStateListOf(
-            ZaloCustomerItem("1", "Nguyễn Văn Anh", "0987654321", isZaloFriend = true, status = LogStatus.SENT_SUCCESS, note = "Đã gửi tin & ảnh thành công"),
-            ZaloCustomerItem("2", "Trần Thị Bình", "0912345678", isZaloFriend = false, status = LogStatus.PENDING, note = "Đã bật tự động kết bạn"),
-            ZaloCustomerItem("3", "Lê Văn Cường", "0933445566", isZaloFriend = true, status = LogStatus.FAILED, note = "SĐT chưa mở tài khoản Zalo"),
-            ZaloCustomerItem("4", "Phạm Minh Đức", "0977889900", isZaloFriend = false, status = LogStatus.PENDING, note = "Chờ gửi"),
-            ZaloCustomerItem("5", "Hoàng Kim Ngân", "0909123456", isZaloFriend = true, status = LogStatus.SENT_SUCCESS, note = "Đã gửi qua Trợ năng Zalo"),
-            ZaloCustomerItem("6", "Đỗ Hữu Tài", "0944556677", isZaloFriend = true, status = LogStatus.PENDING, note = "Chờ gửi")
-        )
+    val displayList = if (recipients.isEmpty() && searchQuery.isEmpty() && selectedFilter == "ALL") {
+        remember {
+            listOf(
+                ZaloRecipient(1, "Nguyễn Văn Anh", "0987654321", isZaloFriend = true, status = LogStatus.SENT_SUCCESS, note = "Đã gửi tin & ảnh thành công"),
+                ZaloRecipient(2, "Trần Thị Bình", "0912345678", isZaloFriend = false, status = LogStatus.PENDING, note = "Đã bật tự động kết bạn"),
+                ZaloRecipient(3, "Lê Văn Cường", "0933445566", isZaloFriend = true, status = LogStatus.FAILED, note = "SĐT chưa mở tài khoản Zalo"),
+                ZaloRecipient(4, "Phạm Minh Đức", "0977889900", isZaloFriend = false, status = LogStatus.PENDING, note = "Chờ gửi")
+            )
+        }
+    } else {
+        recipients
     }
 
-    val filteredList = customerList.filter { customer ->
+    val filteredList = displayList.filter { customer ->
         val matchesSearch = customer.name.contains(searchQuery, ignoreCase = true) || customer.phone.contains(searchQuery)
         val matchesFilter = when (selectedFilter) {
             "PENDING" -> customer.status == LogStatus.PENDING
@@ -97,10 +94,10 @@ fun ZaloRecipientTab(
         matchesSearch && matchesFilter
     }
 
-    val totalCount = customerList.size
-    val pendingCount = customerList.count { it.status == LogStatus.PENDING }
-    val successCount = customerList.count { it.status == LogStatus.SENT_SUCCESS }
-    val failedCount = customerList.count { it.status == LogStatus.FAILED }
+    val totalCount = displayList.size
+    val pendingCount = displayList.count { it.status == LogStatus.PENDING }
+    val successCount = displayList.count { it.status == LogStatus.SENT_SUCCESS }
+    val failedCount = displayList.count { it.status == LogStatus.FAILED }
 
     Column(
         modifier = Modifier
@@ -266,13 +263,8 @@ fun ZaloRecipientTab(
                 items(filteredList, key = { it.id }) { customer ->
                     ZaloCustomerCard(
                         customer = customer,
-                        onDelete = { customerList.remove(customer) },
-                        onRetry = {
-                            val index = customerList.indexOf(customer)
-                            if (index >= 0) {
-                                customerList[index] = customer.copy(status = LogStatus.PENDING, note = "Chờ gửi lại")
-                            }
-                        }
+                        onDelete = { onDeleteRecipient(customer.id) },
+                        onRetry = { onRetryRecipient(customer.id) }
                     )
                 }
             }
@@ -306,16 +298,7 @@ fun ZaloRecipientTab(
                 Button(
                     onClick = {
                         if (newCustomerPhone.isNotBlank()) {
-                            customerList.add(
-                                ZaloCustomerItem(
-                                    id = System.currentTimeMillis().toString(),
-                                    name = newCustomerName.ifBlank { "Khách hàng Mới" },
-                                    phone = newCustomerPhone,
-                                    isZaloFriend = false,
-                                    status = LogStatus.PENDING,
-                                    note = "Chờ gửi"
-                                )
-                            )
+                            onAddRecipient(newCustomerName, newCustomerPhone)
                             newCustomerName = ""
                             newCustomerPhone = ""
                             showAddDialog = false
@@ -336,7 +319,7 @@ fun ZaloRecipientTab(
 
 @Composable
 private fun ZaloCustomerCard(
-    customer: ZaloCustomerItem,
+    customer: ZaloRecipient,
     onDelete: () -> Unit,
     onRetry: () -> Unit
 ) {

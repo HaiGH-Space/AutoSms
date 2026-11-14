@@ -14,12 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.CheckCircle
@@ -31,7 +29,6 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -51,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,19 +57,22 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ZaloConfigTab(
-    onStartSending: () -> Unit,
-    onImportExcel: () -> Unit,
-    onOpenAccessibilitySettings: () -> Unit
+    isAccessibilityEnabled: Boolean = false,
+    messageContent: String = "{Xin chào|Chào} {ten_khach}, bên em đang có chương trình ưu đãi tri ân khách hàng. Vui lòng nhắn tin lại để nhận mã giảm giá nhé!",
+    onMessageContentChange: (String) -> Unit = {},
+    delayRange: ClosedFloatingPointRange<Float> = 10f..25f,
+    onDelayRangeChange: (ClosedFloatingPointRange<Float>) -> Unit = {},
+    autoAddFriend: Boolean = true,
+    onAutoAddFriendChange: (Boolean) -> Unit = {},
+    sendOnlyIfUnsent: Boolean = true,
+    onSendOnlyIfUnsentChange: (Boolean) -> Unit = {},
+    selectedImages: List<String> = listOf("anh_khuyen_mai.jpg"),
+    onAddImage: (String) -> Unit = {},
+    onRemoveImage: (Int) -> Unit = {},
+    onStartSending: () -> Unit = {},
+    onImportExcel: () -> Unit = {},
+    onOpenAccessibilitySettings: () -> Unit = {}
 ) {
-    var isAccessibilityEnabled by remember { mutableStateOf(false) }
-    var messageContent by remember {
-        mutableStateOf("{Xin chào|Chào} {ten_khach}, bên em đang có chương trình ưu đãi tri ân khách hàng. Vui lòng nhắn tin lại để nhận mã giảm giá nhé!")
-    }
-    var delayRange by remember { mutableStateOf(10f..25f) }
-    var autoAddFriend by remember { mutableStateOf(true) }
-    var sendOnlyIfUnsent by remember { mutableStateOf(true) }
-    val selectedImages = remember { mutableStateListOf("anh_khuyen_mai.jpg") }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -81,7 +80,7 @@ fun ZaloConfigTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Accessibility Status Banner Card (Matching app's primaryContainer Card style)
+        // 1. Accessibility Status Banner Card
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -124,17 +123,14 @@ fun ZaloConfigTab(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick = {
-                        isAccessibilityEnabled = !isAccessibilityEnabled
-                        if (!isAccessibilityEnabled) onOpenAccessibilitySettings()
-                    },
+                    onClick = onOpenAccessibilitySettings,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isAccessibilityEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                     ),
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Text(
-                        text = if (isAccessibilityEnabled) "Tắt" else "Bật ngay",
+                        text = if (isAccessibilityEnabled) "Cài đặt" else "Bật ngay",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -171,7 +167,7 @@ fun ZaloConfigTab(
 
                 OutlinedTextField(
                     value = messageContent,
-                    onValueChange = { messageContent = it },
+                    onValueChange = onMessageContentChange,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(130.dp),
@@ -193,22 +189,17 @@ fun ZaloConfigTab(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     AssistChip(
-                        onClick = { messageContent += " {ten_khach}" },
+                        onClick = { onMessageContentChange(messageContent + " {ten_khach}") },
                         label = { Text("{ten_khach}") },
                         leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp)) }
                     )
                     AssistChip(
-                        onClick = { messageContent += " {sdt}" },
+                        onClick = { onMessageContentChange(messageContent + " {sdt}") },
                         label = { Text("{sdt}") },
                         leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp)) }
                     )
                     AssistChip(
-                        onClick = { messageContent += " {hien_tai}" },
-                        label = { Text("{hien_tai}") },
-                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp)) }
-                    )
-                    AssistChip(
-                        onClick = { messageContent += " {Xin chào|Chào anh/chị}" },
+                        onClick = { onMessageContentChange(messageContent + " {Xin chào|Chào anh/chị}") },
                         label = { Text("Spintax {A|B}") },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -255,7 +246,7 @@ fun ZaloConfigTab(
 
                 if (selectedImages.isEmpty()) {
                     OutlinedButton(
-                        onClick = { selectedImages.add("anh_demo_${selectedImages.size + 1}.jpg") },
+                        onClick = { onAddImage("anh_demo_${selectedImages.size + 1}.jpg") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -290,7 +281,7 @@ fun ZaloConfigTab(
                                     )
                                 }
                                 IconButton(
-                                    onClick = { selectedImages.removeAt(index) },
+                                    onClick = { onRemoveImage(index) },
                                     modifier = Modifier.size(24.dp)
                                 ) {
                                     Icon(
@@ -304,7 +295,7 @@ fun ZaloConfigTab(
                         }
 
                         OutlinedButton(
-                            onClick = { selectedImages.add("anh_demo_${selectedImages.size + 1}.jpg") },
+                            onClick = { onAddImage("anh_demo_${selectedImages.size + 1}.jpg") },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -354,7 +345,7 @@ fun ZaloConfigTab(
 
                 RangeSlider(
                     value = delayRange,
-                    onValueChange = { delayRange = it },
+                    onValueChange = onDelayRangeChange,
                     valueRange = 5f..60f,
                     steps = 11,
                     modifier = Modifier.fillMaxWidth()
@@ -381,7 +372,7 @@ fun ZaloConfigTab(
                     }
                     Switch(
                         checked = autoAddFriend,
-                        onCheckedChange = { autoAddFriend = it }
+                        onCheckedChange = onAutoAddFriendChange
                     )
                 }
 
@@ -406,7 +397,7 @@ fun ZaloConfigTab(
                     }
                     Switch(
                         checked = sendOnlyIfUnsent,
-                        onCheckedChange = { sendOnlyIfUnsent = it }
+                        onCheckedChange = onSendOnlyIfUnsentChange
                     )
                 }
             }

@@ -96,4 +96,10 @@ object DatabaseModule {
 
     @Provides
     fun provideSendingLogDao(db: AppDatabase): SendingLogDao = db.sendingLogDao()
+
+    @Provides
+    fun provideZaloRecipientDao(db: AppDatabase): com.gmail.nthai.data.local.dao.ZaloRecipientDao = db.zaloRecipientDao()
+
+    @Provides
+    fun provideZaloSendingLogDao(db: AppDatabase): com.gmail.nthai.data.local.dao.ZaloSendingLogDao = db.zaloSendingLogDao()
 }

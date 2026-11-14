@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -29,15 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,63 +36,48 @@ import androidx.compose.ui.unit.sp
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.presentation.components.common.LogRecordCard
+import com.gmail.nthai.service.ZaloSendingProgressState
 
 @Composable
 fun ZaloProgressTab(
-    isSendingActive: Boolean = true
+    progressState: ZaloSendingProgressState = ZaloSendingProgressState(),
+    logs: List<LogRecord> = emptyList(),
+    onPauseCampaign: () -> Unit = {},
+    onResumeCampaign: () -> Unit = {},
+    onStopCampaign: () -> Unit = {}
 ) {
-    var isSending by remember { mutableStateOf(isSendingActive) }
-    var isPaused by remember { mutableStateOf(false) }
-    var sentCount by remember { mutableIntStateOf(14) }
-    val totalCount = 45
-    val currentRecipientName = "Nguyễn Văn Hùng"
-    val currentRecipientPhone = "0966778899"
-    val nextSendSeconds = 12
+    val isSending = progressState.isSending
+    val isPaused = progressState.isPaused
+    val sentCount = progressState.sentCount
+    val totalCount = if (progressState.totalCount > 0) progressState.totalCount else 1
+    val currentRecipient = progressState.currentRecipient
+    val countdownSeconds = progressState.countdownSeconds
 
-    val mockLogs = remember {
-        mutableStateListOf(
+    val displayLogs = if (logs.isEmpty() && !isSending) {
+        listOf(
             LogRecord(
                 id = 1,
                 customerId = 101,
-                simSlot = 1,
                 customerName = "Nguyễn Văn Anh",
                 phone = "0987654321",
                 messageContent = "{Xin chào|Chào} Nguyễn Văn Anh, bên em có ưu đãi mã giảm giá 20% cho đơn hàng đầu tiên.",
+                simSlot = 0,
                 status = LogStatus.SENT_SUCCESS,
                 timestamp = System.currentTimeMillis() - 1000 * 60 * 12
             ),
             LogRecord(
                 id = 2,
                 customerId = 102,
-                simSlot = 1,
                 customerName = "Trần Thị Bình",
                 phone = "0912345678",
                 messageContent = "Chào bạn, đã tự động bấm gửi lời mời kết bạn & dán tin nhắn trên Zalo.",
+                simSlot = 0,
                 status = LogStatus.SENT_SUCCESS,
                 timestamp = System.currentTimeMillis() - 1000 * 60 * 8
-            ),
-            LogRecord(
-                id = 3,
-                customerId = 103,
-                simSlot = 1,
-                customerName = "Lê Văn Cường",
-                phone = "0933445566",
-                messageContent = "Chào anh Cường, tin nhắn giới thiệu sản phẩm mới.",
-                status = LogStatus.FAILED,
-                errorMessage = "Số điện thoại chưa đăng ký hoặc chưa mở tài khoản Zalo",
-                timestamp = System.currentTimeMillis() - 1000 * 60 * 5
-            ),
-            LogRecord(
-                id = 4,
-                customerId = 104,
-                simSlot = 1,
-                customerName = "Phạm Minh Đức",
-                phone = "0977889900",
-                messageContent = "Chào anh Đức, tin nhắn chăm sóc khách hàng định kỳ.",
-                status = LogStatus.SENT_SUCCESS,
-                timestamp = System.currentTimeMillis() - 1000 * 60 * 2
             )
         )
+    } else {
+        logs
     }
 
     Column(
@@ -110,7 +86,7 @@ fun ZaloProgressTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Live Zalo Progress Center Card (Matching app's SendingProgressScreen style)
+        // 1. Live Zalo Progress Center Card
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -133,9 +109,9 @@ fun ZaloProgressTab(
                         )
                         Text(
                             text = when {
-                                !isSending -> "Trạng thái: Đã dừng"
+                                !isSending -> progressState.statusMessage
                                 isPaused -> "Trạng thái: Tạm dừng"
-                                else -> "Đang tự động thao tác trên Zalo..."
+                                else -> progressState.statusMessage
                             },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -170,7 +146,7 @@ fun ZaloProgressTab(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                if (isSending) {
+                if (isSending && currentRecipient != null) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -187,7 +163,7 @@ fun ZaloProgressTab(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Đang xử lý: $currentRecipientName ($currentRecipientPhone)",
+                                    text = "Đang xử lý: ${currentRecipient.name} (${currentRecipient.phone})",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -197,12 +173,14 @@ fun ZaloProgressTab(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Text(
-                                text = "${nextSendSeconds}s",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            if (countdownSeconds > 0) {
+                                Text(
+                                    text = "${countdownSeconds}s",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }
@@ -214,24 +192,11 @@ fun ZaloProgressTab(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (!isSending) {
-                        Button(
-                            onClick = {
-                                isSending = true
-                                isPaused = false
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Tiếp tục gửi")
-                        }
-                    } else {
+                    if (isSending) {
                         OutlinedButton(
-                            onClick = { isPaused = !isPaused },
+                            onClick = {
+                                if (isPaused) onResumeCampaign() else onPauseCampaign()
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(44.dp)
@@ -245,10 +210,7 @@ fun ZaloProgressTab(
                         }
 
                         Button(
-                            onClick = {
-                                isSending = false
-                                isPaused = false
-                            },
+                            onClick = onStopCampaign,
                             modifier = Modifier
                                 .weight(1f)
                                 .height(44.dp),
@@ -275,7 +237,7 @@ fun ZaloProgressTab(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(mockLogs, key = { it.id }) { log ->
+            items(displayLogs, key = { it.id }) { log ->
                 LogRecordCard(log = log, compact = true)
             }
         }

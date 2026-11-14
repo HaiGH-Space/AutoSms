@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AutoSms</string>
+    <string name="zalo_accessibility_description">Dịch vụ Hỗ trợ Trợ năng giúp ứng dụng AutoSms tự động dán và gửi tin nhắn Zalo cá nhân theo danh sách số điện thoại.</string>
 </resources>

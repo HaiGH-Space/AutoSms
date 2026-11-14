@@ -125,3 +125,49 @@ fun LogRecord.toEntity(): SendingLogEntity = SendingLogEntity(
     status = status.name,
     errorMessage = errorMessage
 )
+
+// Zalo Mappers
+fun com.gmail.nthai.data.local.entity.ZaloRecipientEntity.toDomain(): com.gmail.nthai.domain.model.ZaloRecipient = com.gmail.nthai.domain.model.ZaloRecipient(
+    id = id,
+    name = name,
+    phone = phone,
+    isZaloFriend = isZaloFriend,
+    status = try { LogStatus.valueOf(status) } catch (_: Exception) { LogStatus.PENDING },
+    note = note,
+    lastSentTime = lastSentTime,
+    customFieldsJson = customFieldsJson
+)
+
+fun com.gmail.nthai.domain.model.ZaloRecipient.toEntity(): com.gmail.nthai.data.local.entity.ZaloRecipientEntity = com.gmail.nthai.data.local.entity.ZaloRecipientEntity(
+    id = id,
+    name = name,
+    phone = phone,
+    isZaloFriend = isZaloFriend,
+    status = status.name,
+    note = note,
+    lastSentTime = lastSentTime,
+    customFieldsJson = customFieldsJson
+)
+
+fun com.gmail.nthai.data.local.entity.ZaloSendingLogEntity.toDomain(): LogRecord = LogRecord(
+    id = id,
+    customerId = recipientId,
+    customerName = recipientName,
+    phone = phone,
+    messageContent = messageContent,
+    simSlot = 0,
+    timestamp = timestamp,
+    status = try { LogStatus.valueOf(status) } catch (_: Exception) { LogStatus.PENDING },
+    errorMessage = errorMessage
+)
+
+fun LogRecord.toZaloEntity(): com.gmail.nthai.data.local.entity.ZaloSendingLogEntity = com.gmail.nthai.data.local.entity.ZaloSendingLogEntity(
+    id = id,
+    recipientId = customerId,
+    recipientName = customerName,
+    phone = phone,
+    messageContent = messageContent,
+    timestamp = timestamp,
+    status = status.name,
+    errorMessage = errorMessage
+)

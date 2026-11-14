@@ -22,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -32,23 +34,41 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.gmail.nthai.presentation.components.zalo.ZaloConfigTab
 import com.gmail.nthai.presentation.components.zalo.ZaloProgressTab
 import com.gmail.nthai.presentation.components.zalo.ZaloRecipientTab
+import com.gmail.nthai.presentation.viewmodel.ZaloViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ZaloScreen(
-    initialTab: Int = 0
+    initialTab: Int = 0,
+    viewModel: ZaloViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(initialTab) }
+
+    val recipients by viewModel.recipients.collectAsState()
+    val logs by viewModel.logs.collectAsState()
+    val progressState by viewModel.progressState.collectAsState()
+    val isAccessibilityEnabled by viewModel.isAccessibilityEnabled.collectAsState()
+    val messageContent by viewModel.messageContent.collectAsState()
+    val delayRange by viewModel.delayRange.collectAsState()
+    val autoAddFriend by viewModel.autoAddFriend.collectAsState()
+    val sendOnlyIfUnsent by viewModel.sendOnlyIfUnsent.collectAsState()
+    val selectedImages by viewModel.selectedImages.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkAccessibilityStatus(context)
+    }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            Toast.makeText(context, "Đã chọn file Excel Zalo: ${uri.lastPathSegment}", Toast.LENGTH_SHORT).show()
+            viewModel.importExcelFile(context, uri)
+            Toast.makeText(context, "Đã nhập file Excel Zalo", Toast.LENGTH_SHORT).show()
             selectedTab = 0 // Show in recipient list
         }
     }
@@ -133,15 +153,36 @@ fun ZaloScreen(
         ) {
             when (selectedTab) {
                 0 -> ZaloRecipientTab(
+                    recipients = recipients,
+                    onAddRecipient = { name, phone -> viewModel.addRecipient(name, phone) },
+                    onDeleteRecipient = { id -> viewModel.deleteRecipient(id) },
+                    onRetryRecipient = { id -> viewModel.resetRecipientStatus(id) },
                     onImportExcel = {
                         filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                     }
                 )
                 1 -> ZaloProgressTab(
-                    isSendingActive = true
+                    progressState = progressState,
+                    logs = logs,
+                    onPauseCampaign = { viewModel.pauseCampaign() },
+                    onResumeCampaign = { viewModel.resumeCampaign() },
+                    onStopCampaign = { viewModel.stopCampaign() }
                 )
                 2 -> ZaloConfigTab(
+                    isAccessibilityEnabled = isAccessibilityEnabled,
+                    messageContent = messageContent,
+                    onMessageContentChange = { viewModel.messageContent.value = it },
+                    delayRange = delayRange,
+                    onDelayRangeChange = { viewModel.delayRange.value = it },
+                    autoAddFriend = autoAddFriend,
+                    onAutoAddFriendChange = { viewModel.autoAddFriend.value = it },
+                    sendOnlyIfUnsent = sendOnlyIfUnsent,
+                    onSendOnlyIfUnsentChange = { viewModel.sendOnlyIfUnsent.value = it },
+                    selectedImages = selectedImages,
+                    onAddImage = { viewModel.addSelectedImage(it) },
+                    onRemoveImage = { viewModel.removeSelectedImage(it) },
                     onStartSending = {
+                        viewModel.startCampaign()
                         Toast.makeText(context, "Đã khởi chạy chiến dịch gửi Zalo tự động!", Toast.LENGTH_SHORT).show()
                         selectedTab = 1 // Switch to progress tab
                     },
