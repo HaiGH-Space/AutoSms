@@ -4,7 +4,6 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.text.TextUtils
@@ -12,7 +11,6 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
-import com.gmail.nthai.MainActivity
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -100,17 +98,6 @@ class ZaloAccessibilityService : AccessibilityService() {
         }, 500)
     }
 
-    private fun bringAppToFront() {
-        try {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-            }
-            startActivity(intent)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to bring app to front", e)
-        }
-    }
-
     private fun handleAutoSendFlow(rootNode: AccessibilityNodeInfo) {
         val message = currentPendingMessage ?: return
 
@@ -135,7 +122,7 @@ class ZaloAccessibilityService : AccessibilityService() {
                 isPendingActionActive = false
                 currentPendingMessage = null
                 _sendEvents.tryEmit(SendResult.Success)
-                bringAppToFront()
+                // Stay in Zalo instead of bringing app back to front for debugging
             }
         }
     }

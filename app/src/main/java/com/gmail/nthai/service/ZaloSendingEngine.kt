@@ -125,16 +125,7 @@ class ZaloSendingEngine @Inject constructor(
                     ZaloAccessibilityService.sendEvents.firstOrNull()
                 }
 
-                if (sendResult == null) {
-                    try {
-                        val bringIntent = Intent(context, com.gmail.nthai.MainActivity::class.java).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                        }
-                        context.startActivity(bringIntent)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to bring app to front on timeout", e)
-                    }
-                }
+                // Stay in Zalo instead of bringing app back to front on timeout for debugging
 
                 val isSuccess = sendResult is ZaloAccessibilityService.SendResult.Success
                 val isNotFound = sendResult is ZaloAccessibilityService.SendResult.NotFound
