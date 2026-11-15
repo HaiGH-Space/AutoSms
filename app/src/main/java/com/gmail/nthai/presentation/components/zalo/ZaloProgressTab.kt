@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.LogStatus
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import com.gmail.nthai.presentation.components.common.LogRecordCard
 import com.gmail.nthai.service.ZaloSendingProgressState
 
@@ -89,13 +90,9 @@ fun ZaloProgressTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 1. Live Zalo Progress Center Card
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFFFFFFF),
-            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
+        AutoSmsCardContainer(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -234,7 +231,6 @@ fun ZaloProgressTab(
                         }
                     }
                 }
-            }
         }
 
         // 2. Real-time Log Section Header

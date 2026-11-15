@@ -43,6 +43,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,16 +80,11 @@ fun ZaloConfigTab(
     ) {
         // 1. Accessibility Status Banner Card (Only show if not enabled)
         if (!isAccessibilityEnabled) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFFFFFF),
+            AutoSmsCardContainer(
                 border = BorderStroke(1.dp, Color(0xFFFEE2E2))
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -131,34 +127,17 @@ fun ZaloConfigTab(
         }
 
         // 2. Message Template & Spintax Card
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFFFFFFF),
-            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
+        AutoSmsCardContainer(
+            title = "Nội dung tin nhắn Zalo",
+            titleAction = {
+                Text(
+                    text = "Hỗ trợ Spintax {A|B}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF888888),
+                    fontWeight = FontWeight.Bold
+                )
+            }
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Nội dung tin nhắn Zalo",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF171717)
-                    )
-                    Text(
-                        text = "Hỗ trợ Spintax {A|B}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF888888),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
                 OutlinedTextField(
                     value = messageContent,
                     onValueChange = onMessageContentChange,
@@ -209,7 +188,6 @@ fun ZaloConfigTab(
                         colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFF5F5F5))
                     )
                 }
-            }
         }
 
         // 3. Sending Interval & Anti-Block Settings

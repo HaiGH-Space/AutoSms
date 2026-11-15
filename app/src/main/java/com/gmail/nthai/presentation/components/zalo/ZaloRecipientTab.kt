@@ -40,6 +40,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -367,16 +368,11 @@ private fun ZaloCustomerCard(
     onDelete: () -> Unit,
     onRetry: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFFFFFFF),
-        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
+    AutoSmsCardContainer(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(

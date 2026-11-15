@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,12 +50,9 @@ fun ZaloSettingsTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 1. Accessibility Service Guide Card
-        ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        AutoSmsCardContainer(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -122,18 +120,13 @@ fun ZaloSettingsTab(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Mở Cài Đặt Trợ Năng Android", fontWeight = FontWeight.Bold)
                 }
-            }
         }
 
         // 2. Anti-Spam Safety Recommendations Card
-        ElevatedCard(
+        AutoSmsCardContainer(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
-            )
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Shield,
@@ -169,7 +162,6 @@ fun ZaloSettingsTab(
                     title = "Giới hạn số tin mỗi ngày (Dưới 50 tin/ngày)",
                     description = "Chia nhỏ chiến dịch gửi với tài khoản Zalo cá nhân chưa có độ tương tác cao."
                 )
-            }
         }
     }
 }

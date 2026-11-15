@@ -65,6 +65,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gmail.nthai.domain.model.SimConfig
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
 import com.gmail.nthai.util.PermissionUtils
 
@@ -130,13 +131,10 @@ fun SimManagementTab(
             )
 
             // System Permission Card
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFFFFFF),
+            AutoSmsCardContainer(
                 border = BorderStroke(1.dp, if (hasPhonePermission && hasSmsPermission) Color(0xFFEBEBEB) else Color(0xFFF7D4D6))
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -236,54 +234,35 @@ fun SimSlotCard(
     onSaveLimit: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
+    val carrierLabel = when {
+        !hasPhonePermission -> "Cần quyền đọc SIM"
+        config.subscriptionId == -1 -> "Chưa phát hiện SIM"
+        config.carrierName.isBlank() -> "Chưa xác định"
+        else -> config.carrierName
+    }
+
+    AutoSmsCardContainer(
+        modifier = modifier,
         shape = RoundedCornerShape(8.dp),
-        color = Color(0xFFFFFFFF),
-        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        title = "SIM ${config.simSlot}",
+        titleAction = {
+            Surface(
+                color = Color(0xFFF5F5F5),
+                shape = RoundedCornerShape(9999.dp),
+                border = BorderStroke(1.dp, Color(0xFFEBEBEB))
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.SimCard, contentDescription = null, tint = Color(0xFF171717), modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.padding(4.dp))
-                    Text(
-                        text = "SIM ${config.simSlot}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF171717)
-                    )
-                }
-
-                val carrierLabel = when {
-                    !hasPhonePermission -> "Cần quyền đọc SIM"
-                    config.subscriptionId == -1 -> "Chưa phát hiện SIM"
-                    config.carrierName.isBlank() -> "Chưa xác định"
-                    else -> config.carrierName
-                }
-                Surface(
-                    color = Color(0xFFF5F5F5),
-                    shape = RoundedCornerShape(9999.dp),
-                    border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-                ) {
-                    Text(
-                        text = carrierLabel,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 11.sp
-                        ),
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF171717)
-                    )
-                }
+                Text(
+                    text = carrierLabel,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 11.sp
+                    ),
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF171717)
+                )
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
+        }
+    ) {
             val safeLimit = config.dailyLimit.coerceAtLeast(1)
             val progress = (config.sentCountToday.toFloat() / safeLimit).coerceIn(0f, 1f)
             Row(
@@ -387,6 +366,5 @@ fun SimSlotCard(
                     Text("Lưu hạn mức", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
-        }
     }
 }
