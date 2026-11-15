@@ -15,53 +15,57 @@
 
 ## Overview
 
-**AutoSms** là ứng dụng di động Android hỗ trợ doanh nghiệp nhỏ, nhân viên bán hàng và người vận hành tự động hóa gửi tin nhắn hàng loạt được cá nhân hóa cao. Ứng dụng tích hợp trực tiếp bảng tính Excel (`.xlsx`, `.xls`), tự động điền các trường dữ liệu tùy biến vào mẫu tin nhắn, phân bổ SIM gửi phù hợp (SIM 1 / SIM 2), kiểm soát hạn mức (quota) cùng độ trễ ngẫu nhiên chống spam, và duy trì tiến trình gửi ổn định trong nền qua Foreground Service. Ngoài ra, AutoSms hỗ trợ gửi tin nhắn tự động qua ứng dụng Zalo thông qua Android Accessibility Service.
+**AutoSms** là ứng dụng di động Android chuyên dụng hỗ trợ doanh nghiệp, tổ chức và cá nhân kinh doanh tự động hóa quy trình chăm sóc khách hàng qua SMS và Zalo với mức độ cá nhân hóa cao.
+
+Ứng dụng kết nối trực tiếp với file bảng tính Excel (`.xlsx`, `.xls`), tự động nhận diện dữ liệu liên hệ, hỗ trợ biến động cùng cú pháp Spintax chống spam, tự động tối ưu chi phí cước thông qua nhận diện nhà mạng Việt Nam và phân bổ linh hoạt giữa 2 khe SIM. Quy trình gửi SMS chạy ổn định trong nền qua Foreground Service, đồng thời tích hợp tính năng gửi tự động qua ứng dụng Zalo thông qua Android Accessibility Service.
 
 > [!NOTE]
-> Toàn bộ dữ liệu danh sách liên hệ, mẫu tin nhắn và nhật ký gửi được lưu trữ hoàn toàn cục bộ trên thiết bị qua SQLite (Room Database), bảo đảm tuyệt đối tính riêng tư và an toàn thông tin khách hàng.
+> Toàn bộ danh bạ, dữ liệu khách hàng, mẫu tin nhắn và lịch sử gửi được lưu trữ hoàn toàn cục bộ trên thiết bị qua SQLite (Room Database), bảo đảm tuyệt đối tính an toàn và quyền riêng tư thông tin.
 
 ---
 
 ## Key Features
 
 - **Nhập dữ liệu thông minh từ Excel**:
-  - Tự động đọc file bảng tính Excel định dạng `.xlsx` và `.xls`.
-  - Tự động nhận diện các cột số điện thoại phổ biến (`SDT`, `Phone`, `Mobile`, `Điện thoại`,...).
-  - Trích xuất linh hoạt mọi cột dữ liệu tùy chỉnh phục vụ ghép nội dung tin nhắn.
+  - Hỗ trợ trực tiếp định dạng `.xlsx` và `.xls` qua thư viện Apache POI tối ưu.
+  - Tự động quét và nhận diện các cột số điện thoại phổ biến (`SDT`, `Phone`, `Mobile`, `Điện thoại`,...).
+  - Trích xuất linh hoạt mọi cột dữ liệu tùy chỉnh (`{Ten_KH}`, `{So_Tien}`, `{Ma_HD}`, `{Ngay_Han}`,...).
 
 - **Động hóa nội dung & Công nghệ Spintax**:
-  - Ghép biến dữ liệu từ file Excel vào nội dung theo cú pháp `{Tên_Cột}` hoặc các tham số thông dụng như `{Ten_KH}`, `{So_Tien}`, `{Ma_HD}`, `{Ngay_Han}`.
-  - Hỗ trợ cú pháp **Spintax** dạng `{Chào anh|Kính chào|Xin chào}` giúp hoán đổi ngẫu nhiên cấu trúc câu chữ, giảm thiểu nguy cơ bị chặn bởi bộ lọc chống spam của nhà mạng.
-  - Tự động định dạng tiền tệ và số liệu theo chuẩn định dạng Việt Nam (ví dụ: `1.000.000`).
+  - Ghép biến dữ liệu từ file Excel vào nội dung theo cú pháp `{Tên_Cột}`.
+  - Hỗ trợ cú pháp **Spintax** dạng `{Chào anh|Kính chào|Xin chào}` giúp hoán đổi linh hoạt từ ngữ ngẫu nhiên, hạn chế tối đa nguy cơ bị nhà mạng chặn lọc spam.
+  - Tự động chuẩn hóa định dạng số và tiền tệ theo chuẩn Việt Nam (`1.000.000 đ`).
 
-- **Nhận diện nhà mạng Việt Nam**:
-  - Tự động phân tích đầu số và nhận diện nhà mạng di động Việt Nam (Viettel, VinaPhone, MobiFone, Vietnamobile, Gmobile, Wintel, iTel).
-  - Hỗ trợ quy tắc định tuyến gửi ưu tiên đúng nhà mạng của SIM tương ứng để tiết kiệm tối đa cước phí.
+- **Nhận diện nhà mạng Việt Nam & Định tuyến SIM**:
+  - Nhận diện tức thì tất cả nhà mạng di động tại Việt Nam: Viettel, VinaPhone, MobiFone, Vietnamobile, Gmobile, Wintel, iTel.
+  - Tự động so khớp đầu số với nhà mạng của từng khe SIM (SIM 1 / SIM 2) để gửi nội mạng, tối ưu cước phí viễn thông.
 
 - **Quản lý & Cấu hình 2 khe SIM chuyên sâu**:
-  - Thiết lập định mức (quota) gửi SMS tối đa theo ngày riêng biệt cho từng khe SIM.
-  - Cấu hình khoảng trễ ngẫu nhiên giữa các lần gửi (ví dụ: `15` - `45` giây) nhằm mô phỏng hành vi gửi tự nhiên.
-  - Thiết lập khung giờ gửi cho phép trong ngày để tránh làm phiền khách hàng ngoài giờ làm việc.
-  - Tự động reset bộ đếm hạn mức mỗi ngày thông qua WorkManager (`DailySmsWorker`).
+  - Giám sát trạng thái lắp SIM, tên nhà mạng và số điện thoại từng khe SIM.
+  - Thiết lập định mức (quota) gửi SMS tối đa theo ngày cho từng khe SIM độc lập.
+  - Cấu hình khoảng trễ ngẫu nhiên an toàn giữa các lần gửi (ví dụ: `15` - `45` giây).
+  - Cài đặt khung giờ cho phép gửi tin trong ngày, tự động dừng ngoài giờ làm việc.
+  - Tự động làm mới (reset) hạn mức mỗi ngày qua AndroidX WorkManager (`DailySmsWorker`).
 
 - **Gửi tin nhắn tự động qua Zalo**:
   - Mở trực tiếp cuộc trò chuyện Zalo theo số điện thoại qua deep link (`https://zalo.me/{phone}`).
-  - Sử dụng **Android Accessibility Service** (`ZaloAccessibilityService`) để tự động điền nội dung tin nhắn và thực hiện thao tác gửi.
-  - Quản lý danh sách người nhận Zalo chuyên biệt kèm cơ chế giám sát timeout thông minh.
+  - Sử dụng **Android Accessibility Service** (`ZaloAccessibilityService`) để tự động điền tin nhắn và thực hiện thao tác gửi.
+  - Tự động quản lý danh sách người nhận Zalo, hỗ trợ import từ danh bạ khách hàng hiện có.
+  - Giám sát độ trễ và cơ chế timeout thông minh tránh gián đoạn.
 
-- **Tiến trình gửi bền bỉ trong nền (Foreground Service)**:
-  - Khởi chạy tiến trình gửi SMS qua **Foreground Service** loại `dataSync`, duy trì hoạt động liên tục ngay cả khi ứng dụng bị thu nhỏ hoặc thiết bị khóa màn hình.
-  - Cung cấp thanh thông báo hệ thống trực quan cập nhật tiến độ theo thời gian thực (Đã gửi, Thất bại, Còn lại).
-  - Hỗ trợ các hành động tức thời: Tạm dừng (Pause), Tiếp tục (Resume) hoặc Hủy bỏ (Stop).
+- **Tiến trình gửi nền bền bỉ (Foreground Service)**:
+  - Khởi chạy tiến trình gửi SMS qua **Foreground Service** loại `dataSync`, duy trì hoạt động ngay cả khi ứng dụng bị thu nhỏ hoặc thiết bị khóa màn hình.
+  - Thanh thông báo hệ thống trực quan cập nhật tiến độ theo thời gian thực (Đã gửi, Thất bại, Còn lại).
+  - Hỗ trợ điều khiển trực tiếp: Tạm dừng (Pause), Tiếp tục (Resume) hoặc Hủy bỏ (Stop).
 
 - **Thống kê, Báo cáo & Xuất Excel**:
   - Lưu trữ chi tiết nhật ký trạng thái từng tin nhắn gửi (`SENT`, `DELIVERED`, `FAILED`).
-  - Lọc báo cáo linh hoạt theo ngày/tháng/khoảng thời gian tùy chọn.
-  - Hỗ trợ xuất toàn bộ nhật ký báo cáo kết quả gửi ra file Excel (.xlsx).
+  - Lọc báo cáo linh hoạt theo ngày/tháng hoặc khoảng thời gian tùy chọn.
+  - Hỗ trợ xuất toàn bộ báo cáo lịch sử gửi ra file Excel (.xlsx).
 
-- **Tự động kiểm tra bản cập nhật APK**:
-  - Tích hợp kiểm tra phiên bản mới từ repository từ xa.
-  - Hỗ trợ tải và kích hoạt cài đặt file APK mới an toàn qua Android FileProvider.
+- **Tự động kiểm tra cập nhật ứng dụng**:
+  - Tích hợp sẵn cơ chế kiểm tra phiên bản mới từ máy chủ từ xa qua metadata `update.json`.
+  - Tải về và mở giao diện cài đặt file APK mới an toàn qua Android FileProvider.
 
 ---
 
@@ -72,7 +76,7 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 | Phân tầng / Thành phần | Công nghệ / Thư viện | Vai trò |
 | :--- | :--- | :--- |
 | **Ngôn ngữ** | Kotlin 2.0.21 | Ngôn ngữ lập trình chính |
-| **Giao diện (UI)** | Jetpack Compose BOM 2024.12.01, Material 3 | Xây dựng giao diện khai báo hiện đại, mượt mà |
+| **Giao diện (UI)** | Jetpack Compose BOM 2024.12.01, Material 3 | Giao diện khai báo hiện đại, mượt mà và trực quan |
 | **Điều hướng** | Navigation Compose 2.8.5 | Quản lý luồng chuyển màn hình trong kiến trúc Single-Activity |
 | **Kiến trúc** | Clean Architecture (Presentation, Domain, Data) | Phân tách rõ ràng UI, quy tắc nghiệp vụ và truy xuất dữ liệu |
 | **Dependency Injection** | Hilt (Dagger) 2.60.1 | Quản lý vòng đời phụ thuộc, tối ưu kiểm thử |
@@ -90,7 +94,7 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 ### Yêu cầu hệ thống
 
 - **Hệ điều hành**: Android 8.0 (API Level 26) trở lên.
-- **Phần cứng**: Thiết bị Android hỗ trợ SIM (1 SIM hoặc Dual SIM) đang kích hoạt gói cước viễn thông.
+- **Phần cứng**: Thiết bị Android hỗ trợ SIM (1 SIM hoặc Dual SIM) có sóng viễn thông hoạt động.
 - **Môi trường phát triển**: Android Studio (Ladybug 2024.2.1 trở lên), JDK 11+, Android SDK 35.
 
 ### Quyền ứng dụng (Permissions)
@@ -101,10 +105,10 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 - `SEND_SMS`: Quyền gửi trực tiếp tin nhắn SMS qua SIM của thiết bị.
 - `READ_PHONE_STATE` & `READ_PHONE_NUMBERS`: Nhận diện khe SIM, trạng thái SIM và phân tích nhà mạng.
 - `POST_NOTIFICATIONS`: Hiển thị thông báo tiến độ gửi tin thời gian thực trên Android 13+.
-- `FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_DATA_SYNC`: Duy trì tiến trình gửi SMS trong nền không bị Android giải phóng tài nguyên.
-- `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: Bỏ qua chế độ tối ưu pin (Doze mode) để đảm bảo độ trễ gửi tin chuẩn xác.
+- `FOREGROUND_SERVICE` & `FOREGROUND_SERVICE_DATA_SYNC`: Duy trì tiến trình gửi SMS trong nền không bị hệ điều hành tắt giải phóng tài nguyên.
+- `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: Bỏ qua tối ưu pin (Doze mode) để đảm bảo độ trễ gửi tin chuẩn xác.
 - `BIND_ACCESSIBILITY_SERVICE`: Quyền trợ năng để hỗ trợ tính năng gửi tin nhắn tự động qua Zalo.
-- `REQUEST_INSTALL_PACKAGES`: Cho phép cập nhật phiên bản mới trực tiếp từ file APK nội bộ.
+- `REQUEST_INSTALL_PACKAGES`: Cho phép cài đặt bản cập nhật ứng dụng trực tiếp từ file APK nội bộ.
 
 ---
 
@@ -112,7 +116,7 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 
 ### 1. Nhập danh sách khách hàng từ Excel
 1. Tại màn hình **Trang chủ**, nhấn **Nhập danh sách Excel**.
-2. Chọn tệp bảng tính (`.xlsx` hoặc `.xls`). Ứng dụng sẽ tự động phân tích và gắn các trường dữ liệu.
+2. Chọn tệp bảng tính (`.xlsx` hoặc `.xls`). Ứng dụng sẽ tự động phân tích và nhận diện các cột dữ liệu.
 3. Kiểm tra danh sách khách hàng và các biến dữ liệu đã được nạp thành công.
 
 ### 2. Soạn thảo Mẫu tin nhắn & Spintax
@@ -124,23 +128,23 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 3. Nhấn **Xem trước (Preview)** để kiểm tra nội dung thực tế sau khi thế biến và xử lý Spintax ngẫu nhiên.
 
 ### 3. Cấu hình SIM & Quy tắc an toàn
-1. Chuyển sang màn hình **Cấu hình**.
+1. Chuyển sang màn hình **Cấu hình** (hoặc tab SIM trong mục Quản lý).
 2. Thiết lập cho từng khe **SIM 1** và **SIM 2**:
    - Hạn mức tin nhắn tối đa gửi mỗi ngày.
    - Khoảng trễ ngẫu nhiên giữa 2 tin liên tiếp (ví dụ: `20` - `45` giây).
    - Khung giờ hợp lệ cho phép gửi tin trong ngày.
-3. Bật tùy chọn ưu tiên gửi theo nhà mạng phù hợp nếu muốn tối ưu hóa chi phí.
+3. Bật tùy chọn ưu tiên gửi theo nhà mạng tương ứng để tối ưu cước phí viễn thông.
 
 ### 4. Khởi chạy tiến trình gửi & Giám sát
 1. Chọn mẫu tin nhắn, khe SIM điều phối và danh sách liên hệ cần gửi.
-2. Bấm **Bắt đầu gửi**. Màn hình tiến độ sẽ hiển thị trạng thái từng lượt gửi.
-3. Bạn có thể ẩn ứng dụng; tiến trình gửi sẽ tiếp tục chạy ngầm ổn định kèm thanh thông báo hệ thống. Có thể bấm **Tạm dừng**, **Tiếp tục** hoặc **Hủy** bất kỳ lúc nào.
+2. Bấm **Bắt đầu gửi**. Màn hình tiến độ sẽ hiển thị trạng thái từng lượt gửi theo thời gian thực.
+3. Người dùng có thể thu nhỏ ứng dụng; tiến trình gửi sẽ tiếp tục chạy ngầm ổn định kèm thanh thông báo hệ thống. Có thể bấm **Tạm dừng**, **Tiếp tục** hoặc **Hủy** bất kỳ lúc nào.
 
 ### 5. Gửi tin nhắn qua Zalo
-1. Điều hướng đến màn hình **Zalo**.
+1. Điều hướng đến màn hình **Gửi Zalo**.
 2. Nhập danh sách số điện thoại cần gửi hoặc nạp từ tập khách hàng có sẵn.
-3. Kích hoạt dịch vụ **AutoSms Accessibility Service** trong phần Cài đặt Trợ năng của Android.
-4. Bấm **Bắt đầu gửi Zalo** và để ứng dụng tự động mở cuộc trò chuyện và gửi tin.
+3. Kích hoạt dịch vụ **AutoSms Accessibility Service** trong phần Cài đặt Trợ năng (Accessibility) của Android.
+4. Bấm **Bắt đầu gửi Zalo** và để ứng dụng tự động mở cuộc trò chuyện và gửi tin theo mẫu đã chọn.
 
 ### 6. Báo cáo & Xuất nhật ký
 1. Mở màn hình **Báo cáo**.
@@ -169,6 +173,11 @@ Chạy toàn bộ Unit Tests (Domain UseCases, Parsers, Models):
 .\gradlew.bat test
 ```
 
+Chạy kiểm thử giao diện và điều hướng (Instrumented Tests):
+```powershell
+.\gradlew.bat connectedAndroidTest
+```
+
 ---
 
 ## Project Structure
@@ -179,10 +188,10 @@ AutoSms/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/gmail/nthai/
-│   │   │   │   ├── data/             # Triển khai Room Database, Repositories, Excel Parser & SmsSender
-│   │   │   │   ├── di/               # Hilt Dependency Injection Modules (DatabaseModule, etc.)
-│   │   │   │   ├── domain/           # Models, Repository Contracts, UseCases (Spintax, Carrier, Rules)
-│   │   │   │   ├── presentation/     # Tầng UI Jetpack Compose (Screens, Components, ViewModels, Theme)
+│   │   │   │   ├── data/             # Triển khai Room Database, Repositories, Excel Parser/Exporter & SmsSender
+│   │   │   │   ├── di/               # Hilt Dependency Injection Modules (DatabaseModule, UseCaseModule,...)
+│   │   │   │   ├── domain/           # Models, Repository Contracts, UseCases (Spintax, Carrier, Constraints)
+│   │   │   │   ├── presentation/     # Jetpack Compose UI (Screens, Components, ViewModels, Navigation, Theme)
 │   │   │   │   ├── service/          # Foreground Service, Zalo Accessibility Service, WorkManager Worker
 │   │   │   │   └── util/             # Tiện ích hệ thống (Permissions, DateTime, ApkInstaller)
 │   │   │   └── res/                  # Android Resources (Layouts, Drawables, Mipmaps, Values)
