@@ -22,9 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
@@ -67,9 +65,6 @@ fun ZaloConfigTab(
     onAutoAddFriendChange: (Boolean) -> Unit = {},
     sendOnlyIfUnsent: Boolean = true,
     onSendOnlyIfUnsentChange: (Boolean) -> Unit = {},
-    selectedImages: List<String> = listOf("anh_khuyen_mai.jpg"),
-    onAddImage: (String) -> Unit = {},
-    onRemoveImage: (Int) -> Unit = {},
     onStartSending: () -> Unit = {},
     onNextToRecipients: () -> Unit = {},
     onImportExcel: () -> Unit = {},
@@ -82,56 +77,55 @@ fun ZaloConfigTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Accessibility Status Banner Card
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFFFFFFF),
-            border = BorderStroke(1.dp, if (isAccessibilityEnabled) Color(0xFFEBEBEB) else Color(0xFFFEE2E2))
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+        // 1. Accessibility Status Banner Card (Only show if not enabled)
+        if (!isAccessibilityEnabled) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFFFFFFFF),
+                border = BorderStroke(1.dp, Color(0xFFFEE2E2))
             ) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .size(10.dp)
-                        .background(if (isAccessibilityEnabled) Color(0xFF10B981) else Color(0xFFEE0000), CircleShape)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = if (isAccessibilityEnabled) "Trợ năng Zalo: ĐÃ BẬT" else "Trợ năng Zalo: CHƯA BẬT",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF171717)
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = if (isAccessibilityEnabled)
-                            "Ứng dụng đã sẵn sàng tự động thao tác trên Zalo cá nhân."
-                        else
-                            "Cần cấp quyền Trợ năng (Accessibility) để tự động tìm SĐT & gửi tin Zalo.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF666666)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = onOpenAccessibilitySettings,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isAccessibilityEnabled) Color(0xFFF5F5F5) else Color(0xFF171717),
-                        contentColor = if (isAccessibilityEnabled) Color(0xFF171717) else Color(0xFFFFFFFF)
-                    ),
-                    shape = RoundedCornerShape(9999.dp)
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = if (isAccessibilityEnabled) "Cài đặt" else "Bật ngay",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .background(Color(0xFFEE0000), CircleShape)
                     )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Trợ năng Zalo: CHƯA BẬT",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF171717)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Cần cấp quyền Trợ năng (Accessibility) để tự động tìm SĐT & gửi tin Zalo.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF666666)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = onOpenAccessibilitySettings,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF171717),
+                            contentColor = Color(0xFFFFFFFF)
+                        ),
+                        shape = RoundedCornerShape(9999.dp)
+                    ) {
+                        Text(
+                            text = "Bật ngay",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -218,113 +212,7 @@ fun ZaloConfigTab(
             }
         }
 
-        // 3. Image Attachment Card
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFFFFFFF),
-            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.AddPhotoAlternate,
-                            contentDescription = null,
-                            tint = Color(0xFF171717),
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Hình ảnh đính kèm",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717)
-                        )
-                    }
-                    Text(
-                        text = "${selectedImages.size} tệp",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF888888)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (selectedImages.isEmpty()) {
-                    OutlinedButton(
-                        onClick = { onAddImage("anh_demo_${selectedImages.size + 1}.jpg") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(9999.dp),
-                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Thêm ảnh gửi kèm Zalo", fontSize = 13.sp)
-                    }
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        selectedImages.forEachIndexed { index, fileName ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(Color(0xFFF5F5F5))
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.AddPhotoAlternate,
-                                        contentDescription = null,
-                                        tint = Color(0xFF171717),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = fileName,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFF171717)
-                                    )
-                                }
-                                IconButton(
-                                    onClick = { onRemoveImage(index) },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Xóa",
-                                        tint = Color(0xFF888888),
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        OutlinedButton(
-                            onClick = { onAddImage("anh_demo_${selectedImages.size + 1}.jpg") },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(9999.dp),
-                            border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Thêm ảnh khác", fontSize = 13.sp)
-                        }
-                    }
-                }
-            }
-        }
-
-        // 4. Sending Interval & Anti-Block Settings
+        // 3. Sending Interval & Anti-Block Settings
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),

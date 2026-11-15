@@ -46,6 +46,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.runtime.DisposableEffect
 import com.gmail.nthai.presentation.components.zalo.ZaloConfigTab
 import com.gmail.nthai.presentation.components.zalo.ZaloProgressTab
 import com.gmail.nthai.presentation.components.zalo.ZaloRecipientTab
@@ -70,10 +74,21 @@ fun ZaloScreen(
     val delayRange by viewModel.delayRange.collectAsState()
     val autoAddFriend by viewModel.autoAddFriend.collectAsState()
     val sendOnlyIfUnsent by viewModel.sendOnlyIfUnsent.collectAsState()
-    val selectedImages by viewModel.selectedImages.collectAsState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
         viewModel.checkAccessibilityStatus(context)
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.checkAccessibilityStatus(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -185,9 +200,6 @@ fun ZaloScreen(
                     onAutoAddFriendChange = { viewModel.autoAddFriend.value = it },
                     sendOnlyIfUnsent = sendOnlyIfUnsent,
                     onSendOnlyIfUnsentChange = { viewModel.sendOnlyIfUnsent.value = it },
-                    selectedImages = selectedImages,
-                    onAddImage = { viewModel.addSelectedImage(it) },
-                    onRemoveImage = { viewModel.removeSelectedImage(it) },
                     onStartSending = {
                         viewModel.startCampaign()
                         Toast.makeText(context, "Đã khởi chạy chiến dịch gửi Zalo tự động!", Toast.LENGTH_SHORT).show()

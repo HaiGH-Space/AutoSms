@@ -43,6 +43,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -285,71 +286,60 @@ fun CustomerListScreen(
             }
 
             // Search Bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.updateSearchQuery(it) },
+            AutoSmsSearchBar(
+                query = searchQuery,
+                onQueryChange = { viewModel.updateSearchQuery(it) },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Tìm theo tên, số điện thoại, mã HĐ...", fontSize = 13.sp, color = Color(0xFF888888)) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color(0xFF888888)) },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.updateSearchQuery("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Xóa tìm kiếm", modifier = Modifier.size(16.dp))
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(9999.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFFFFFFF),
-                    unfocusedContainerColor = Color(0xFFFFFFFF),
-                    focusedBorderColor = Color(0xFF171717),
-                    unfocusedBorderColor = Color(0xFFEBEBEB)
-                )
+                placeholder = "Tìm theo tên, số điện thoại, mã HĐ..."
             )
 
-            // Status Filter Chips
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            // Filters Section (2 separate rows with tight vertical spacing)
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                VercelFilterPill(
-                    selected = selectedFilter == CustomerFilter.ALL,
-                    text = "Tất cả",
-                    onClick = { viewModel.updateFilter(CustomerFilter.ALL) }
-                )
-                VercelFilterPill(
-                    selected = selectedFilter == CustomerFilter.PENDING,
-                    text = "Chờ gửi",
-                    onClick = { viewModel.updateFilter(CustomerFilter.PENDING) }
-                )
-                VercelFilterPill(
-                    selected = selectedFilter == CustomerFilter.SENT,
-                    text = "Thành công",
-                    onClick = { viewModel.updateFilter(CustomerFilter.SENT) }
-                )
-                VercelFilterPill(
-                    selected = selectedFilter == CustomerFilter.FAILED,
-                    text = "Lỗi",
-                    onClick = { viewModel.updateFilter(CustomerFilter.FAILED) }
-                )
-            }
-
-            // Carrier Filter Chips
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                CustomerCarrierFilter.entries.forEach { carrierFilter ->
+                // Status Filter Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     VercelFilterPill(
-                        selected = selectedCarrierFilter == carrierFilter,
-                        text = carrierFilter.label,
-                        onClick = { viewModel.updateCarrierFilter(carrierFilter) }
+                        selected = selectedFilter == CustomerFilter.ALL,
+                        text = "Tất cả",
+                        onClick = { viewModel.updateFilter(CustomerFilter.ALL) }
                     )
+                    VercelFilterPill(
+                        selected = selectedFilter == CustomerFilter.PENDING,
+                        text = "Chờ gửi",
+                        onClick = { viewModel.updateFilter(CustomerFilter.PENDING) }
+                    )
+                    VercelFilterPill(
+                        selected = selectedFilter == CustomerFilter.SENT,
+                        text = "Thành công",
+                        onClick = { viewModel.updateFilter(CustomerFilter.SENT) }
+                    )
+                    VercelFilterPill(
+                        selected = selectedFilter == CustomerFilter.FAILED,
+                        text = "Lỗi",
+                        onClick = { viewModel.updateFilter(CustomerFilter.FAILED) }
+                    )
+                }
+
+                // Carrier Filter Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    CustomerCarrierFilter.entries.forEach { carrierFilter ->
+                        VercelFilterPill(
+                            selected = selectedCarrierFilter == carrierFilter,
+                            text = carrierFilter.label,
+                            onClick = { viewModel.updateCarrierFilter(carrierFilter) }
+                        )
+                    }
                 }
             }
 
@@ -358,8 +348,7 @@ fun CustomerListScreen(
                 val allSelected = customers.all { it.isSelected }
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 2.dp),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {

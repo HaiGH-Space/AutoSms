@@ -60,7 +60,6 @@ class ZaloViewModel @Inject constructor(
     val delayRange = MutableStateFlow(10f..25f)
     val autoAddFriend = MutableStateFlow(true)
     val sendOnlyIfUnsent = MutableStateFlow(true)
-    val selectedImages = MutableStateFlow<List<String>>(listOf("anh_khuyen_mai.jpg"))
 
     private val _isAccessibilityEnabled = MutableStateFlow(false)
     val isAccessibilityEnabled: StateFlow<Boolean> = _isAccessibilityEnabled.asStateFlow()
@@ -158,17 +157,4 @@ class ZaloViewModel @Inject constructor(
         zaloSendingEngine.stopCampaign()
     }
 
-    fun addSelectedImage(fileName: String) {
-        val current = selectedImages.value.toMutableList()
-        current.add(fileName)
-        selectedImages.value = current
-    }
-
-    fun removeSelectedImage(index: Int) {
-        val current = selectedImages.value.toMutableList()
-        if (index in current.indices) {
-            current.removeAt(index)
-            selectedImages.value = current
-        }
-    }
 }
