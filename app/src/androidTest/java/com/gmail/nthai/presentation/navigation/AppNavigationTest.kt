@@ -22,20 +22,20 @@ class AppNavigationTest {
             AppNavHost()
         }
 
-        composeTestRule.onNodeWithText("Trang chủ").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tổng quan").assertIsDisplayed()
         composeTestRule.onNodeWithText("Gửi SMS").assertIsDisplayed()
         composeTestRule.onNodeWithText("Gửi Zalo").assertIsDisplayed()
         composeTestRule.onNodeWithText("Quản lý").assertIsDisplayed()
     }
 
     @Test
-    fun navigateToAutoZalo_displaysPlaceholderScreen() {
+    fun navigateToAutoZalo_displaysZaloScreen() {
         composeTestRule.setContent {
             AppNavHost()
         }
 
         composeTestRule.onNodeWithText("Gửi Zalo").performClick()
-        composeTestRule.onNodeWithText("Tính năng đang phát triển").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tự động gửi Zalo").assertIsDisplayed()
     }
 
     @Test
@@ -45,7 +45,7 @@ class AppNavigationTest {
         }
 
         composeTestRule.onNodeWithText("Quản lý").performClick()
-        composeTestRule.onNodeWithText("Quản lý hệ thống").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Quản lý & Cấu hình").assertIsDisplayed()
     }
 
     @Test
@@ -67,7 +67,7 @@ class AppNavigationTest {
 
         composeTestRule.onNodeWithText("Gửi SMS").performClick()
         composeTestRule.onNodeWithText("Tự động gửi SMS").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Trang chủ").performClick()
+        composeTestRule.onNodeWithText("Tổng quan").performClick()
         composeTestRule.onNodeWithText("Tổng quan").assertIsDisplayed()
     }
 }

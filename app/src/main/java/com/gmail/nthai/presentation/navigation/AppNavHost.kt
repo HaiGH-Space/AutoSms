@@ -32,8 +32,8 @@ fun AppNavHost() {
     val navController = rememberNavController()
     val screens = listOf(
         Screen.Home,
-        Screen.Customers,
-        Screen.Progress,
+        Screen.AutoSms,
+        Screen.AutoZalo,
         Screen.Management
     )
 
@@ -51,16 +51,13 @@ fun AppNavHost() {
                 screens.forEach { screen ->
                     val isSelected = when (screen) {
                         Screen.Home -> currentRoute == Screen.Home.route
-                        Screen.Customers -> currentRoute?.startsWith(Screen.Customers.BASE_ROUTE) == true
-                        Screen.Progress -> currentRoute == Screen.Progress.route
+                        Screen.AutoSms -> currentRoute == Screen.AutoSms.route || currentRoute?.startsWith(Screen.Customers.BASE_ROUTE) == true
+                        Screen.AutoZalo -> currentRoute == Screen.AutoZalo.route
                         Screen.Management -> currentRoute == Screen.Management.route
                         else -> currentRoute == screen.route
                     }
 
-                    val targetRoute = when (screen) {
-                        Screen.Customers -> Screen.Customers.route(1)
-                        else -> screen.route
-                    }
+                    val targetRoute = screen.route
 
                     NavigationBarItem(
                         selected = isSelected,
@@ -108,9 +105,10 @@ fun AppNavHost() {
             composable(Screen.Home.route) {
                 HomeScreen(
                     onSelectSim = { slot -> navController.navigate(Screen.Customers.route(slot)) },
-                    onNavigateToCustomers = { navController.navigate(Screen.Customers.route(1)) },
+                    onNavigateToCustomers = { navController.navigate(Screen.AutoSms.route) },
                     onNavigateToProgress = { navController.navigate(Screen.Progress.route) },
-                    onNavigateToManagement = { _ -> navController.navigate(Screen.Management.route) }
+                    onNavigateToManagement = { _ -> navController.navigate(Screen.Management.route) },
+                    onNavigateToAutoZalo = { navController.navigate(Screen.AutoZalo.route) }
                 )
             }
             composable(
@@ -132,14 +130,19 @@ fun AppNavHost() {
                 SendingProgressScreen()
             }
             composable(Screen.Management.route) {
-                ManagementScreen()
+                ManagementScreen(
+                    onNavigateToAutoZalo = { navController.navigate(Screen.AutoZalo.route) }
+                )
             }
 
             composable(Screen.AutoSms.route) {
                 AutoSmsScreen()
             }
             composable(Screen.AutoZalo.route) {
-                ZaloScreen()
+                ZaloScreen(
+                    showTopBarBackIcon = false,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Report.route) {
                 ReportScreen()

@@ -103,33 +103,7 @@ fun AutoSmsScreen(
                         }
                     )
                 }
-                if (selectedTab == 0) {
-                    TabRow(
-                        selectedTabIndex = selectedSimSlot - 1,
-                        containerColor = Color(0xFFFAFAFA),
-                        contentColor = Color(0xFF171717),
-                        indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedSimSlot - 1]),
-                                color = Color(0xFF171717)
-                            )
-                        }
-                    ) {
-                        (1..2).forEach { slot ->
-                            Tab(
-                                selected = selectedSimSlot == slot,
-                                onClick = { selectedSimSlot = slot },
-                                text = {
-                                    Text(
-                                        "SIM $slot",
-                                        fontWeight = if (selectedSimSlot == slot) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (selectedSimSlot == slot) Color(0xFF171717) else Color(0xFF888888)
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
+
             }
         }
     ) { innerPadding ->

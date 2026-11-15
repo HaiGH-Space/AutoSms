@@ -5,19 +5,29 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -28,12 +38,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gmail.nthai.presentation.components.zalo.ZaloConfigTab
 import com.gmail.nthai.presentation.components.zalo.ZaloProgressTab
@@ -44,6 +55,8 @@ import com.gmail.nthai.presentation.viewmodel.ZaloViewModel
 @Composable
 fun ZaloScreen(
     initialTab: Int = 0,
+    showTopBarBackIcon: Boolean = false,
+    onBack: () -> Unit = {},
     viewModel: ZaloViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -69,7 +82,7 @@ fun ZaloScreen(
         if (uri != null) {
             viewModel.importExcelFile(context, uri)
             Toast.makeText(context, "Đã nhập file Excel Zalo", Toast.LENGTH_SHORT).show()
-            selectedTab = 0 // Show in recipient list
+            selectedTab = 1 // Show in recipient list tab
         }
     }
 
@@ -89,59 +102,68 @@ fun ZaloScreen(
                     title = {
                         Text(
                             text = "Tự động gửi Zalo",
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF171717)
                         )
                     },
+                    navigationIcon = {
+                        if (showTopBarBackIcon) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Quay lại",
+                                    tint = Color(0xFF171717)
+                                )
+                            }
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = Color(0xFFFFFFFF)
                     )
                 )
-                TabRow(
+                SecondaryTabRow(
                     selectedTabIndex = selectedTab,
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = Color(0xFFFFFFFF),
+                    contentColor = Color(0xFF171717),
+                    indicator = {
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(selectedTab),
+                            color = Color(0xFF171717)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color(0xFFEBEBEB))
                 ) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = {
-                            Text(
-                                text = "Danh sách SĐT",
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        icon = { Icon(Icons.Default.People, contentDescription = "Danh sách SĐT") }
+                    val tabs = listOf(
+                        Pair("Soạn tin & Cấu hình", Icons.Default.Tune),
+                        Pair("Danh sách SĐT", Icons.Default.People),
+                        Pair("Tiến độ gửi", Icons.AutoMirrored.Filled.Send)
                     )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        text = {
-                            Text(
-                                text = "Tiến độ gửi",
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        icon = { Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Tiến độ") }
-                    )
-                    Tab(
-                        selected = selectedTab == 2,
-                        onClick = { selectedTab = 2 },
-                        text = {
-                            Text(
-                                text = "Cấu hình",
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        icon = { Icon(Icons.Default.Tune, contentDescription = "Cấu hình") }
-                    )
+                    tabs.forEachIndexed { index, tab ->
+                        val selected = selectedTab == index
+                        Tab(
+                            selected = selected,
+                            onClick = { selectedTab = index },
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        tab.second,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = if (selected) Color(0xFF171717) else Color(0xFF888888)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = tab.first,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (selected) Color(0xFF171717) else Color(0xFF888888)
+                                    )
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -150,25 +172,10 @@ fun ZaloScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(Color(0xFFFAFAFA))
         ) {
             when (selectedTab) {
-                0 -> ZaloRecipientTab(
-                    recipients = recipients,
-                    onAddRecipient = { name, phone -> viewModel.addRecipient(name, phone) },
-                    onDeleteRecipient = { id -> viewModel.deleteRecipient(id) },
-                    onRetryRecipient = { id -> viewModel.resetRecipientStatus(id) },
-                    onImportExcel = {
-                        filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    }
-                )
-                1 -> ZaloProgressTab(
-                    progressState = progressState,
-                    logs = logs,
-                    onPauseCampaign = { viewModel.pauseCampaign() },
-                    onResumeCampaign = { viewModel.resumeCampaign() },
-                    onStopCampaign = { viewModel.stopCampaign() }
-                )
-                2 -> ZaloConfigTab(
+                0 -> ZaloConfigTab(
                     isAccessibilityEnabled = isAccessibilityEnabled,
                     messageContent = messageContent,
                     onMessageContentChange = { viewModel.messageContent.value = it },
@@ -184,12 +191,36 @@ fun ZaloScreen(
                     onStartSending = {
                         viewModel.startCampaign()
                         Toast.makeText(context, "Đã khởi chạy chiến dịch gửi Zalo tự động!", Toast.LENGTH_SHORT).show()
-                        selectedTab = 1 // Switch to progress tab
+                        selectedTab = 2 // Switch to progress tab
+                    },
+                    onNextToRecipients = {
+                        selectedTab = 1 // Switch to recipient list tab
                     },
                     onImportExcel = {
                         filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                     },
                     onOpenAccessibilitySettings = openAccessibilitySettings
+                )
+                1 -> ZaloRecipientTab(
+                    recipients = recipients,
+                    onAddRecipient = { name, phone -> viewModel.addRecipient(name, phone) },
+                    onDeleteRecipient = { id -> viewModel.deleteRecipient(id) },
+                    onRetryRecipient = { id -> viewModel.resetRecipientStatus(id) },
+                    onImportExcel = {
+                        filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    },
+                    onStartSending = {
+                        viewModel.startCampaign()
+                        Toast.makeText(context, "Đã khởi chạy chiến dịch gửi Zalo tự động!", Toast.LENGTH_SHORT).show()
+                        selectedTab = 2 // Switch to progress tab
+                    }
+                )
+                2 -> ZaloProgressTab(
+                    progressState = progressState,
+                    logs = logs,
+                    onPauseCampaign = { viewModel.pauseCampaign() },
+                    onResumeCampaign = { viewModel.resumeCampaign() },
+                    onStopCampaign = { viewModel.stopCampaign() }
                 )
             }
         }

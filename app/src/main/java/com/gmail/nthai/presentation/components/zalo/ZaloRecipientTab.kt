@@ -1,5 +1,6 @@
 package com.gmail.nthai.presentation.components.zalo
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileUpload
@@ -27,16 +29,17 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +64,8 @@ fun ZaloRecipientTab(
     onAddRecipient: (name: String, phone: String) -> Unit = { _, _ -> },
     onDeleteRecipient: (id: Long) -> Unit = {},
     onRetryRecipient: (id: Long) -> Unit = {},
-    onImportExcel: () -> Unit = {}
+    onImportExcel: () -> Unit = {},
+    onStartSending: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("ALL") } // "ALL", "PENDING", "SUCCESS", "FAILED"
@@ -104,19 +108,19 @@ fun ZaloRecipientTab(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Summary Header Card matching CustomerListScreen style
-        Card(
+        // Summary Header Card matching modern app style
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+                .padding(bottom = 12.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFFFFFFFF),
+            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -127,19 +131,19 @@ fun ZaloRecipientTab(
                     Icon(
                         Icons.Default.People,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = Color(0xFF171717)
                     )
                     Column {
                         Text(
                             "TỔNG SỐ SĐT ZALO",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                            color = Color(0xFF888888)
                         )
                         Text(
                             totalCount.toString(),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = Color(0xFF171717)
                         )
                     }
                 }
@@ -147,14 +151,14 @@ fun ZaloRecipientTab(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         "ĐÃ GỬI THÀNH CÔNG",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                        color = Color(0xFF888888)
                     )
                     Text(
                         "$successCount / $totalCount",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color(0xFF171717)
                     )
                 }
             }
@@ -170,11 +174,17 @@ fun ZaloRecipientTab(
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .weight(1f)
-                    .height(52.dp),
-                placeholder = { Text("Tìm theo tên hoặc SĐT...", fontSize = 14.sp) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    .height(48.dp),
+                placeholder = { Text("Tìm theo tên hoặc SĐT...", fontSize = 13.sp, color = Color(0xFF888888)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF888888), modifier = Modifier.size(18.dp)) },
                 shape = RoundedCornerShape(12.dp),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF171717),
+                    unfocusedBorderColor = Color(0xFFEBEBEB),
+                    focusedContainerColor = Color(0xFFFFFFFF),
+                    unfocusedContainerColor = Color(0xFFFFFFFF)
+                )
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -182,13 +192,14 @@ fun ZaloRecipientTab(
             IconButton(
                 onClick = { showAddDialog = true },
                 modifier = Modifier
-                    .size(52.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
+                    .size(48.dp)
+                    .background(Color(0xFF171717), RoundedCornerShape(12.dp))
             ) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = "Thêm SĐT",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    tint = Color(0xFFFFFFFF),
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
@@ -197,49 +208,56 @@ fun ZaloRecipientTab(
             IconButton(
                 onClick = onImportExcel,
                 modifier = Modifier
-                    .size(52.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(12.dp))
+                    .size(48.dp)
+                    .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
             ) {
                 Icon(
                     Icons.Default.FileUpload,
                     contentDescription = "Excel",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    tint = Color(0xFF171717),
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // Single Horizontal Scrollable Row for Filter Chips (Matching CustomerListScreen)
+        // Single Horizontal Scrollable Row for Filter Chips
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            FilterChip(
-                selected = selectedFilter == "ALL",
-                onClick = { selectedFilter = "ALL" },
-                label = { Text("Tất cả ($totalCount)") }
+            val chips = listOf(
+                "ALL" to "Tất cả ($totalCount)",
+                "PENDING" to "Chờ gửi ($pendingCount)",
+                "SUCCESS" to "Thành công ($successCount)",
+                "FAILED" to "Thất bại ($failedCount)"
             )
-            FilterChip(
-                selected = selectedFilter == "PENDING",
-                onClick = { selectedFilter = "PENDING" },
-                label = { Text("Chờ gửi ($pendingCount)") }
-            )
-            FilterChip(
-                selected = selectedFilter == "SUCCESS",
-                onClick = { selectedFilter = "SUCCESS" },
-                label = { Text("Thành công ($successCount)") }
-            )
-            FilterChip(
-                selected = selectedFilter == "FAILED",
-                onClick = { selectedFilter = "FAILED" },
-                label = { Text("Thất bại ($failedCount)") }
-            )
+            chips.forEach { (key, label) ->
+                val selected = selectedFilter == key
+                FilterChip(
+                    selected = selected,
+                    onClick = { selectedFilter = key },
+                    label = { Text(label, fontSize = 12.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF171717),
+                        selectedLabelColor = Color(0xFFFFFFFF),
+                        containerColor = Color(0xFFFFFFFF),
+                        labelColor = Color(0xFF171717)
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = selected,
+                        borderColor = Color(0xFFEBEBEB),
+                        selectedBorderColor = Color(0xFF171717)
+                    )
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // Recipient List
         if (filteredList.isEmpty()) {
@@ -252,7 +270,7 @@ fun ZaloRecipientTab(
                 Text(
                     text = "Không tìm thấy số điện thoại phù hợp",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF888888)
                 )
             }
         } else {
@@ -269,28 +287,57 @@ fun ZaloRecipientTab(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Prominent "Bắt đầu gửi Zalo" Action Button
+        Button(
+            onClick = onStartSending,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(9999.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF171717),
+                contentColor = Color(0xFFFFFFFF)
+            )
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Send,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                "Bắt Đầu Gửi Zalo (${filteredList.size} SĐT)",
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+        }
     }
 
-    // Add Customer Dialog Simulation
+    // Add Customer Dialog
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Thêm SĐT Zalo mới", fontWeight = FontWeight.Bold) },
+            title = { Text("Thêm SĐT Zalo mới", fontWeight = FontWeight.Bold, color = Color(0xFF171717)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         value = newCustomerName,
                         onValueChange = { newCustomerName = it },
                         label = { Text("Tên người nhận") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp)
                     )
                     OutlinedTextField(
                         value = newCustomerPhone,
                         onValueChange = { newCustomerPhone = it },
                         label = { Text("Số điện thoại Zalo") },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
             },
@@ -303,16 +350,25 @@ fun ZaloRecipientTab(
                             newCustomerPhone = ""
                             showAddDialog = false
                         }
-                    }
+                    },
+                    shape = RoundedCornerShape(9999.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF171717), contentColor = Color(0xFFFFFFFF))
                 ) {
-                    Text("Thêm SĐT")
+                    Text("Thêm SĐT", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) {
+                OutlinedButton(
+                    onClick = { showAddDialog = false },
+                    shape = RoundedCornerShape(9999.dp),
+                    border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
+                ) {
                     Text("Hủy")
                 }
-            }
+            },
+            containerColor = Color(0xFFFFFFFF),
+            shape = RoundedCornerShape(16.dp)
         )
     }
 }
@@ -323,27 +379,28 @@ private fun ZaloCustomerCard(
     onDelete: () -> Unit,
     onRetry: () -> Unit
 ) {
-    ElevatedCard(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFFFFFFFF),
+        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer),
+                    .background(Color(0xFFF5F5F5)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = customer.name.firstOrNull()?.uppercase() ?: "?",
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    color = Color(0xFF171717),
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -356,6 +413,7 @@ private fun ZaloCustomerCard(
                         text = customer.name,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
+                        color = Color(0xFF171717),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -363,23 +421,23 @@ private fun ZaloCustomerCard(
                     Text(
                         text = if (customer.isZaloFriend) "(Bạn bè)" else "(Chưa kết bạn)",
                         fontSize = 11.sp,
-                        color = if (customer.isZaloFriend) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (customer.isZaloFriend) Color(0xFF10B981) else Color(0xFF888888)
                     )
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = customer.phone,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF888888)
                 )
                 if (customer.note.isNotBlank()) {
                     Text(
                         text = customer.note,
                         fontSize = 11.sp,
                         color = when (customer.status) {
-                            LogStatus.FAILED -> MaterialTheme.colorScheme.error
-                            LogStatus.SENT_SUCCESS -> Color(0xFF176B45)
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            LogStatus.FAILED -> Color(0xFFEE0000)
+                            LogStatus.SENT_SUCCESS -> Color(0xFF10B981)
+                            else -> Color(0xFF888888)
                         }
                     )
                 }
@@ -396,7 +454,7 @@ private fun ZaloCustomerCard(
                         Icon(
                             Icons.Default.Refresh,
                             contentDescription = "Gửi lại",
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = Color(0xFF171717),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -405,7 +463,7 @@ private fun ZaloCustomerCard(
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Xóa",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = Color(0xFF888888),
                             modifier = Modifier.size(18.dp)
                         )
                     }

@@ -1,5 +1,6 @@
 package com.gmail.nthai.presentation.components.zalo
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,17 +20,17 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -87,14 +89,13 @@ fun ZaloProgressTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 1. Live Zalo Progress Center Card
-        ElevatedCard(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFFFFFFFF),
+            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
         ) {
-            Column(modifier = Modifier.padding(18.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -102,10 +103,12 @@ fun ZaloProgressTab(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = "Trung tâm gửi Zalo Trợ năng",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            text = "TRUNG TÂM GỬI ZALO",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = Color(0xFF888888)
                         )
                         Text(
                             text = when {
@@ -113,22 +116,23 @@ fun ZaloProgressTab(
                                 isPaused -> "Trạng thái: Tạm dừng"
                                 else -> progressState.statusMessage
                             },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF171717)
                         )
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             text = "$sentCount / $totalCount",
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = Color(0xFF171717)
                         )
                         Text(
                             text = "tin Zalo",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF888888)
                         )
                     }
                 }
@@ -139,20 +143,20 @@ fun ZaloProgressTab(
                     progress = { sentCount.toFloat() / totalCount },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(8.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(9999.dp)),
+                    color = Color(0xFF171717),
+                    trackColor = Color(0xFFEBEBEB)
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
-
                 if (isSending && currentRecipient != null) {
-                    Card(
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-                        )
+                        color = Color(0xFFF5F5F5),
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
                     ) {
                         Row(
                             modifier = Modifier
@@ -165,12 +169,13 @@ fun ZaloProgressTab(
                                 Text(
                                     text = "Đang xử lý: ${currentRecipient.name} (${currentRecipient.phone})",
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF171717)
                                 )
                                 Text(
                                     text = "Đang đếm ngược giãn cách chống spam Zalo...",
                                     fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = Color(0xFF666666)
                                 )
                             }
                             if (countdownSeconds > 0) {
@@ -178,35 +183,38 @@ fun ZaloProgressTab(
                                     text = "${countdownSeconds}s",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = Color(0xFF171717)
                                 )
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                if (isSending) {
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                // Control Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    if (isSending) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         OutlinedButton(
                             onClick = {
                                 if (isPaused) onResumeCampaign() else onPauseCampaign()
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .height(44.dp)
+                                .height(44.dp),
+                            shape = RoundedCornerShape(9999.dp),
+                            border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
                         ) {
                             Icon(
                                 if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                                contentDescription = null
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (isPaused) "Tiếp tục" else "Tạm dừng")
+                            Text(if (isPaused) "Tiếp tục" else "Tạm dừng", fontSize = 13.sp)
                         }
 
                         Button(
@@ -214,11 +222,15 @@ fun ZaloProgressTab(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(44.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            shape = RoundedCornerShape(9999.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFEE0000),
+                                contentColor = Color(0xFFFFFFFF)
+                            )
                         ) {
-                            Icon(Icons.Default.Stop, contentDescription = null)
+                            Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Dừng chiến dịch")
+                            Text("Dừng chiến dịch", fontSize = 13.sp)
                         }
                     }
                 }
@@ -227,9 +239,12 @@ fun ZaloProgressTab(
 
         // 2. Real-time Log Section Header
         Text(
-            text = "Nhật ký tự động gửi Zalo",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            text = "NHẬT KÝ TỰ ĐỘNG GỬI ZALO",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color(0xFF888888)
         )
 
         // 3. Log List (Using App's standard LogRecordCard)

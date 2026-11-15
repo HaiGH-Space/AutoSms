@@ -1,5 +1,6 @@
 package com.gmail.nthai.presentation.components.zalo
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,9 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddPhotoAlternate
@@ -29,25 +32,23 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RangeSlider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,6 +71,7 @@ fun ZaloConfigTab(
     onAddImage: (String) -> Unit = {},
     onRemoveImage: (Int) -> Unit = {},
     onStartSending: () -> Unit = {},
+    onNextToRecipients: () -> Unit = {},
     onImportExcel: () -> Unit = {},
     onOpenAccessibilitySettings: () -> Unit = {}
 ) {
@@ -81,35 +83,30 @@ fun ZaloConfigTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 1. Accessibility Status Banner Card
-        ElevatedCard(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = if (isAccessibilityEnabled)
-                    MaterialTheme.colorScheme.primaryContainer
-                else
-                    MaterialTheme.colorScheme.errorContainer
-            )
+            shape = RoundedCornerShape(16.dp),
+            color = Color(0xFFFFFFFF),
+            border = BorderStroke(1.dp, if (isAccessibilityEnabled) Color(0xFFEBEBEB) else Color(0xFFFEE2E2))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(18.dp),
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = if (isAccessibilityEnabled) Icons.Default.CheckCircle else Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = if (isAccessibilityEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(36.dp)
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(if (isAccessibilityEnabled) Color(0xFF10B981) else Color(0xFFEE0000), CircleShape)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (isAccessibilityEnabled) "Trợ năng Zalo: ĐÃ BẬT" else "Trợ năng Zalo: CHƯA BẬT",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (isAccessibilityEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+                        color = Color(0xFF171717)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
@@ -118,16 +115,17 @@ fun ZaloConfigTab(
                         else
                             "Cần cấp quyền Trợ năng (Accessibility) để tự động tìm SĐT & gửi tin Zalo.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (isAccessibilityEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+                        color = Color(0xFF666666)
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = onOpenAccessibilitySettings,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isAccessibilityEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        containerColor = if (isAccessibilityEnabled) Color(0xFFF5F5F5) else Color(0xFF171717),
+                        contentColor = if (isAccessibilityEnabled) Color(0xFF171717) else Color(0xFFFFFFFF)
                     ),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(9999.dp)
                 ) {
                     Text(
                         text = if (isAccessibilityEnabled) "Cài đặt" else "Bật ngay",
@@ -139,10 +137,11 @@ fun ZaloConfigTab(
         }
 
         // 2. Message Template & Spintax Card
-        ElevatedCard(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            color = Color(0xFFFFFFFF),
+            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -152,13 +151,14 @@ fun ZaloConfigTab(
                 ) {
                     Text(
                         text = "Nội dung tin nhắn Zalo",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF171717)
                     )
                     Text(
                         text = "Hỗ trợ Spintax {A|B}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = Color(0xFF888888),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -172,48 +172,58 @@ fun ZaloConfigTab(
                         .fillMaxWidth()
                         .height(130.dp),
                     placeholder = { Text("Nhập nội dung tin nhắn Zalo...") },
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF171717),
+                        unfocusedBorderColor = Color(0xFFEBEBEB),
+                        focusedContainerColor = Color(0xFFFFFFFF),
+                        unfocusedContainerColor = Color(0xFFFFFFFF)
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Chèn nhanh biến cá nhân hóa:",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF888888)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     AssistChip(
                         onClick = { onMessageContentChange(messageContent + " {ten_khach}") },
-                        label = { Text("{ten_khach}") },
-                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                        label = { Text("{ten_khach}", color = Color(0xFF171717)) },
+                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFF171717)) },
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFFFFFFF))
                     )
                     AssistChip(
                         onClick = { onMessageContentChange(messageContent + " {sdt}") },
-                        label = { Text("{sdt}") },
-                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                        label = { Text("{sdt}", color = Color(0xFF171717)) },
+                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFF171717)) },
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFFFFFFF))
                     )
                     AssistChip(
                         onClick = { onMessageContentChange(messageContent + " {Xin chào|Chào anh/chị}") },
-                        label = { Text("Spintax {A|B}") },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
+                        label = { Text("Spintax {A|B}", color = Color(0xFF171717)) },
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFF5F5F5))
                     )
                 }
             }
         }
 
         // 3. Image Attachment Card
-        ElevatedCard(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            color = Color(0xFFFFFFFF),
+            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -225,20 +235,21 @@ fun ZaloConfigTab(
                         Icon(
                             imageVector = Icons.Default.AddPhotoAlternate,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = Color(0xFF171717),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Hình ảnh đính kèm",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF171717)
                         )
                     }
                     Text(
                         text = "${selectedImages.size} tệp",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF888888)
                     )
                 }
 
@@ -248,11 +259,13 @@ fun ZaloConfigTab(
                     OutlinedButton(
                         onClick = { onAddImage("anh_demo_${selectedImages.size + 1}.jpg") },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(9999.dp),
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Thêm ảnh gửi kèm Zalo")
+                        Text("Thêm ảnh gửi kèm Zalo", fontSize = 13.sp)
                     }
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -261,7 +274,7 @@ fun ZaloConfigTab(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                    .background(Color(0xFFF5F5F5))
                                     .padding(horizontal = 12.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
@@ -270,14 +283,15 @@ fun ZaloConfigTab(
                                     Icon(
                                         imageVector = Icons.Default.AddPhotoAlternate,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        tint = Color(0xFF171717),
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = fileName,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF171717)
                                     )
                                 }
                                 IconButton(
@@ -287,7 +301,7 @@ fun ZaloConfigTab(
                                     Icon(
                                         Icons.Default.Close,
                                         contentDescription = "Xóa",
-                                        tint = MaterialTheme.colorScheme.error,
+                                        tint = Color(0xFF888888),
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
@@ -297,11 +311,13 @@ fun ZaloConfigTab(
                         OutlinedButton(
                             onClick = { onAddImage("anh_demo_${selectedImages.size + 1}.jpg") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(9999.dp),
+                            border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Thêm ảnh khác")
+                            Text("Thêm ảnh khác", fontSize = 13.sp)
                         }
                     }
                 }
@@ -309,24 +325,26 @@ fun ZaloConfigTab(
         }
 
         // 4. Sending Interval & Anti-Block Settings
-        ElevatedCard(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            color = Color(0xFFFFFFFF),
+            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = Color(0xFF171717),
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Giãn cách & Chống khóa Zalo",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF171717)
                     )
                 }
 
@@ -335,12 +353,13 @@ fun ZaloConfigTab(
                 Text(
                     text = "Giãn cách giữa 2 tin nhắn: ${delayRange.start.roundToInt()}s - ${delayRange.endInclusive.roundToInt()}s",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF171717)
                 )
                 Text(
                     text = "Thời gian ngẫu nhiên giúp hạn chế bị hệ thống Zalo quét Spam.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF666666)
                 )
 
                 RangeSlider(
@@ -348,7 +367,12 @@ fun ZaloConfigTab(
                     onValueChange = onDelayRangeChange,
                     valueRange = 5f..60f,
                     steps = 11,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = Color(0xFF171717),
+                        activeTrackColor = Color(0xFF171717),
+                        inactiveTrackColor = Color(0xFFEBEBEB)
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -362,17 +386,24 @@ fun ZaloConfigTab(
                         Text(
                             text = "Tự động gửi lời mời kết bạn",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF171717)
                         )
                         Text(
                             text = "Tự bấm 'Kết Bạn' trên Zalo nếu số điện thoại chưa là bạn bè",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF666666)
                         )
                     }
                     Switch(
                         checked = autoAddFriend,
-                        onCheckedChange = onAutoAddFriendChange
+                        onCheckedChange = onAutoAddFriendChange,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color(0xFFFFFFFF),
+                            checkedTrackColor = Color(0xFF171717),
+                            uncheckedThumbColor = Color(0xFF888888),
+                            uncheckedTrackColor = Color(0xFFEBEBEB)
+                        )
                     )
                 }
 
@@ -387,17 +418,24 @@ fun ZaloConfigTab(
                         Text(
                             text = "Bỏ qua SĐT đã gửi thành công",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF171717)
                         )
                         Text(
                             text = "Không gửi lại cho các SĐT đã thành công trước đây",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Color(0xFF666666)
                         )
                     }
                     Switch(
                         checked = sendOnlyIfUnsent,
-                        onCheckedChange = onSendOnlyIfUnsentChange
+                        onCheckedChange = onSendOnlyIfUnsentChange,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color(0xFFFFFFFF),
+                            checkedTrackColor = Color(0xFF171717),
+                            uncheckedThumbColor = Color(0xFF888888),
+                            uncheckedTrackColor = Color(0xFFEBEBEB)
+                        )
                     )
                 }
             }
@@ -412,27 +450,30 @@ fun ZaloConfigTab(
                 onClick = onImportExcel,
                 modifier = Modifier
                     .weight(1f)
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(9999.dp),
+                border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
             ) {
-                Icon(Icons.Default.FileUpload, contentDescription = null)
+                Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Nhập Excel", fontWeight = FontWeight.Bold)
+                Text("Nhập Excel", fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
 
             Button(
-                onClick = onStartSending,
+                onClick = onNextToRecipients,
                 modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
+                    .weight(1.3f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(9999.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFF171717),
+                    contentColor = Color(0xFFFFFFFF)
                 )
             ) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
+                Text("Danh sách SĐT", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("Bắt Đầu Gửi Zalo", fontWeight = FontWeight.Bold)
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
             }
         }
 

@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SimCard
@@ -46,6 +48,7 @@ import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 @Composable
 fun ManagementScreen(
     initialTab: Int = 0,
+    onNavigateToAutoZalo: () -> Unit = {},
     configViewModel: ConfigViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel()
 ) {

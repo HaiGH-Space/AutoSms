@@ -348,6 +348,15 @@ fun HomeScreen(
                 onPrimaryClick = onNavigateToProgress,
                 highlight = isSending
             )
+
+            // Step 4: Zalo Automation
+            WorkflowStepCard(
+                stepTag = "04",
+                title = "Gửi tin nhắn Zalo tự động",
+                description = "Tự động hóa tìm SĐT, kết bạn và gửi tin nhắn/hình ảnh qua ứng dụng Zalo bằng Trợ năng.",
+                primaryButtonText = "Mở Zalo Auto",
+                onPrimaryClick = onNavigateToAutoZalo
+            )
         }
     }
 
