@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -170,7 +169,11 @@ fun CustomerDetailDialog(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Icon(Icons.Outlined.Person, contentDescription = null, tint = Color(0xFF171717))
-                Text("Thông tin người nhận", fontWeight = FontWeight.Bold, color = Color(0xFF171717))
+                Text(
+                    "Thông tin người nhận",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF171717)
+                )
             }
         },
         text = {

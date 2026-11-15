@@ -80,11 +80,17 @@ fun SendingProgressScreen(
             onDismissRequest = { showPermissionSettingsDialog = false },
             containerColor = Color(0xFFFFFFFF),
             shape = RoundedCornerShape(16.dp),
-            title = { Text("Cần cấp quyền gửi SMS", fontWeight = FontWeight.Bold, color = Color(0xFF171717)) },
+            title = {
+                Text(
+                    "Cần cấp quyền gửi SMS",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF171717)
+                )
+            },
             text = {
                 Text(
                     "Ứng dụng cần quyền Điện thoại, SMS và Thông báo để tự động gửi tin nhắn trong nền. " +
-                        "Hãy bấm 'Mở cài đặt' để kích hoạt các quyền này.",
+                            "Hãy bấm 'Mở cài đặt' để kích hoạt các quyền này.",
                     color = Color(0xFF4D4D4D)
                 )
             },
@@ -194,7 +200,8 @@ fun SendingProgressScreen(
 
             // SIM Progress Cards
             (1..2).forEach { simSlot ->
-                val carrierName = simConfigs.find { it.simSlot == simSlot }?.carrierName?.trim().orEmpty()
+                val carrierName =
+                    simConfigs.find { it.simSlot == simSlot }?.carrierName?.trim().orEmpty()
                 SimSendingProgressCard(
                     simSlot = simSlot,
                     carrierName = carrierName,

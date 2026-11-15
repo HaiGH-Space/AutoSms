@@ -50,7 +50,8 @@ class ParseSpintaxUseCaseTest {
         val template = "{Chao|Kinh chao} {Ten_KH}"
         val result = useCase(template, sampleCustomer)
 
-        val containsOption = result.startsWith("Chao Nguyen Van A") || result.startsWith("Kinh chao Nguyen Van A")
+        val containsOption =
+            result.startsWith("Chao Nguyen Van A") || result.startsWith("Kinh chao Nguyen Van A")
         assertTrue(containsOption)
     }
 

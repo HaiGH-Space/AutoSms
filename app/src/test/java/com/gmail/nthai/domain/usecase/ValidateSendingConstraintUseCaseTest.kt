@@ -45,7 +45,14 @@ class ValidateSendingConstraintUseCaseTest {
     fun `respects minute precision at the start of the sending window`() {
         val minuteRule = rule.copy(startHour = 8, startMinute = 30)
 
-        assertTrue(useCase(minuteRule, 8, validSim, currentMinute = 29) is ValidationResult.OutsideTimeFrame)
+        assertTrue(
+            useCase(
+                minuteRule,
+                8,
+                validSim,
+                currentMinute = 29
+            ) is ValidationResult.OutsideTimeFrame
+        )
         assertTrue(useCase(minuteRule, 8, validSim, currentMinute = 30) is ValidationResult.Valid)
     }
 
@@ -54,7 +61,14 @@ class ValidateSendingConstraintUseCaseTest {
         val minuteRule = rule.copy(endHour = 17, endMinute = 30)
 
         assertTrue(useCase(minuteRule, 17, validSim, currentMinute = 29) is ValidationResult.Valid)
-        assertTrue(useCase(minuteRule, 17, validSim, currentMinute = 30) is ValidationResult.OutsideTimeFrame)
+        assertTrue(
+            useCase(
+                minuteRule,
+                17,
+                validSim,
+                currentMinute = 30
+            ) is ValidationResult.OutsideTimeFrame
+        )
     }
 
     @Test

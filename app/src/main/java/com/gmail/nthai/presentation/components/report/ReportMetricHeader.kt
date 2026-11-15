@@ -70,7 +70,13 @@ fun ReportMetricHeader(
             ReportMetricCard(
                 modifier = Modifier.weight(1f),
                 label = "Tỷ lệ thành công",
-                value = "${String.format(Locale.getDefault(), "%.1f", stats.successRatePercentage)}%",
+                value = "${
+                    String.format(
+                        Locale.getDefault(),
+                        "%.1f",
+                        stats.successRatePercentage
+                    )
+                }%",
                 icon = Icons.Default.CheckCircle,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer

@@ -23,7 +23,8 @@ object UseCaseModule {
 
     @Provides
     @Singleton
-    fun provideValidateSendingConstraintUseCase(): ValidateSendingConstraintUseCase = ValidateSendingConstraintUseCase()
+    fun provideValidateSendingConstraintUseCase(): ValidateSendingConstraintUseCase =
+        ValidateSendingConstraintUseCase()
 
     @Provides
     @Singleton

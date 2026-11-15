@@ -126,7 +126,7 @@ class TemplateViewModel @Inject constructor(
             val isNew = _template.value.id == 0L
             val toSave = _template.value.copy(updatedAt = System.currentTimeMillis())
             val savedId = templateRepository.saveTemplate(toSave)
-            
+
             val updatedTemplate = toSave.copy(id = savedId)
             _template.value = updatedTemplate
 

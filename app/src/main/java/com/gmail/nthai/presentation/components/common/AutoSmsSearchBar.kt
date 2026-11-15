@@ -37,11 +37,22 @@ fun AutoSmsSearchBar(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color(0xFF888888)) },
+        leadingIcon = {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = Color(0xFF888888)
+            )
+        },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Clear, contentDescription = "Xóa tìm kiếm", modifier = Modifier.size(16.dp))
+                    Icon(
+                        Icons.Default.Clear,
+                        contentDescription = "Xóa tìm kiếm",
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         },

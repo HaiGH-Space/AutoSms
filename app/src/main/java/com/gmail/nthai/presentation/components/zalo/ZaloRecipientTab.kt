@@ -40,8 +40,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
-import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.ZaloRecipient
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
+import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
 import com.gmail.nthai.presentation.components.common.StatusBadge
 
 @Composable
@@ -74,21 +74,53 @@ fun ZaloRecipientTab(
     var newCustomerName by remember { mutableStateOf("") }
     var newCustomerPhone by remember { mutableStateOf("") }
 
-    val displayList = if (recipients.isEmpty() && searchQuery.isEmpty() && selectedFilter == "ALL") {
-        remember {
-            listOf(
-                ZaloRecipient(1, "Nguyễn Văn Anh", "0987654321", isZaloFriend = true, status = LogStatus.SENT_SUCCESS, note = "Đã gửi tin & ảnh thành công"),
-                ZaloRecipient(2, "Trần Thị Bình", "0912345678", isZaloFriend = false, status = LogStatus.PENDING, note = "Đã bật tự động kết bạn"),
-                ZaloRecipient(3, "Lê Văn Cường", "0933445566", isZaloFriend = true, status = LogStatus.FAILED, note = "SĐT chưa mở tài khoản Zalo"),
-                ZaloRecipient(4, "Phạm Minh Đức", "0977889900", isZaloFriend = false, status = LogStatus.PENDING, note = "Chờ gửi")
-            )
+    val displayList =
+        if (recipients.isEmpty() && searchQuery.isEmpty() && selectedFilter == "ALL") {
+            remember {
+                listOf(
+                    ZaloRecipient(
+                        1,
+                        "Nguyễn Văn Anh",
+                        "0987654321",
+                        isZaloFriend = true,
+                        status = LogStatus.SENT_SUCCESS,
+                        note = "Đã gửi tin & ảnh thành công"
+                    ),
+                    ZaloRecipient(
+                        2,
+                        "Trần Thị Bình",
+                        "0912345678",
+                        isZaloFriend = false,
+                        status = LogStatus.PENDING,
+                        note = "Đã bật tự động kết bạn"
+                    ),
+                    ZaloRecipient(
+                        3,
+                        "Lê Văn Cường",
+                        "0933445566",
+                        isZaloFriend = true,
+                        status = LogStatus.FAILED,
+                        note = "SĐT chưa mở tài khoản Zalo"
+                    ),
+                    ZaloRecipient(
+                        4,
+                        "Phạm Minh Đức",
+                        "0977889900",
+                        isZaloFriend = false,
+                        status = LogStatus.PENDING,
+                        note = "Chờ gửi"
+                    )
+                )
+            }
+        } else {
+            recipients
         }
-    } else {
-        recipients
-    }
 
     val filteredList = displayList.filter { customer ->
-        val matchesSearch = customer.name.contains(searchQuery, ignoreCase = true) || customer.phone.contains(searchQuery)
+        val matchesSearch =
+            customer.name.contains(searchQuery, ignoreCase = true) || customer.phone.contains(
+                searchQuery
+            )
         val matchesFilter = when (selectedFilter) {
             "PENDING" -> customer.status == LogStatus.PENDING
             "SUCCESS" -> customer.status == LogStatus.SENT_SUCCESS
@@ -136,7 +168,10 @@ fun ZaloRecipientTab(
                     Column {
                         Text(
                             "TỔNG SỐ SĐT ZALO",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
                             color = Color(0xFF888888)
                         )
                         Text(
@@ -151,7 +186,10 @@ fun ZaloRecipientTab(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         "ĐÃ GỬI THÀNH CÔNG",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
                         color = Color(0xFF888888)
                     )
                     Text(
@@ -229,7 +267,13 @@ fun ZaloRecipientTab(
                 FilterChip(
                     selected = selected,
                     onClick = { selectedFilter = key },
-                    label = { Text(label, fontSize = 12.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium) },
+                    label = {
+                        Text(
+                            label,
+                            fontSize = 12.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                        )
+                    },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = Color(0xFF171717),
                         selectedLabelColor = Color(0xFFFFFFFF),
@@ -309,7 +353,13 @@ fun ZaloRecipientTab(
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text("Thêm SĐT Zalo mới", fontWeight = FontWeight.Bold, color = Color(0xFF171717)) },
+            title = {
+                Text(
+                    "Thêm SĐT Zalo mới",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF171717)
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
@@ -341,7 +391,10 @@ fun ZaloRecipientTab(
                         }
                     },
                     shape = RoundedCornerShape(9999.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF171717), contentColor = Color(0xFFFFFFFF))
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF171717),
+                        contentColor = Color(0xFFFFFFFF)
+                    )
                 ) {
                     Text("Thêm SĐT", fontWeight = FontWeight.Bold)
                 }

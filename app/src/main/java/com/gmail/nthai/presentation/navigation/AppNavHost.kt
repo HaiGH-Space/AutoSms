@@ -2,7 +2,6 @@ package com.gmail.nthai.presentation.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -51,7 +50,10 @@ fun AppNavHost() {
                 screens.forEach { screen ->
                     val isSelected = when (screen) {
                         Screen.Home -> currentRoute == Screen.Home.route
-                        Screen.AutoSms -> currentRoute == Screen.AutoSms.route || currentRoute?.startsWith(Screen.Customers.BASE_ROUTE) == true
+                        Screen.AutoSms -> currentRoute == Screen.AutoSms.route || currentRoute?.startsWith(
+                            Screen.Customers.BASE_ROUTE
+                        ) == true
+
                         Screen.AutoZalo -> currentRoute == Screen.AutoZalo.route
                         Screen.Management -> currentRoute == Screen.Management.route
                         else -> currentRoute == screen.route
@@ -64,7 +66,10 @@ fun AppNavHost() {
                         onClick = {
                             if (screen == Screen.Home) {
                                 if (currentRoute != Screen.Home.route &&
-                                    !navController.popBackStack(Screen.Home.route, inclusive = false)
+                                    !navController.popBackStack(
+                                        Screen.Home.route,
+                                        inclusive = false
+                                    )
                                 ) {
                                     navController.navigate(Screen.Home.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {

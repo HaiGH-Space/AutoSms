@@ -32,29 +32,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -69,7 +63,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -79,6 +72,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.presentation.components.LoadingDialog
 import com.gmail.nthai.presentation.components.SelectPhoneColumnDialog
+import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
 import com.gmail.nthai.presentation.components.customer.CustomerDetailDialog
 import com.gmail.nthai.presentation.components.customer.CustomerItemCard
 import com.gmail.nthai.presentation.components.customer.ResetStatusDialog
@@ -117,7 +111,8 @@ fun CustomerListScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             viewModel.prepareExcelImportWithUri(context, uri) { err ->
-                Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG)
+                    .show()
             }
         }
     }
@@ -164,14 +159,26 @@ fun CustomerListScreen(
                                 filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                             }
                         ) {
-                            Icon(Icons.Default.FileUpload, contentDescription = "Nhập Excel", tint = Color(0xFF171717))
+                            Icon(
+                                Icons.Default.FileUpload,
+                                contentDescription = "Nhập Excel",
+                                tint = Color(0xFF171717)
+                            )
                         }
                         if (customers.isNotEmpty()) {
                             IconButton(onClick = { showResetDialog = true }, enabled = !isSending) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Đặt lại trạng thái", tint = Color(0xFF888888))
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = "Đặt lại trạng thái",
+                                    tint = Color(0xFF888888)
+                                )
                             }
                             IconButton(onClick = { viewModel.deleteAllCustomers() }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Xóa tất cả", tint = Color(0xFFEE0000))
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Xóa tất cả",
+                                    tint = Color(0xFFEE0000)
+                                )
                             }
                         }
                     },
@@ -224,7 +231,11 @@ fun CustomerListScreen(
                             ),
                             contentPadding = ButtonDefaults.ButtonWithIconContentPadding
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.AutoMirrored.Filled.Send,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Bắt đầu gửi", fontWeight = FontWeight.SemiBold)
                         }
@@ -258,7 +269,8 @@ fun CustomerListScreen(
             ) {
                 (1..2).forEach { slot ->
                     val config = simConfigs.find { it.simSlot == slot }
-                    val label = if (!config?.carrierName.isNullOrBlank()) "SIM $slot (${config?.carrierName})" else "SIM $slot"
+                    val label =
+                        if (!config?.carrierName.isNullOrBlank()) "SIM $slot (${config?.carrierName})" else "SIM $slot"
                     Tab(
                         selected = selectedSimSlot == slot,
                         onClick = { viewModel.selectSimSlot(slot) },
@@ -271,13 +283,17 @@ fun CustomerListScreen(
                                     Icons.Default.SimCard,
                                     contentDescription = null,
                                     modifier = Modifier.size(15.dp),
-                                    tint = if (selectedSimSlot == slot) Color(0xFF171717) else Color(0xFF888888)
+                                    tint = if (selectedSimSlot == slot) Color(0xFF171717) else Color(
+                                        0xFF888888
+                                    )
                                 )
                                 Text(
                                     label,
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = if (selectedSimSlot == slot) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (selectedSimSlot == slot) Color(0xFF171717) else Color(0xFF888888)
+                                    color = if (selectedSimSlot == slot) Color(0xFF171717) else Color(
+                                        0xFF888888
+                                    )
                                 )
                             }
                         }
@@ -436,7 +452,11 @@ fun CustomerListScreen(
                                     contentColor = Color(0xFFFFFFFF)
                                 )
                             ) {
-                                Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(
+                                    Icons.Default.FileUpload,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Nhập file Excel", fontWeight = FontWeight.SemiBold)
                             }
@@ -483,9 +503,17 @@ fun CustomerListScreen(
             onConfirm = {
                 viewModel.confirmImport { result ->
                     result.onSuccess { count ->
-                        Toast.makeText(context, "Đã nhập thành công $count khách hàng", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Đã nhập thành công $count khách hàng",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }.onFailure { err ->
-                        Toast.makeText(context, "Lỗi đọc file Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            "Lỗi đọc file Excel: ${err.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             },
@@ -497,7 +525,11 @@ fun CustomerListScreen(
         ResetStatusDialog(
             onConfirm = { scope ->
                 viewModel.resetCustomerStatus(scope) {
-                    Toast.makeText(context, "Đã đặt lại trạng thái về 'Chờ gửi'", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Đã đặt lại trạng thái về 'Chờ gửi'",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 showResetDialog = false
             },

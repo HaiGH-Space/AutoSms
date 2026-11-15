@@ -25,7 +25,10 @@ open class SmsSenderEngine(
                 SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
             }
         } catch (e: Exception) {
-            throw IllegalStateException("Không thể khởi tạo dịch vụ SIM (SubID: $subscriptionId): ${e.localizedMessage ?: e.message}", e)
+            throw IllegalStateException(
+                "Không thể khởi tạo dịch vụ SIM (SubID: $subscriptionId): ${e.localizedMessage ?: e.message}",
+                e
+            )
         }
 
         try {
@@ -56,9 +59,15 @@ open class SmsSenderEngine(
         } catch (e: SecurityException) {
             throw SecurityException("Ứng dụng chưa được cấp quyền gửi SMS (SEND_SMS).", e)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("Số điện thoại ($destinationAddress) hoặc nội dung tin nhắn không hợp lệ.", e)
+            throw IllegalArgumentException(
+                "Số điện thoại ($destinationAddress) hoặc nội dung tin nhắn không hợp lệ.",
+                e
+            )
         } catch (e: Exception) {
-            throw Exception("Lỗi hệ thống khi khởi tạo gửi SMS: ${e.localizedMessage ?: e.message ?: e.javaClass.simpleName}", e)
+            throw Exception(
+                "Lỗi hệ thống khi khởi tạo gửi SMS: ${e.localizedMessage ?: e.message ?: e.javaClass.simpleName}",
+                e
+            )
         }
     }
 }

@@ -22,13 +22,10 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 
 @Composable
 fun ZaloSettingsTab(
@@ -53,73 +51,73 @@ fun ZaloSettingsTab(
         AutoSmsCardContainer(
             modifier = Modifier.fillMaxWidth()
         ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AccessibilityNew,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "Hướng dẫn Kích hoạt Trợ năng Zalo",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Yêu cầu bắt buộc để ứng dụng tự động dán & gửi tin Zalo",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                GuideStepItem(
-                    stepNumber = "1",
-                    title = "Mở Cài đặt hệ thống Android",
-                    description = "Bấm nút bên dưới để mở mục Cài đặt Hỗ trợ / Trợ năng (Accessibility)."
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                GuideStepItem(
-                    stepNumber = "2",
-                    title = "Chọn 'AutoSms Zalo Service'",
-                    description = "Trong danh sách Dịch vụ tải xuống / Ứng dụng cài đặt, chọn dịch vụ của AutoSms."
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                GuideStepItem(
-                    stepNumber = "3",
-                    title = "Bật công tắc Cho phép Trợ năng",
-                    description = "Cấp quyền để ứng dụng đọc màn hình và tự động bấm nút gửi trong Zalo."
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = onOpenAccessibilitySettings,
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.AccessibilityNew, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Mở Cài Đặt Trợ Năng Android", fontWeight = FontWeight.Bold)
+                    Icon(
+                        imageVector = Icons.Default.AccessibilityNew,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "Hướng dẫn Kích hoạt Trợ năng Zalo",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Yêu cầu bắt buộc để ứng dụng tự động dán & gửi tin Zalo",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            GuideStepItem(
+                stepNumber = "1",
+                title = "Mở Cài đặt hệ thống Android",
+                description = "Bấm nút bên dưới để mở mục Cài đặt Hỗ trợ / Trợ năng (Accessibility)."
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            GuideStepItem(
+                stepNumber = "2",
+                title = "Chọn 'AutoSms Zalo Service'",
+                description = "Trong danh sách Dịch vụ tải xuống / Ứng dụng cài đặt, chọn dịch vụ của AutoSms."
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            GuideStepItem(
+                stepNumber = "3",
+                title = "Bật công tắc Cho phép Trợ năng",
+                description = "Cấp quyền để ứng dụng đọc màn hình và tự động bấm nút gửi trong Zalo."
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onOpenAccessibilitySettings,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Icon(Icons.Default.AccessibilityNew, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Mở Cài Đặt Trợ Năng Android", fontWeight = FontWeight.Bold)
+            }
         }
 
         // 2. Anti-Spam Safety Recommendations Card
@@ -127,41 +125,41 @@ fun ZaloSettingsTab(
             modifier = Modifier.fillMaxWidth(),
             containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
         ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Shield,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Khuyên dùng an toàn bảo vệ Zalo",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                SafetyTipItem(
-                    title = "Giãn cách thời gian (15s - 30s/tin)",
-                    description = "Đặt thời gian nghỉ hợp lý giữa các lần gửi để tránh hệ thống Zalo phát hiện bất thường."
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Shield,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                SafetyTipItem(
-                    title = "Sử dụng Spintax {A|B} xoay tin nhắn",
-                    description = "Đổi mới nội dung từng tin nhắn gửi đi để tránh bị trùng lặp văn bản."
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Khuyên dùng an toàn bảo vệ Zalo",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                SafetyTipItem(
-                    title = "Giới hạn số tin mỗi ngày (Dưới 50 tin/ngày)",
-                    description = "Chia nhỏ chiến dịch gửi với tài khoản Zalo cá nhân chưa có độ tương tác cao."
-                )
+            SafetyTipItem(
+                title = "Giãn cách thời gian (15s - 30s/tin)",
+                description = "Đặt thời gian nghỉ hợp lý giữa các lần gửi để tránh hệ thống Zalo phát hiện bất thường."
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            SafetyTipItem(
+                title = "Sử dụng Spintax {A|B} xoay tin nhắn",
+                description = "Đổi mới nội dung từng tin nhắn gửi đi để tránh bị trùng lặp văn bản."
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            SafetyTipItem(
+                title = "Giới hạn số tin mỗi ngày (Dưới 50 tin/ngày)",
+                description = "Chia nhỏ chiến dịch gửi với tài khoản Zalo cá nhân chưa có độ tương tác cao."
+            )
         }
     }
 }

@@ -7,7 +7,10 @@ import java.io.InputStream
 class ImportCustomerExcelUseCase(
     private val excelParser: ExcelParser = ExcelParser()
 ) {
-    operator fun invoke(inputStream: InputStream, phoneColumnName: String = "sdt"): Result<List<Customer>> {
+    operator fun invoke(
+        inputStream: InputStream,
+        phoneColumnName: String = "sdt"
+    ): Result<List<Customer>> {
         return excelParser.parseCustomers(inputStream, phoneColumnName)
     }
 

@@ -183,7 +183,11 @@ fun TemplateEditorScreen(
                     TextButton(
                         onClick = {
                             viewModel.setSelectedTemplate(template.id) {
-                                Toast.makeText(context, "Đã chọn làm mẫu gửi SMS!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "Đã chọn làm mẫu gửi SMS!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                     ) {

@@ -127,7 +127,8 @@ class ZaloSendingEngine @Inject constructor(
 
                 val isSuccess = sendResult is ZaloAccessibilityService.SendResult.Success
                 val statusStr = if (isSuccess) "SENT_SUCCESS" else "FAILED"
-                val noteStr = if (isSuccess) "Đã gửi qua Trợ năng Zalo" else "Không thể tự động gửi Zalo"
+                val noteStr =
+                    if (isSuccess) "Đã gửi qua Trợ năng Zalo" else "Không thể tự động gửi Zalo"
 
                 zaloRepository.updateRecipientStatus(recipient.id, statusStr, noteStr)
                 zaloRepository.addLog(
@@ -193,7 +194,12 @@ class ZaloSendingEngine @Inject constructor(
     }
 
     fun resumeCampaign() {
-        _progressState.update { it.copy(isPaused = false, statusMessage = "Đang tiếp tục gửi Zalo...") }
+        _progressState.update {
+            it.copy(
+                isPaused = false,
+                statusMessage = "Đang tiếp tục gửi Zalo..."
+            )
+        }
     }
 
     fun stopCampaign() {

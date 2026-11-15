@@ -2,10 +2,10 @@ package com.gmail.nthai.presentation.screens
 
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.gmail.nthai.presentation.components.config.RuleAndUpdateTab as ComponentRuleAndUpdateTab
-import com.gmail.nthai.presentation.components.config.SimManagementTab as ComponentSimManagementTab
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
 import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
+import com.gmail.nthai.presentation.components.config.RuleAndUpdateTab as ComponentRuleAndUpdateTab
+import com.gmail.nthai.presentation.components.config.SimManagementTab as ComponentSimManagementTab
 
 @Composable
 fun SimManagementTab(
@@ -21,5 +21,9 @@ fun RuleAndUpdateTab(
     updateViewModel: UpdateViewModel = hiltViewModel(),
     showTopBar: Boolean = false
 ) {
-    ComponentRuleAndUpdateTab(viewModel = viewModel, updateViewModel = updateViewModel, showTopBar = showTopBar)
+    ComponentRuleAndUpdateTab(
+        viewModel = viewModel,
+        updateViewModel = updateViewModel,
+        showTopBar = showTopBar
+    )
 }

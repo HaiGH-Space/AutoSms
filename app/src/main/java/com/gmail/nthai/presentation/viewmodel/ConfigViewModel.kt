@@ -52,8 +52,8 @@ class ConfigViewModel @Inject constructor(
                 val saved = savedSims.find { it.simSlot == slot }
 
                 val isSimSwapped = detected != null && saved != null &&
-                    saved.subscriptionId != -1 &&
-                    detected.subscriptionId != saved.subscriptionId
+                        saved.subscriptionId != -1 &&
+                        detected.subscriptionId != saved.subscriptionId
 
                 val targetSubId = detected?.subscriptionId ?: -1
                 val carrier = detected?.carrierName.orEmpty().ifBlank {

@@ -136,7 +136,8 @@ fun LogRecordCard(
             }
 
             if (log.status == LogStatus.FAILED) {
-                val reason = if (!log.errorMessage.isNullOrBlank()) log.errorMessage else "Lỗi gửi SMS không xác định"
+                val reason =
+                    if (!log.errorMessage.isNullOrBlank()) log.errorMessage else "Lỗi gửi SMS không xác định"
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

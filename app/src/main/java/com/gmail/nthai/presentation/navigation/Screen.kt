@@ -11,10 +11,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Tổng quan", Icons.Default.Dashboard)
-    data object Customers : Screen("customers?simSlot={simSlot}", "Khách hàng", Icons.Default.People) {
+    data object Customers :
+        Screen("customers?simSlot={simSlot}", "Khách hàng", Icons.Default.People) {
         const val BASE_ROUTE = "customers"
         fun route(simSlot: Int = 1) = "customers?simSlot=$simSlot"
     }
+
     data object Progress : Screen("progress", "Gửi tin", Icons.AutoMirrored.Filled.Send)
     data object Management : Screen("management", "Quản lý", Icons.Default.Tune)
 

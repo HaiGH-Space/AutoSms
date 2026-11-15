@@ -65,7 +65,8 @@ interface CustomerDao {
 
     @Transaction
     suspend fun updateSelectionForSim(customerIds: List<Long>, simSlot: Int, isSelected: Boolean) {
-        customerIds.chunked(900).forEach { updateCustomerSelectionBatchForSim(it, simSlot, isSelected) }
+        customerIds.chunked(900)
+            .forEach { updateCustomerSelectionBatchForSim(it, simSlot, isSelected) }
     }
 
     @Query("UPDATE customers SET isSelected = 1, sendSimSlot = 1 WHERE id IN (:customerIds)")
@@ -75,7 +76,11 @@ interface CustomerDao {
     suspend fun updateCustomerSelectionBatch(customerIds: List<Long>, isSelected: Boolean)
 
     @Query("UPDATE customers SET isSelected = :isSelected, sendSimSlot = CASE WHEN :isSelected = 1 THEN :simSlot ELSE NULL END WHERE id IN (:customerIds)")
-    suspend fun updateCustomerSelectionBatchForSim(customerIds: List<Long>, simSlot: Int, isSelected: Boolean)
+    suspend fun updateCustomerSelectionBatchForSim(
+        customerIds: List<Long>,
+        simSlot: Int,
+        isSelected: Boolean
+    )
 
     @Query("DELETE FROM customers")
     suspend fun deleteAllCustomers()

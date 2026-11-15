@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import com.gmail.nthai.data.local.entity.ZaloRecipientEntity
 import kotlinx.coroutines.flow.Flow
@@ -53,7 +52,12 @@ interface ZaloRecipientDao {
     suspend fun updateRecipient(recipient: ZaloRecipientEntity)
 
     @Query("UPDATE zalo_recipients SET status = :status, note = :note, lastSentTime = :lastSentTime WHERE id = :id")
-    suspend fun updateRecipientStatus(id: Long, status: String, note: String, lastSentTime: Long = System.currentTimeMillis())
+    suspend fun updateRecipientStatus(
+        id: Long,
+        status: String,
+        note: String,
+        lastSentTime: Long = System.currentTimeMillis()
+    )
 
     @Delete
     suspend fun deleteRecipient(recipient: ZaloRecipientEntity)

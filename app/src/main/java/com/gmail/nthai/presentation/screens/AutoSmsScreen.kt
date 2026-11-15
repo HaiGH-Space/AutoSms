@@ -73,7 +73,9 @@ fun AutoSmsScreen(
                             Text(
                                 "Danh sách khách hàng",
                                 fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
-                                color = if (selectedTab == 0) Color(0xFF171717) else Color(0xFF888888)
+                                color = if (selectedTab == 0) Color(0xFF171717) else Color(
+                                    0xFF888888
+                                )
                             )
                         },
                         icon = {
@@ -91,7 +93,9 @@ fun AutoSmsScreen(
                             Text(
                                 "Tiến độ gửi SMS",
                                 fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
-                                color = if (selectedTab == 1) Color(0xFF171717) else Color(0xFF888888)
+                                color = if (selectedTab == 1) Color(0xFF171717) else Color(
+                                    0xFF888888
+                                )
                             )
                         },
                         icon = {
@@ -119,6 +123,7 @@ fun AutoSmsScreen(
                     showTopBar = false,
                     onBack = null
                 )
+
                 1 -> SendingProgressScreen(
                     showTopBar = false
                 )

@@ -84,7 +84,11 @@ fun ReportScreen(
         if (rangeStartMillis == null || rangeEndMillis == null) {
             "Khoảng ngày"
         } else {
-            "${DateTimeUtils.formatPickerDate(rangeStartMillis!!)} – ${DateTimeUtils.formatPickerDate(rangeEndMillis!!)}"
+            "${DateTimeUtils.formatPickerDate(rangeStartMillis!!)} – ${
+                DateTimeUtils.formatPickerDate(
+                    rangeEndMillis!!
+                )
+            }"
         }
     }
 
@@ -103,9 +107,14 @@ fun ReportScreen(
                     Result.failure(error)
                 }
                 result.onSuccess {
-                    Toast.makeText(context, "Đã xuất báo cáo Excel thành công!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Đã xuất báo cáo Excel thành công!", Toast.LENGTH_SHORT)
+                        .show()
                 }.onFailure { error ->
-                    Toast.makeText(context, "Xuất file thất bại: ${error.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        "Xuất file thất bại: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -247,7 +256,11 @@ fun ReportScreen(
                             TextButton(
                                 onClick = { viewModel.clearFilters() }
                             ) {
-                                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
                                 Text("Xóa lọc")
                             }
                         }
@@ -264,7 +277,13 @@ fun ReportScreen(
                             onClick = { viewModel.setSelectedSimSlot(null) },
                             label = { Text("Tất cả SIM") },
                             leadingIcon = if (selectedSimSlot == null) {
-                                { Icon(Icons.Default.SimCard, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                                {
+                                    Icon(
+                                        Icons.Default.SimCard,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             } else null
                         )
                         FilterChip(
@@ -282,7 +301,11 @@ fun ReportScreen(
                             onClick = { showDatePicker = true },
                             label = { Text(dateRangeLabel, maxLines = 1) },
                             leadingIcon = {
-                                Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Icon(
+                                    Icons.Default.DateRange,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
                             }
                         )
                     }

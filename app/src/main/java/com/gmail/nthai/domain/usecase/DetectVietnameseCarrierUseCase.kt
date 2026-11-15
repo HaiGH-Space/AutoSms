@@ -12,9 +12,9 @@ object DetectVietnameseCarrierUseCase {
     }
 
     private val viettelPrefixes = (32..39).map { "0$it" }.toSet() +
-        setOf("086", "096", "097", "098")
+            setOf("086", "096", "097", "098")
     private val vinaPhonePrefixes = (81..85).map { "0$it" }.toSet() +
-        setOf("088", "091", "094")
+            setOf("088", "091", "094")
     private val mobiFonePrefixes = setOf(
         "070", "076", "077", "078", "079", "089", "090", "093"
     )

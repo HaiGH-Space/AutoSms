@@ -62,7 +62,8 @@ class SmsStatusReceiver : BroadcastReceiver() {
                             23 -> "Tiến trình gửi SMS bị hủy (Cancelled)"
                             else -> "Lỗi gửi SMS từ nhà mạng/thiết bị (Mã lỗi: $resultCode)"
                         }
-                        val previousStatus = sendingLogRepository.markLogFailedAndGetPreviousStatus(logId, errorMsg)
+                        val previousStatus =
+                            sendingLogRepository.markLogFailedAndGetPreviousStatus(logId, errorMsg)
                         if (previousStatus != null) {
                             if (previousStatus == LogStatus.SENT_SUCCESS) {
                                 simConfigRepository.decrementSentCount(simSlot)
@@ -73,16 +74,20 @@ class SmsStatusReceiver : BroadcastReceiver() {
 
                     val customer = customerRepository.getCustomerById(customerId)
                     if (customer != null) {
-                        val recipients = customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
+                        val recipients =
+                            customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
                         val allCustomerLogs = sendingLogRepository.getLogsForCustomer(customerId)
                         val latestLogsByPhone = recipients.mapNotNull { phone ->
-                            allCustomerLogs.filter { it.phone == phone }.maxByOrNull { it.timestamp }
+                            allCustomerLogs.filter { it.phone == phone }
+                                .maxByOrNull { it.timestamp }
                         }
-                        val finishedLogs = latestLogsByPhone.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
+                        val finishedLogs =
+                            latestLogsByPhone.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
 
                         if (finishedLogs.size >= recipients.size) {
                             val hasFailed = finishedLogs.any { it.status == LogStatus.FAILED }
-                            val newStatus = if (hasFailed) CustomerStatus.FAILED else CustomerStatus.SENT
+                            val newStatus =
+                                if (hasFailed) CustomerStatus.FAILED else CustomerStatus.SENT
                             customerRepository.updateCustomerStatus(customerId, newStatus)
                         }
                     }

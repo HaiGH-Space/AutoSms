@@ -7,12 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SimCard
@@ -24,7 +22,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -130,7 +127,11 @@ fun ManagementScreen(
                 0 -> TemplateEditorScreen(showTopBar = false)
                 1 -> ReportScreen(showTopBar = false)
                 2 -> SimManagementTab(viewModel = configViewModel, showTopBar = false)
-                3 -> RuleAndUpdateTab(viewModel = configViewModel, updateViewModel = updateViewModel, showTopBar = false)
+                3 -> RuleAndUpdateTab(
+                    viewModel = configViewModel,
+                    updateViewModel = updateViewModel,
+                    showTopBar = false
+                )
             }
         }
     }

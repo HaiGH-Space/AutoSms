@@ -3,7 +3,6 @@ package com.gmail.nthai.service
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.text.TextUtils
@@ -191,8 +190,11 @@ class ZaloAccessibilityService : AccessibilityService() {
         private var currentAutoAddFriend = false
 
         fun isAccessibilityEnabled(context: Context): Boolean {
-            val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager ?: return false
-            val enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
+            val am =
+                context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+                    ?: return false
+            val enabledServices =
+                am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
             val isEnabledInList = enabledServices.any {
                 it.resolveInfo.serviceInfo.packageName == context.packageName &&
                         it.resolveInfo.serviceInfo.name == ZaloAccessibilityService::class.java.name
@@ -208,7 +210,8 @@ class ZaloAccessibilityService : AccessibilityService() {
             val colonSplitter = TextUtils.SimpleStringSplitter(':')
             colonSplitter.setString(prefString)
 
-            val expectedComponentName = "${context.packageName}/${ZaloAccessibilityService::class.java.name}"
+            val expectedComponentName =
+                "${context.packageName}/${ZaloAccessibilityService::class.java.name}"
             while (colonSplitter.hasNext()) {
                 val componentName = colonSplitter.next()
                 if (componentName.equals(expectedComponentName, ignoreCase = true)) {

@@ -15,7 +15,11 @@ interface CustomerRepository {
     suspend fun insertCustomers(customers: List<Customer>)
     suspend fun replaceAllCustomers(customers: List<Customer>)
     suspend fun importCustomers(customers: List<Customer>, mode: ImportMode): Int
-    suspend fun resetCustomerStatus(scope: ResetStatusScope, selectedCustomerIds: List<Long> = emptyList())
+    suspend fun resetCustomerStatus(
+        scope: ResetStatusScope,
+        selectedCustomerIds: List<Long> = emptyList()
+    )
+
     suspend fun updateCustomer(customer: Customer)
     suspend fun updateCustomerStatus(id: Long, status: CustomerStatus)
     suspend fun updateCustomerSelection(id: Long, isSelected: Boolean)

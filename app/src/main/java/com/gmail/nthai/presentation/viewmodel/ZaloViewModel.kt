@@ -114,7 +114,10 @@ class ZaloViewModel @Inject constructor(
                 parseResult.onSuccess { parsedCustomers ->
                     val newRecipients = parsedCustomers.map { customer ->
                         val name = customer.customFields.entries.find { (k, _) ->
-                            k.contains("tên", ignoreCase = true) || k.contains("ten", ignoreCase = true)
+                            k.contains("tên", ignoreCase = true) || k.contains(
+                                "ten",
+                                ignoreCase = true
+                            )
                         }?.value ?: "Khách hàng"
 
                         ZaloRecipient(

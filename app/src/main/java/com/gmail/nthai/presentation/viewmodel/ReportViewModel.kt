@@ -8,6 +8,7 @@ import com.gmail.nthai.domain.repository.SendingLogRepository
 import com.gmail.nthai.domain.usecase.ExportReportExcelUseCase
 import com.gmail.nthai.util.DateTimeUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
@@ -58,11 +58,11 @@ class ReportViewModel @Inject constructor(
         val endExclusive = endMillis?.let(DateTimeUtils::localStartOfNextDay)
         allLogs.filter { log ->
             (simSlot == null || log.simSlot == simSlot) &&
-                (start == null || log.timestamp >= start) &&
-                (endExclusive == null || log.timestamp < endExclusive)
+                    (start == null || log.timestamp >= start) &&
+                    (endExclusive == null || log.timestamp < endExclusive)
         }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val stats: StateFlow<ReportStats> = filteredLogs.map { list ->
         val total = list.size
@@ -79,7 +79,7 @@ class ReportViewModel @Inject constructor(
             successRatePercentage = rate
         )
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReportStats())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReportStats())
 
     fun setSelectedSimSlot(slot: Int?) {
         _selectedSimSlot.value = slot

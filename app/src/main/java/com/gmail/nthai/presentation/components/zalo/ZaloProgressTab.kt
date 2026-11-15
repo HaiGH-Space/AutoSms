@@ -93,144 +93,148 @@ fun ZaloProgressTab(
         AutoSmsCardContainer(
             modifier = Modifier.fillMaxWidth()
         ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            text = "TRUNG TÂM GỬI ZALO",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = Color(0xFF888888)
-                        )
-                        Text(
-                            text = when {
-                                !isSending -> progressState.statusMessage
-                                isPaused -> "Trạng thái: Tạm dừng"
-                                else -> progressState.statusMessage
-                            },
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717)
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "$sentCount / $totalCount",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717)
-                        )
-                        Text(
-                            text = "tin Zalo",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF888888)
-                        )
-                    }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "TRUNG TÂM GỬI ZALO",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color(0xFF888888)
+                    )
+                    Text(
+                        text = when {
+                            !isSending -> progressState.statusMessage
+                            isPaused -> "Trạng thái: Tạm dừng"
+                            else -> progressState.statusMessage
+                        },
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF171717)
+                    )
                 }
 
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "$sentCount / $totalCount",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF171717)
+                    )
+                    Text(
+                        text = "tin Zalo",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF888888)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            LinearProgressIndicator(
+                progress = { sentCount.toFloat() / totalCount },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(9999.dp)),
+                color = Color(0xFF171717),
+                trackColor = Color(0xFFEBEBEB)
+            )
+
+            if (isSending && currentRecipient != null) {
                 Spacer(modifier = Modifier.height(14.dp))
 
-                LinearProgressIndicator(
-                    progress = { sentCount.toFloat() / totalCount },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(9999.dp)),
-                    color = Color(0xFF171717),
-                    trackColor = Color(0xFFEBEBEB)
-                )
-
-                if (isSending && currentRecipient != null) {
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFFF5F5F5),
-                        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Đang xử lý: ${currentRecipient.name} (${currentRecipient.phone})",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF171717)
-                                )
-                                Text(
-                                    text = "Đang đếm ngược giãn cách chống spam Zalo...",
-                                    fontSize = 11.sp,
-                                    color = Color(0xFF666666)
-                                )
-                            }
-                            if (countdownSeconds > 0) {
-                                Text(
-                                    text = "${countdownSeconds}s",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF171717)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (isSending) {
-                    Spacer(modifier = Modifier.height(14.dp))
-
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFF5F5F5),
+                    border = BorderStroke(1.dp, Color(0xFFEBEBEB))
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        OutlinedButton(
-                            onClick = {
-                                if (isPaused) onResumeCampaign() else onPauseCampaign()
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp),
-                            shape = RoundedCornerShape(9999.dp),
-                            border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
-                        ) {
-                            Icon(
-                                if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Đang xử lý: ${currentRecipient.name} (${currentRecipient.phone})",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF171717)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (isPaused) "Tiếp tục" else "Tạm dừng", fontSize = 13.sp)
+                            Text(
+                                text = "Đang đếm ngược giãn cách chống spam Zalo...",
+                                fontSize = 11.sp,
+                                color = Color(0xFF666666)
+                            )
                         }
-
-                        Button(
-                            onClick = onStopCampaign,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp),
-                            shape = RoundedCornerShape(9999.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFEE0000),
-                                contentColor = Color(0xFFFFFFFF)
+                        if (countdownSeconds > 0) {
+                            Text(
+                                text = "${countdownSeconds}s",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF171717)
                             )
-                        ) {
-                            Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Dừng chiến dịch", fontSize = 13.sp)
                         }
                     }
                 }
+            }
+
+            if (isSending) {
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            if (isPaused) onResumeCampaign() else onPauseCampaign()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(9999.dp),
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
+                    ) {
+                        Icon(
+                            if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (isPaused) "Tiếp tục" else "Tạm dừng", fontSize = 13.sp)
+                    }
+
+                    Button(
+                        onClick = onStopCampaign,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(9999.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFEE0000),
+                            contentColor = Color(0xFFFFFFFF)
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Stop,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Dừng chiến dịch", fontSize = 13.sp)
+                    }
+                }
+            }
         }
 
         // 2. Real-time Log Section Header

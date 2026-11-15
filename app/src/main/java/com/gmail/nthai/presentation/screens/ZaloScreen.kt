@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -49,7 +50,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.compose.runtime.DisposableEffect
 import com.gmail.nthai.presentation.components.zalo.ZaloConfigTab
 import com.gmail.nthai.presentation.components.zalo.ZaloProgressTab
 import com.gmail.nthai.presentation.components.zalo.ZaloRecipientTab
@@ -106,7 +106,11 @@ fun ZaloScreen(
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
             context.startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(context, "Không thể mở Cài đặt Trợ năng: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Không thể mở Cài đặt Trợ năng: ${e.message}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -173,7 +177,9 @@ fun ZaloScreen(
                                     Text(
                                         text = tab.first,
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selected) Color(0xFF171717) else Color(0xFF888888)
+                                        color = if (selected) Color(0xFF171717) else Color(
+                                            0xFF888888
+                                        )
                                     )
                                 }
                             }
@@ -202,7 +208,11 @@ fun ZaloScreen(
                     onSendOnlyIfUnsentChange = { viewModel.sendOnlyIfUnsent.value = it },
                     onStartSending = {
                         viewModel.startCampaign()
-                        Toast.makeText(context, "Đã khởi chạy chiến dịch gửi Zalo tự động!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Đã khởi chạy chiến dịch gửi Zalo tự động!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         selectedTab = 2 // Switch to progress tab
                     },
                     onNextToRecipients = {
@@ -213,6 +223,7 @@ fun ZaloScreen(
                     },
                     onOpenAccessibilitySettings = openAccessibilitySettings
                 )
+
                 1 -> ZaloRecipientTab(
                     recipients = recipients,
                     onAddRecipient = { name, phone -> viewModel.addRecipient(name, phone) },
@@ -223,10 +234,15 @@ fun ZaloScreen(
                     },
                     onStartSending = {
                         viewModel.startCampaign()
-                        Toast.makeText(context, "Đã khởi chạy chiến dịch gửi Zalo tự động!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Đã khởi chạy chiến dịch gửi Zalo tự động!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         selectedTab = 2 // Switch to progress tab
                     }
                 )
+
                 2 -> ZaloProgressTab(
                     progressState = progressState,
                     logs = logs,

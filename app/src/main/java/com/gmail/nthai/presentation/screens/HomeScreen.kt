@@ -24,10 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,9 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -108,7 +104,8 @@ fun HomeScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             customerViewModel.prepareExcelImportWithUri(context, uri) { err ->
-                Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG)
+                    .show()
             }
         }
     }
@@ -135,6 +132,7 @@ fun HomeScreen(
                 onDismiss = { updateViewModel.dismissState() }
             )
         }
+
         is UpdateState.Downloading -> {
             DownloadProgressDialog(
                 progressPercent = state.progressPercent,
@@ -143,6 +141,7 @@ fun HomeScreen(
                 onCancel = { updateViewModel.cancelDownload() }
             )
         }
+
         is UpdateState.Downloaded -> {
             DownloadedInstallDialog(
                 apkFile = state.apkFile,
@@ -154,18 +153,21 @@ fun HomeScreen(
                 onDismiss = { updateViewModel.dismissState() }
             )
         }
+
         is UpdateState.NoUpdateAvailable -> {
             NoUpdateAvailableDialog(
                 currentVersionName = state.currentVersionName,
                 onDismiss = { updateViewModel.dismissState() }
             )
         }
+
         is UpdateState.Error -> {
             UpdateErrorDialog(
                 errorMessage = state.message,
                 onDismiss = { updateViewModel.dismissState() }
             )
         }
+
         else -> {}
     }
 
@@ -323,7 +325,11 @@ fun HomeScreen(
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF888888)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp)
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("Đặt lại trạng thái gửi", fontSize = 13.sp)
                     }
@@ -370,9 +376,14 @@ fun HomeScreen(
             onConfirm = {
                 customerViewModel.confirmImport { result ->
                     result.onSuccess { count ->
-                        Toast.makeText(context, "Đã nhập $count khách hàng", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Đã nhập $count khách hàng", Toast.LENGTH_SHORT)
+                            .show()
                     }.onFailure { err ->
-                        Toast.makeText(context, "Lỗi đọc file Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            "Lỗi đọc file Excel: ${err.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             },
@@ -384,7 +395,11 @@ fun HomeScreen(
         ResetStatusDialog(
             onConfirm = { scope ->
                 customerViewModel.resetCustomerStatus(scope) {
-                    Toast.makeText(context, "Đã đặt lại trạng thái về 'Chờ gửi'", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Đã đặt lại trạng thái về 'Chờ gửi'",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 showResetDialog = false
             },
@@ -488,7 +503,8 @@ private fun ModernSimCard(
     val carrierName = config?.carrierName?.trim().orEmpty()
     val dailyLimit = config?.dailyLimit ?: 0
     val sentToday = config?.sentCountToday ?: 0
-    val quotaProgress = if (dailyLimit > 0) (sentToday.toFloat() / dailyLimit).coerceIn(0f, 1f) else 0f
+    val quotaProgress =
+        if (dailyLimit > 0) (sentToday.toFloat() / dailyLimit).coerceIn(0f, 1f) else 0f
 
     Surface(
         onClick = onClick,
@@ -527,7 +543,10 @@ private fun ModernSimCard(
                 Box(
                     modifier = Modifier
                         .size(7.dp)
-                        .background(if (detected) Color(0xFF10B981) else Color(0xFF888888), CircleShape)
+                        .background(
+                            if (detected) Color(0xFF10B981) else Color(0xFF888888),
+                            CircleShape
+                        )
                 )
             }
 
@@ -641,7 +660,9 @@ private fun WorkflowStepCard(
             ) {
                 Button(
                     onClick = onPrimaryClick,
-                    modifier = Modifier.weight(1f).height(40.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
                     shape = RoundedCornerShape(9999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF171717),
@@ -659,7 +680,9 @@ private fun WorkflowStepCard(
                 if (secondaryButtonText != null && onSecondaryClick != null) {
                     OutlinedButton(
                         onClick = onSecondaryClick,
-                        modifier = Modifier.weight(1f).height(40.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp),
                         shape = RoundedCornerShape(9999.dp),
                         border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
                         colors = ButtonDefaults.outlinedButtonColors(

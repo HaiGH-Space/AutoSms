@@ -36,10 +36,12 @@ fun StatusBadge(
             label = "Thành công",
             dotColor = Color(0xFF10B981)
         )
+
         LogStatus.FAILED -> StatusStyle(
             label = "Thất bại",
             dotColor = Color(0xFFEE0000)
         )
+
         LogStatus.PENDING -> StatusStyle(
             label = "Đang chờ",
             dotColor = Color(0xFFF5A623)

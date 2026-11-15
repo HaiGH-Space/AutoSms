@@ -20,18 +20,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -43,15 +39,14 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -138,56 +133,70 @@ fun ZaloConfigTab(
                 )
             }
         ) {
-                OutlinedTextField(
-                    value = messageContent,
-                    onValueChange = onMessageContentChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(130.dp),
-                    placeholder = { Text("Nhập nội dung tin nhắn Zalo...") },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF171717),
-                        unfocusedBorderColor = Color(0xFFEBEBEB),
-                        focusedContainerColor = Color(0xFFFFFFFF),
-                        unfocusedContainerColor = Color(0xFFFFFFFF)
-                    )
+            OutlinedTextField(
+                value = messageContent,
+                onValueChange = onMessageContentChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(130.dp),
+                placeholder = { Text("Nhập nội dung tin nhắn Zalo...") },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF171717),
+                    unfocusedBorderColor = Color(0xFFEBEBEB),
+                    focusedContainerColor = Color(0xFFFFFFFF),
+                    unfocusedContainerColor = Color(0xFFFFFFFF)
                 )
+            )
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Chèn nhanh biến cá nhân hóa:",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF888888)
+            Text(
+                text = "Chèn nhanh biến cá nhân hóa:",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFF888888)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                AssistChip(
+                    onClick = { onMessageContentChange(messageContent + " {ten_khach}") },
+                    label = { Text("{ten_khach}", color = Color(0xFF171717)) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = Color(0xFF171717)
+                        )
+                    },
+                    border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                    colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFFFFFFF))
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    AssistChip(
-                        onClick = { onMessageContentChange(messageContent + " {ten_khach}") },
-                        label = { Text("{ten_khach}", color = Color(0xFF171717)) },
-                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFF171717)) },
-                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFFFFFFF))
-                    )
-                    AssistChip(
-                        onClick = { onMessageContentChange(messageContent + " {sdt}") },
-                        label = { Text("{sdt}", color = Color(0xFF171717)) },
-                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFF171717)) },
-                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFFFFFFF))
-                    )
-                    AssistChip(
-                        onClick = { onMessageContentChange(messageContent + " {Xin chào|Chào anh/chị}") },
-                        label = { Text("Spintax {A|B}", color = Color(0xFF171717)) },
-                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFF5F5F5))
-                    )
-                }
+                AssistChip(
+                    onClick = { onMessageContentChange(messageContent + " {sdt}") },
+                    label = { Text("{sdt}", color = Color(0xFF171717)) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = Color(0xFF171717)
+                        )
+                    },
+                    border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                    colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFFFFFFF))
+                )
+                AssistChip(
+                    onClick = { onMessageContentChange(messageContent + " {Xin chào|Chào anh/chị}") },
+                    label = { Text("Spintax {A|B}", color = Color(0xFF171717)) },
+                    border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                    colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFF5F5F5))
+                )
+            }
         }
 
         // 3. Sending Interval & Anti-Block Settings
@@ -321,7 +330,11 @@ fun ZaloConfigTab(
                 border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
             ) {
-                Icon(Icons.Default.FileUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(
+                    Icons.Default.FileUpload,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("Nhập Excel", fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
@@ -339,7 +352,11 @@ fun ZaloConfigTab(
             ) {
                 Text("Danh sách SĐT", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 Spacer(modifier = Modifier.width(6.dp))
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
 

@@ -8,7 +8,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +25,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,7 +52,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -132,7 +129,12 @@ fun SimManagementTab(
 
             // System Permission Card
             AutoSmsCardContainer(
-                border = BorderStroke(1.dp, if (hasPhonePermission && hasSmsPermission) Color(0xFFEBEBEB) else Color(0xFFF7D4D6))
+                border = BorderStroke(
+                    1.dp,
+                    if (hasPhonePermission && hasSmsPermission) Color(0xFFEBEBEB) else Color(
+                        0xFFF7D4D6
+                    )
+                )
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
@@ -143,7 +145,9 @@ fun SimManagementTab(
                             modifier = Modifier
                                 .size(7.dp)
                                 .background(
-                                    if (hasPhonePermission && hasSmsPermission) Color(0xFF10B981) else Color(0xFFEE0000),
+                                    if (hasPhonePermission && hasSmsPermission) Color(0xFF10B981) else Color(
+                                        0xFFEE0000
+                                    ),
                                     CircleShape
                                 )
                         )
@@ -203,7 +207,11 @@ fun SimManagementTab(
                     hasPhonePermission = hasPhonePermission,
                     onSaveLimit = { limit ->
                         viewModel.updateSimLimit(config.simSlot, limit)
-                        Toast.makeText(context, "Đã cập nhật hạn mức SIM ${config.simSlot}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Đã cập nhật hạn mức SIM ${config.simSlot}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
             }
@@ -215,7 +223,13 @@ fun SimManagementTab(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Quản lý SIM", fontWeight = FontWeight.Bold, color = Color(0xFF171717)) },
+                    title = {
+                        Text(
+                            "Quản lý SIM",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF171717)
+                        )
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFFFFFFF))
                 )
             }
@@ -263,108 +277,116 @@ fun SimSlotCard(
             }
         }
     ) {
-            val safeLimit = config.dailyLimit.coerceAtLeast(1)
-            val progress = (config.sentCountToday.toFloat() / safeLimit).coerceIn(0f, 1f)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Hạn mức hôm nay", style = MaterialTheme.typography.labelSmall, color = Color(0xFF888888))
-                Text(
-                    "${config.sentCountToday} / ${config.dailyLimit} tin",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF171717)
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(9999.dp)),
-                color = if (progress >= 1f) Color(0xFFEE0000) else Color(0xFF171717),
-                trackColor = Color(0xFFEBEBEB)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-            val defaultCarrierLimit = SimConfig.getDefaultDailyLimit(config.carrierName)
-            val carrierHintText = if (config.carrierName.isNotBlank()) {
-                "Mặc định ${config.carrierName}: $defaultCarrierLimit tin/ngày"
-            } else {
-                "Khuyến nghị mặc định: $defaultCarrierLimit tin/ngày"
-            }
-
+        val safeLimit = config.dailyLimit.coerceAtLeast(1)
+        val progress = (config.sentCountToday.toFloat() / safeLimit).coerceIn(0f, 1f)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                "ĐIỀU CHỈNH HẠN MỨC",
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
-                ),
+                "Hạn mức hôm nay",
+                style = MaterialTheme.typography.labelSmall,
                 color = Color(0xFF888888)
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            var limitText by remember(config.dailyLimit) { mutableStateOf(config.dailyLimit.toString()) }
-            val parsedLimit = limitText.toIntOrNull()
-            val isLimitValid = parsedLimit != null && parsedLimit > 0
-
-            OutlinedTextField(
-                value = limitText,
-                onValueChange = { limitText = it.filter(Char::isDigit) },
-                label = { Text("Giới hạn tin nhắn mỗi ngày", fontSize = 12.sp) },
-                supportingText = {
-                    Text(if (isLimitValid) "Áp dụng cho SIM ${config.simSlot}. $carrierHintText" else "Nhập số lớn hơn 0.")
-                },
-                isError = !isLimitValid,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                shape = RoundedCornerShape(9999.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFFFFFFF),
-                    unfocusedContainerColor = Color(0xFFFFFFFF),
-                    focusedBorderColor = Color(0xFF171717),
-                    unfocusedBorderColor = Color(0xFFEBEBEB)
-                )
+            Text(
+                "${config.sentCountToday} / ${config.dailyLimit} tin",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF171717)
             )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(RoundedCornerShape(9999.dp)),
+            color = if (progress >= 1f) Color(0xFFEE0000) else Color(0xFF171717),
+            trackColor = Color(0xFFEBEBEB)
+        )
 
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+        val defaultCarrierLimit = SimConfig.getDefaultDailyLimit(config.carrierName)
+        val carrierHintText = if (config.carrierName.isNotBlank()) {
+            "Mặc định ${config.carrierName}: $defaultCarrierLimit tin/ngày"
+        } else {
+            "Khuyến nghị mặc định: $defaultCarrierLimit tin/ngày"
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                if (config.carrierName.isNotBlank() && parsedLimit != defaultCarrierLimit) {
-                    OutlinedButton(
-                        onClick = { limitText = defaultCarrierLimit.toString() },
-                        modifier = Modifier.weight(1f).height(40.dp),
-                        shape = RoundedCornerShape(9999.dp),
-                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
-                    ) {
-                        Text("Đặt theo ${config.carrierName} ($defaultCarrierLimit)", fontSize = 12.sp)
-                    }
-                }
-                Button(
-                    onClick = {
-                        parsedLimit?.let { limit -> onSaveLimit(limit) }
-                    },
-                    enabled = isLimitValid && parsedLimit != config.dailyLimit,
-                    modifier = Modifier.weight(1f).height(40.dp),
+        Text(
+            "ĐIỀU CHỈNH HẠN MỨC",
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color(0xFF888888)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        var limitText by remember(config.dailyLimit) { mutableStateOf(config.dailyLimit.toString()) }
+        val parsedLimit = limitText.toIntOrNull()
+        val isLimitValid = parsedLimit != null && parsedLimit > 0
+
+        OutlinedTextField(
+            value = limitText,
+            onValueChange = { limitText = it.filter(Char::isDigit) },
+            label = { Text("Giới hạn tin nhắn mỗi ngày", fontSize = 12.sp) },
+            supportingText = {
+                Text(if (isLimitValid) "Áp dụng cho SIM ${config.simSlot}. $carrierHintText" else "Nhập số lớn hơn 0.")
+            },
+            isError = !isLimitValid,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = RoundedCornerShape(9999.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color(0xFFFFFFFF),
+                unfocusedContainerColor = Color(0xFFFFFFFF),
+                focusedBorderColor = Color(0xFF171717),
+                unfocusedBorderColor = Color(0xFFEBEBEB)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (config.carrierName.isNotBlank() && parsedLimit != defaultCarrierLimit) {
+                OutlinedButton(
+                    onClick = { limitText = defaultCarrierLimit.toString() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
                     shape = RoundedCornerShape(9999.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF171717),
-                        contentColor = Color(0xFFFFFFFF),
-                        disabledContainerColor = Color(0xFFEBEBEB),
-                        disabledContentColor = Color(0xFF888888)
-                    )
+                    border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
                 ) {
-                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.padding(3.dp))
-                    Text("Lưu hạn mức", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Đặt theo ${config.carrierName} ($defaultCarrierLimit)", fontSize = 12.sp)
                 }
             }
+            Button(
+                onClick = {
+                    parsedLimit?.let { limit -> onSaveLimit(limit) }
+                },
+                enabled = isLimitValid && parsedLimit != config.dailyLimit,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp),
+                shape = RoundedCornerShape(9999.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF171717),
+                    contentColor = Color(0xFFFFFFFF),
+                    disabledContainerColor = Color(0xFFEBEBEB),
+                    disabledContentColor = Color(0xFF888888)
+                )
+            ) {
+                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(15.dp))
+                Spacer(modifier = Modifier.padding(3.dp))
+                Text("Lưu hạn mức", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
 }

@@ -19,7 +19,8 @@ object DateTimeUtils {
         pattern: String = DEFAULT_DATE_FORMAT
     ): String {
         val formatter = DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
-        return LocalDate.from(Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC)).format(formatter)
+        return LocalDate.from(Instant.ofEpochMilli(timestamp).atZone(ZoneOffset.UTC))
+            .format(formatter)
     }
 
     fun formatDateTime(
@@ -35,12 +36,15 @@ object DateTimeUtils {
     }
 
     fun localStartOfDay(pickerTimestamp: Long): Long {
-        val selectedDate = LocalDate.from(Instant.ofEpochMilli(pickerTimestamp).atZone(ZoneOffset.UTC))
+        val selectedDate =
+            LocalDate.from(Instant.ofEpochMilli(pickerTimestamp).atZone(ZoneOffset.UTC))
         return selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun localStartOfNextDay(pickerTimestamp: Long): Long {
-        val selectedDate = LocalDate.from(Instant.ofEpochMilli(pickerTimestamp).atZone(ZoneOffset.UTC))
-        return selectedDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val selectedDate =
+            LocalDate.from(Instant.ofEpochMilli(pickerTimestamp).atZone(ZoneOffset.UTC))
+        return selectedDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()
+            .toEpochMilli()
     }
 }

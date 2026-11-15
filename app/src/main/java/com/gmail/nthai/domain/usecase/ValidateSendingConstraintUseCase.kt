@@ -13,7 +13,9 @@ sealed class ValidationResult {
         val startMinute: Int = 0,
         val endMinute: Int = 0
     ) : ValidationResult()
-    data class ExceededLimit(val simSlot: Int, val dailyLimit: Int, val sentToday: Int) : ValidationResult()
+
+    data class ExceededLimit(val simSlot: Int, val dailyLimit: Int, val sentToday: Int) :
+        ValidationResult()
 }
 
 class ValidateSendingConstraintUseCase {

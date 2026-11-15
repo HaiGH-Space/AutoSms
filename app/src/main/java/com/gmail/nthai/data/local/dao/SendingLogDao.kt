@@ -4,8 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import androidx.room.Transaction
+import androidx.room.Update
 import com.gmail.nthai.data.local.entity.SendingLogEntity
 import kotlinx.coroutines.flow.Flow
 

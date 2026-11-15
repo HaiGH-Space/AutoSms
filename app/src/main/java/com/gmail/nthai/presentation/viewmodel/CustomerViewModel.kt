@@ -4,11 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
+import com.gmail.nthai.domain.model.ImportMode
+import com.gmail.nthai.domain.model.ResetStatusScope
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.repository.CustomerRepository
+import com.gmail.nthai.domain.repository.SendingLogRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
 import com.gmail.nthai.domain.usecase.DetectVietnameseCarrierUseCase
 import com.gmail.nthai.domain.usecase.ImportCustomerExcelUseCase
+import com.gmail.nthai.service.SendingServiceState
+import com.gmail.nthai.service.SmsForegroundService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,19 +23,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import javax.inject.Inject
-
-import com.gmail.nthai.domain.model.ImportMode
-import com.gmail.nthai.domain.model.ResetStatusScope
-import com.gmail.nthai.domain.repository.SendingLogRepository
-import com.gmail.nthai.service.SendingServiceState
-import com.gmail.nthai.service.SmsForegroundService
-import kotlinx.coroutines.flow.map
 
 enum class CustomerFilter {
     ALL, PENDING, SENT, FAILED
@@ -97,7 +96,7 @@ class CustomerViewModel @Inject constructor(
         }
         count
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     private val _pendingImportState = MutableStateFlow<PendingImportState?>(null)
     val pendingImportState: StateFlow<PendingImportState?> = _pendingImportState.asStateFlow()
@@ -137,7 +136,12 @@ class CustomerViewModel @Inject constructor(
         list.filter { customer ->
             val matchesQuery = if (!hasQuery) true else {
                 customer.phone.contains(trimmedQuery, ignoreCase = true) ||
-                        customer.customFields.values.any { it.contains(trimmedQuery, ignoreCase = true) }
+                        customer.customFields.values.any {
+                            it.contains(
+                                trimmedQuery,
+                                ignoreCase = true
+                            )
+                        }
             }
             if (!matchesQuery) return@filter false
 
@@ -179,7 +183,7 @@ class CustomerViewModel @Inject constructor(
             matchesSim
         }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun updateSearchQuery(query: String) {
         searchQuery.value = query
@@ -199,7 +203,11 @@ class CustomerViewModel @Inject constructor(
         }
     }
 
-    fun prepareExcelImportWithUri(context: android.content.Context, uri: android.net.Uri, onHeaderError: (Throwable) -> Unit) {
+    fun prepareExcelImportWithUri(
+        context: android.content.Context,
+        uri: android.net.Uri,
+        onHeaderError: (Throwable) -> Unit
+    ) {
         viewModelScope.launch {
             _isImporting.value = true
             _importLoadingMessage.value = "Đang mở file Excel..."
@@ -221,9 +229,9 @@ class CustomerViewModel @Inject constructor(
                         val defaultHeader = rule.phoneColumnName.trim()
                         val matchedHeader = headers.find {
                             it.equals(defaultHeader, ignoreCase = true) ||
-                            it.contains("sdt", ignoreCase = true) ||
-                            it.contains("sđt", ignoreCase = true) ||
-                            it.contains("phone", ignoreCase = true)
+                                    it.contains("sdt", ignoreCase = true) ||
+                                    it.contains("sđt", ignoreCase = true) ||
+                                    it.contains("phone", ignoreCase = true)
                         } ?: headers.first()
 
                         _pendingImportState.value = PendingImportState(
@@ -260,9 +268,9 @@ class CustomerViewModel @Inject constructor(
                         val defaultHeader = rule.phoneColumnName.trim()
                         val matchedHeader = headers.find {
                             it.equals(defaultHeader, ignoreCase = true) ||
-                            it.contains("sdt", ignoreCase = true) ||
-                            it.contains("sđt", ignoreCase = true) ||
-                            it.contains("phone", ignoreCase = true)
+                                    it.contains("sdt", ignoreCase = true) ||
+                                    it.contains("sđt", ignoreCase = true) ||
+                                    it.contains("phone", ignoreCase = true)
                         } ?: headers.first()
 
                         _pendingImportState.value = PendingImportState(
@@ -302,10 +310,15 @@ class CustomerViewModel @Inject constructor(
             try {
                 val result = withContext(Dispatchers.IO) {
                     val inputStream = ByteArrayInputStream(current.fileBytes)
-                    val parseResult = importCustomerExcelUseCase(inputStream, current.selectedHeader)
+                    val parseResult =
+                        importCustomerExcelUseCase(inputStream, current.selectedHeader)
                     parseResult.map { importedCustomers ->
-                        _importLoadingMessage.value = "Đang lưu ${importedCustomers.size} khách hàng vào cơ sở dữ liệu..."
-                        customerRepository.importCustomers(importedCustomers, current.selectedImportMode)
+                        _importLoadingMessage.value =
+                            "Đang lưu ${importedCustomers.size} khách hàng vào cơ sở dữ liệu..."
+                        customerRepository.importCustomers(
+                            importedCustomers,
+                            current.selectedImportMode
+                        )
                     }
                 }
                 _isImporting.value = false
@@ -338,17 +351,21 @@ class CustomerViewModel @Inject constructor(
                 ResetStatusScope.ALL -> {
                     sendingLogRepository.deleteAllLogs()
                 }
+
                 ResetStatusScope.SENT_ONLY -> {
-                    val sentCustomerIds = allCustomers.filter { it.status == CustomerStatus.SENT }.map { it.id }
+                    val sentCustomerIds =
+                        allCustomers.filter { it.status == CustomerStatus.SENT }.map { it.id }
                     if (sentCustomerIds.isNotEmpty()) {
                         sendingLogRepository.deleteLogsForCustomers(sentCustomerIds)
                     }
                 }
+
                 ResetStatusScope.SELECTED_ONLY -> {
                     if (selectedIds.isNotEmpty()) {
                         sendingLogRepository.deleteLogsForCustomers(selectedIds)
                     }
                 }
+
                 ResetStatusScope.FAILED_ONLY -> {
                     // Keep logs so successfully sent numbers are skipped and failed numbers are retried.
                 }
@@ -382,7 +399,11 @@ class CustomerViewModel @Inject constructor(
     fun selectAll(selectAll: Boolean) {
         viewModelScope.launch {
             val visibleCustomerIds = customersState.value.map { it.id }
-            customerRepository.updateSelectionForSim(visibleCustomerIds, selectedSimSlot.value, selectAll)
+            customerRepository.updateSelectionForSim(
+                visibleCustomerIds,
+                selectedSimSlot.value,
+                selectAll
+            )
         }
     }
 }

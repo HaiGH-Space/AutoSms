@@ -6,12 +6,11 @@ import com.gmail.nthai.data.local.mapper.toEntity
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
 import com.gmail.nthai.domain.model.HomeDashboardStats
+import com.gmail.nthai.domain.model.ImportMode
+import com.gmail.nthai.domain.model.ResetStatusScope
 import com.gmail.nthai.domain.repository.CustomerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-
-import com.gmail.nthai.domain.model.ImportMode
-import com.gmail.nthai.domain.model.ResetStatusScope
 
 class CustomerRepositoryImpl(
     private val customerDao: CustomerDao
@@ -34,7 +33,8 @@ class CustomerRepositoryImpl(
     }
 
     override fun getSelectedCustomersForSending(): Flow<List<Customer>> {
-        return customerDao.getSelectedCustomersForSending().map { list -> list.map { it.toDomain() } }
+        return customerDao.getSelectedCustomersForSending()
+            .map { list -> list.map { it.toDomain() } }
     }
 
     override suspend fun getCustomerById(id: Long): Customer? {
@@ -55,19 +55,27 @@ class CustomerRepositoryImpl(
                 replaceAllCustomers(customers)
                 customers.size
             }
+
             ImportMode.APPEND -> {
                 insertCustomers(customers)
                 customers.size
             }
+
             ImportMode.SKIP_DUPLICATES -> {
                 val existingPhones = HashSet<String>()
                 customerDao.getAllCustomerPhones().forEach { raw ->
-                    raw.split(',').map(String::trim).filter(String::isNotEmpty).forEach { existingPhones.add(it) }
+                    raw.split(',').map(String::trim).filter(String::isNotEmpty)
+                        .forEach { existingPhones.add(it) }
                 }
                 val filtered = mutableListOf<Customer>()
                 for (customer in customers) {
-                    val customerPhones = customer.phone.split(',').map(String::trim).filter(String::isNotEmpty)
-                    if (customerPhones.isNotEmpty() && customerPhones.none { existingPhones.contains(it) }) {
+                    val customerPhones =
+                        customer.phone.split(',').map(String::trim).filter(String::isNotEmpty)
+                    if (customerPhones.isNotEmpty() && customerPhones.none {
+                            existingPhones.contains(
+                                it
+                            )
+                        }) {
                         filtered.add(customer)
                         existingPhones.addAll(customerPhones)
                     }
@@ -80,17 +88,23 @@ class CustomerRepositoryImpl(
         }
     }
 
-    override suspend fun resetCustomerStatus(scope: ResetStatusScope, selectedCustomerIds: List<Long>) {
+    override suspend fun resetCustomerStatus(
+        scope: ResetStatusScope,
+        selectedCustomerIds: List<Long>
+    ) {
         when (scope) {
             ResetStatusScope.ALL -> {
                 customerDao.resetAllCustomerStatus()
             }
+
             ResetStatusScope.SENT_ONLY -> {
                 customerDao.resetCustomerStatusByStatus(CustomerStatus.SENT.name)
             }
+
             ResetStatusScope.FAILED_ONLY -> {
                 customerDao.resetCustomerStatusByStatus(CustomerStatus.FAILED.name)
             }
+
             ResetStatusScope.SELECTED_ONLY -> {
                 if (selectedCustomerIds.isNotEmpty()) {
                     customerDao.resetCustomerStatusByIds(selectedCustomerIds)
@@ -111,7 +125,11 @@ class CustomerRepositoryImpl(
         customerDao.updateCustomerSelection(id, isSelected)
     }
 
-    override suspend fun updateCustomerSelectionForSim(id: Long, simSlot: Int, isSelected: Boolean) {
+    override suspend fun updateCustomerSelectionForSim(
+        id: Long,
+        simSlot: Int,
+        isSelected: Boolean
+    ) {
         customerDao.updateCustomerSelectionForSim(id, simSlot, isSelected)
     }
 
@@ -129,7 +147,11 @@ class CustomerRepositoryImpl(
         }
     }
 
-    override suspend fun updateSelectionForSim(customerIds: List<Long>, simSlot: Int, isSelected: Boolean) {
+    override suspend fun updateSelectionForSim(
+        customerIds: List<Long>,
+        simSlot: Int,
+        isSelected: Boolean
+    ) {
         if (customerIds.isNotEmpty()) {
             customerDao.updateSelectionForSim(customerIds, simSlot, isSelected)
         }

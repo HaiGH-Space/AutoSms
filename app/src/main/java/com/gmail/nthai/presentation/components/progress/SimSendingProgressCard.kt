@@ -87,9 +87,18 @@ fun SimSendingProgressCard(
         is SendingServiceState.Error -> "Có lỗi"
     }
     val dotColor = when (state) {
-        is SendingServiceState.Running -> if (failedCount > 0) Color(0xFFEE0000) else Color(0xFF10B981)
-        is SendingServiceState.Paused -> if (failedCount > 0) Color(0xFFEE0000) else Color(0xFFF5A623)
-        is SendingServiceState.Finished -> if (failedCount > 0) Color(0xFFEE0000) else Color(0xFF0070F3)
+        is SendingServiceState.Running -> if (failedCount > 0) Color(0xFFEE0000) else Color(
+            0xFF10B981
+        )
+
+        is SendingServiceState.Paused -> if (failedCount > 0) Color(0xFFEE0000) else Color(
+            0xFFF5A623
+        )
+
+        is SendingServiceState.Finished -> if (failedCount > 0) Color(0xFFEE0000) else Color(
+            0xFF0070F3
+        )
+
         is SendingServiceState.Error -> Color(0xFFEE0000)
         SendingServiceState.Idle -> Color(0xFF888888)
     }
@@ -107,7 +116,13 @@ fun SimSendingProgressCard(
             onDismissRequest = { showStopConfirmation = false },
             containerColor = Color(0xFFFFFFFF),
             shape = RoundedCornerShape(12.dp),
-            title = { Text("Dừng gửi bằng SIM $simSlot?", fontWeight = FontWeight.Bold, color = Color(0xFF171717)) },
+            title = {
+                Text(
+                    "Dừng gửi bằng SIM $simSlot?",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF171717)
+                )
+            },
             text = {
                 Text(
                     "Tiến trình gửi tin sẽ kết thúc ngay lập tức. Các số điện thoại chưa gửi vẫn được lưu trạng thái để gửi sau.",
@@ -186,7 +201,9 @@ fun SimSendingProgressCard(
                                 SendingServiceState.Idle -> if (plannedCount > 0) "$plannedCount tin trong hàng đợi" else "Chưa có liên hệ chờ gửi"
                             },
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (state is SendingServiceState.Error) Color(0xFFEE0000) else Color(0xFF888888)
+                            color = if (state is SendingServiceState.Error) Color(0xFFEE0000) else Color(
+                                0xFF888888
+                            )
                         )
                     }
                 }
@@ -312,7 +329,11 @@ fun SimSendingProgressCard(
                                 disabledContentColor = Color(0xFF888888)
                             )
                         ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = if (state is SendingServiceState.Error) "Thử lại SIM $simSlot"
@@ -321,6 +342,7 @@ fun SimSendingProgressCard(
                             )
                         }
                     }
+
                     is SendingServiceState.Running -> {
                         OutlinedButton(
                             onClick = onPause,
@@ -333,7 +355,11 @@ fun SimSendingProgressCard(
                                 contentColor = Color(0xFF171717)
                             )
                         ) {
-                            Icon(Icons.Default.Pause, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.Pause,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Tạm dừng", fontWeight = FontWeight.Medium)
                         }
@@ -348,11 +374,16 @@ fun SimSendingProgressCard(
                                 contentColor = Color(0xFFEE0000)
                             )
                         ) {
-                            Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.Stop,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Dừng gửi", fontWeight = FontWeight.Medium)
                         }
                     }
+
                     is SendingServiceState.Paused -> {
                         Button(
                             onClick = onResume,
@@ -365,7 +396,11 @@ fun SimSendingProgressCard(
                                 contentColor = Color(0xFFFFFFFF)
                             )
                         ) {
-                            Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Tiếp tục", fontWeight = FontWeight.SemiBold)
                         }
@@ -380,7 +415,11 @@ fun SimSendingProgressCard(
                                 contentColor = Color(0xFFEE0000)
                             )
                         ) {
-                            Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.Stop,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("Dừng gửi", fontWeight = FontWeight.Medium)
                         }
