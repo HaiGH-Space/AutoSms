@@ -1,58 +1,58 @@
 package com.gmail.nthai.presentation.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
 
 private val AutoSmsColors = lightColorScheme(
-    primary = Color(0xFF176B55),
+    primary = Color(0xFF171717),
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFD9F1E8),
-    onPrimaryContainer = Color(0xFF103D32),
-    inversePrimary = Color(0xFF85D6BB),
-    secondary = Color(0xFF8A5A20),
+    primaryContainer = Color(0xFFF5F5F5),
+    onPrimaryContainer = Color(0xFF171717),
+    inversePrimary = Color(0xFFEBEBEB),
+    secondary = Color(0xFF171717),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFF6E6CF),
-    onSecondaryContainer = Color(0xFF3E2A10),
-    tertiary = Color(0xFF476B8C),
+    secondaryContainer = Color(0xFFF5F5F5),
+    onSecondaryContainer = Color(0xFF171717),
+    tertiary = Color(0xFF0070F3),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFDCEAF4),
-    onTertiaryContainer = Color(0xFF142E42),
-    background = Color(0xFFF4F7F5),
-    onBackground = Color(0xFF17211D),
-    surface = Color(0xFFFEFFFE),
-    onSurface = Color(0xFF17211D),
-    surfaceTint = Color(0xFF176B55),
+    tertiaryContainer = Color(0xFFD3E5FF),
+    onTertiaryContainer = Color(0xFF0761D1),
+    background = Color(0xFFFAFAFA),
+    onBackground = Color(0xFF171717),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF171717),
+    surfaceTint = Color(0xFF171717),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFFBFCFB),
-    surfaceContainer = Color(0xFFF4F7F5),
-    surfaceContainerHigh = Color(0xFFE8EFEB),
-    surfaceContainerHighest = Color(0xFFDCE5E0),
+    surfaceContainerLow = Color(0xFFFAFAFA),
+    surfaceContainer = Color(0xFFF5F5F5),
+    surfaceContainerHigh = Color(0xFFEBEBEB),
+    surfaceContainerHighest = Color(0xFFE0E0E0),
     surfaceBright = Color(0xFFFFFFFF),
-    surfaceDim = Color(0xFFE1E6E3),
-    surfaceVariant = Color(0xFFE8EFEB),
-    onSurfaceVariant = Color(0xFF52615A),
-    inverseSurface = Color(0xFF2C3430),
-    inverseOnSurface = Color(0xFFF0F3F1),
-    outline = Color(0xFFBBC8C1),
-    outlineVariant = Color(0xFFDCE5E0),
+    surfaceDim = Color(0xFFEBEBEB),
+    surfaceVariant = Color(0xFFF5F5F5),
+    onSurfaceVariant = Color(0xFF666666),
+    inverseSurface = Color(0xFF171717),
+    inverseOnSurface = Color(0xFFFAFAFA),
+    outline = Color(0xFFEBEBEB),
+    outlineVariant = Color(0xFFF0F0F0),
     scrim = Color(0xFF000000),
-    error = Color(0xFFBA3D3D),
+    error = Color(0xFFEE0000),
     onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFFE1DE),
-    onErrorContainer = Color(0xFF5F1414)
+    errorContainer = Color(0xFFF7D4D6),
+    onErrorContainer = Color(0xFFC50000)
 )
 
 private val AutoSmsShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(18.dp),
-    large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(30.dp)
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(6.dp),
+    medium = RoundedCornerShape(8.dp),
+    large = RoundedCornerShape(12.dp),
+    extraLarge = RoundedCornerShape(9999.dp)
 )
 
 @Composable

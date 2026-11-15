@@ -2,23 +2,23 @@ package com.gmail.nthai.presentation.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.gmail.nthai.presentation.screens.AutoSmsScreen
 import com.gmail.nthai.presentation.screens.CustomerListScreen
 import com.gmail.nthai.presentation.screens.HomeScreen
@@ -32,8 +32,8 @@ fun AppNavHost() {
     val navController = rememberNavController()
     val screens = listOf(
         Screen.Home,
-        Screen.AutoSms,
-        Screen.AutoZalo,
+        Screen.Customers,
+        Screen.Progress,
         Screen.Management
     )
 
@@ -43,13 +43,27 @@ fun AppNavHost() {
             val currentRoute = navBackStackEntry?.destination?.route
 
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                tonalElevation = 0.dp
+                containerColor = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
+                contentColor = androidx.compose.ui.graphics.Color(0xFF888888),
+                tonalElevation = 0.dp,
+                modifier = Modifier.padding(top = 1.dp)
             ) {
                 screens.forEach { screen ->
+                    val isSelected = when (screen) {
+                        Screen.Home -> currentRoute == Screen.Home.route
+                        Screen.Customers -> currentRoute?.startsWith(Screen.Customers.BASE_ROUTE) == true
+                        Screen.Progress -> currentRoute == Screen.Progress.route
+                        Screen.Management -> currentRoute == Screen.Management.route
+                        else -> currentRoute == screen.route
+                    }
+
+                    val targetRoute = when (screen) {
+                        Screen.Customers -> Screen.Customers.route(1)
+                        else -> screen.route
+                    }
+
                     NavigationBarItem(
-                        selected = currentRoute == screen.route,
+                        selected = isSelected,
                         onClick = {
                             if (screen == Screen.Home) {
                                 if (currentRoute != Screen.Home.route &&
@@ -62,8 +76,8 @@ fun AppNavHost() {
                                         launchSingleTop = true
                                     }
                                 }
-                            } else if (currentRoute != screen.route) {
-                                navController.navigate(screen.route) {
+                            } else if (!isSelected) {
+                                navController.navigate(targetRoute) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
                                     }
@@ -75,11 +89,11 @@ fun AppNavHost() {
                         icon = { Icon(screen.icon, contentDescription = screen.title) },
                         label = { Text(screen.title, maxLines = 1) },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            selectedIconColor = androidx.compose.ui.graphics.Color(0xFF171717),
+                            selectedTextColor = androidx.compose.ui.graphics.Color(0xFF171717),
+                            indicatorColor = androidx.compose.ui.graphics.Color(0xFFF5F5F5),
+                            unselectedIconColor = androidx.compose.ui.graphics.Color(0xFF888888),
+                            unselectedTextColor = androidx.compose.ui.graphics.Color(0xFF888888)
                         )
                     )
                 }
@@ -94,31 +108,38 @@ fun AppNavHost() {
             composable(Screen.Home.route) {
                 HomeScreen(
                     onSelectSim = { slot -> navController.navigate(Screen.Customers.route(slot)) },
-                    onNavigateToAutoSms = { navController.navigate(Screen.AutoSms.route) },
-                    onNavigateToAutoZalo = { navController.navigate(Screen.AutoZalo.route) }
+                    onNavigateToCustomers = { navController.navigate(Screen.Customers.route(1)) },
+                    onNavigateToProgress = { navController.navigate(Screen.Progress.route) },
+                    onNavigateToManagement = { _ -> navController.navigate(Screen.Management.route) }
                 )
             }
+            composable(
+                route = Screen.Customers.route,
+                arguments = listOf(
+                    navArgument("simSlot") {
+                        type = NavType.IntType
+                        defaultValue = 1
+                    }
+                )
+            ) { entry ->
+                CustomerListScreen(
+                    simSlot = entry.arguments?.getInt("simSlot") ?: 1,
+                    onBack = { navController.popBackStack() },
+                    onStartSending = { navController.navigate(Screen.Progress.route) }
+                )
+            }
+            composable(Screen.Progress.route) {
+                SendingProgressScreen()
+            }
+            composable(Screen.Management.route) {
+                ManagementScreen()
+            }
+
             composable(Screen.AutoSms.route) {
                 AutoSmsScreen()
             }
             composable(Screen.AutoZalo.route) {
                 ZaloScreen()
-            }
-            composable(Screen.Customers.route,
-                arguments = listOf(
-                    navArgument("simSlot") { type = NavType.IntType }
-                )
-            ) { entry ->
-                CustomerListScreen(
-                    simSlot = entry.arguments?.getInt("simSlot") ?: 1,
-                    onBack = { navController.popBackStack() }
-                )
-            }
-            composable(Screen.Management.route) {
-                ManagementScreen()
-            }
-            composable(Screen.Progress.route) {
-                SendingProgressScreen()
             }
             composable(Screen.Report.route) {
                 ReportScreen()

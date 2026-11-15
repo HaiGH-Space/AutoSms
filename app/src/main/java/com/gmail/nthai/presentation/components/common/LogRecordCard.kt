@@ -1,6 +1,8 @@
 package com.gmail.nthai.presentation.components.common
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,21 +13,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.SimCard
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.util.DateTimeUtils
@@ -36,12 +41,11 @@ fun LogRecordCard(
     modifier: Modifier = Modifier,
     compact: Boolean = false
 ) {
-    ElevatedCard(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = MaterialTheme.shapes.large
+        color = Color(0xFFFFFFFF),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
     ) {
         Column(
             modifier = Modifier
@@ -56,15 +60,19 @@ fun LogRecordCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(32.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.tertiaryContainer),
+                        .background(Color(0xFFF5F5F5))
+                        .border(1.dp, Color(0xFFEBEBEB), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = log.customerName.firstOrNull()?.uppercase() ?: "?",
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        fontWeight = FontWeight.Bold
+                        color = Color(0xFF171717),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontFamily = FontFamily.Monospace
+                        )
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
@@ -72,13 +80,17 @@ fun LogRecordCard(
                         text = log.customerName.ifBlank { "Khách hàng" },
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF171717),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = log.phone,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp
+                        ),
+                        color = Color(0xFF888888)
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
@@ -86,8 +98,11 @@ fun LogRecordCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = DateTimeUtils.formatDateTime(log.timestamp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 10.sp
+                        ),
+                        color = Color(0xFF888888)
                     )
                 }
             }
@@ -95,7 +110,7 @@ fun LogRecordCard(
             Text(
                 text = log.messageContent,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color(0xFF171717),
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
@@ -112,13 +127,16 @@ fun LogRecordCard(
                     Icon(
                         imageVector = Icons.Default.SimCard,
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        modifier = Modifier.size(14.dp),
+                        tint = Color(0xFF888888)
                     )
                     Text(
                         text = "SIM ${log.simSlot}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp
+                        ),
+                        color = Color(0xFF888888)
                     )
                 }
             }
@@ -128,8 +146,9 @@ fun LogRecordCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color(0xFFFAFAFA))
+                        .border(1.dp, Color(0xFFF7D4D6), RoundedCornerShape(4.dp))
                         .padding(horizontal = 10.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -137,13 +156,13 @@ fun LogRecordCard(
                     Icon(
                         imageVector = Icons.Default.ErrorOutline,
                         contentDescription = "Chi tiết lỗi",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(16.dp)
+                        tint = Color(0xFFEE0000),
+                        modifier = Modifier.size(15.dp)
                     )
                     Text(
-                        text = "Lý do lỗi: $reason",
+                        text = "Lý do: $reason",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        color = Color(0xFFEE0000),
                         fontWeight = FontWeight.Medium
                     )
                 }
