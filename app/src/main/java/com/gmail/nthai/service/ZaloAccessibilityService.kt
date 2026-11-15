@@ -3,6 +3,8 @@ package com.gmail.nthai.service
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
 import android.provider.Settings
@@ -99,32 +101,89 @@ class ZaloAccessibilityService : AccessibilityService() {
     }
 
     private fun handleAutoSendFlow(rootNode: AccessibilityNodeInfo) {
+        if (isActionInProgress) return
         val message = currentPendingMessage ?: return
+
+        // 0. Check & click "Nhắn tin" (Chat) button if on profile view
+        if (findAndClickChatButton(rootNode)) {
+            Log.d(TAG, "Clicked 'Nhắn tin' button, waiting for chat screen...")
+            return
+        }
 
         // 1. Check & click "Kết bạn" if autoAddFriend is enabled and button exists
         if (currentAutoAddFriend) {
             findAndClickAddFriendButton(rootNode)
         }
 
-        // 2. Find message input field & set text
+        // 2. Find message input field & set/paste text
         val inputNode = findMessageInputNode(rootNode)
         if (inputNode != null) {
+            isActionInProgress = true
+
+            inputNode.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
+            inputNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+
+            // Try SET_TEXT
             val arguments = Bundle().apply {
                 putCharSequence("ACTION_ARGUMENT_SET_TEXT_ARGUMENT", message)
             }
-            val textSet = inputNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
-            Log.d(TAG, "Text set result: $textSet for message: $message")
+            inputNode.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
 
-            // 3. Find and click Send button
-            val sendClicked = findAndClickSendButton(rootNode)
-            if (sendClicked) {
-                Log.d(TAG, "Send button clicked successfully")
-                isPendingActionActive = false
-                currentPendingMessage = null
-                _sendEvents.tryEmit(SendResult.Success)
-                // Stay in Zalo instead of bringing app back to front for debugging
+            // Also try CLIPBOARD PASTE as a robust fallback for custom views
+            try {
+                val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("ZaloMessage", message))
+                inputNode.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+                Log.d(TAG, "Performed ACTION_PASTE on input node")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to paste via clipboard", e)
+            }
+
+            Log.d(TAG, "Text set/pasted. Scheduling Send button click after 600ms...")
+
+            // 3. Wait 600ms for Zalo UI to update and enable Send button, then click Send
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                val latestRoot = rootInActiveWindow
+                if (latestRoot != null && isPendingActionActive) {
+                    val sendClicked = findAndClickSendButton(latestRoot)
+                    Log.d(TAG, "Send button clicked result: $sendClicked")
+                    if (sendClicked) {
+                        isPendingActionActive = false
+                        currentPendingMessage = null
+                        _sendEvents.tryEmit(SendResult.Success)
+                    }
+                }
+                isActionInProgress = false
+            }, 600)
+        }
+    }
+
+    private fun findAndClickChatButton(rootNode: AccessibilityNodeInfo): Boolean {
+        val chatIdentifiers = listOf("Nhắn tin", "Chat")
+        for (identifier in chatIdentifiers) {
+            val nodes = rootNode.findAccessibilityNodeInfosByText(identifier)
+            if (!nodes.isNullOrEmpty()) {
+                for (node in nodes) {
+                    val text = node.text?.toString() ?: ""
+                    val cd = node.contentDescription?.toString() ?: ""
+                    if (text.equals(identifier, ignoreCase = true) || cd.equals(identifier, ignoreCase = true) || text.contains(identifier, ignoreCase = true) || cd.contains(identifier, ignoreCase = true)) {
+                        if (node.isClickable) {
+                            Log.d(TAG, "Clicked Chat button directly: $identifier")
+                            return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                        }
+                        var parent = node.parent
+                        while (parent != null) {
+                            if (parent.isClickable) {
+                                Log.d(TAG, "Clicked Chat parent button: $identifier")
+                                return parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            }
+                            parent = parent.parent
+                        }
+                    }
+                }
             }
         }
+        return false
     }
 
     private fun findAndClickAddFriendButton(rootNode: AccessibilityNodeInfo): Boolean {
@@ -152,59 +211,170 @@ class ZaloAccessibilityService : AccessibilityService() {
     }
 
     private fun findMessageInputNode(rootNode: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-        // Try finding EditText by class name
+        // 1. Try finding EditText by class name
         val editTexts = mutableListOf<AccessibilityNodeInfo>()
         findNodesByClassName(rootNode, "android.widget.EditText", editTexts)
         if (editTexts.isNotEmpty()) {
+            for (et in editTexts) {
+                if (et.isEnabled && et.isFocusable) {
+                    return et
+                }
+            }
             return editTexts.first()
         }
 
-        // Try finding by hint/text
-        val hintNodes = rootNode.findAccessibilityNodeInfosByText("Nhập tin nhắn")
-        if (!hintNodes.isNullOrEmpty()) {
-            return hintNodes.first()
+        // 2. Find any node where isEditable is true
+        val editableNodes = mutableListOf<AccessibilityNodeInfo>()
+        findEditableNodes(rootNode, editableNodes)
+        if (editableNodes.isNotEmpty()) {
+            return editableNodes.first()
+        }
+
+        // 3. Try finding by hint/text and navigating to editable container
+        val hints = listOf("Nhập tin nhắn", "Tin nhắn", "Message", "Type a message")
+        for (hint in hints) {
+            val hintNodes = rootNode.findAccessibilityNodeInfosByText(hint)
+            if (!hintNodes.isNullOrEmpty()) {
+                for (node in hintNodes) {
+                    var curr: AccessibilityNodeInfo? = node
+                    while (curr != null) {
+                        if (curr.isEditable || curr.className?.toString()?.contains("EditText") == true) {
+                            return curr
+                        }
+                        curr = curr.parent
+                    }
+                }
+            }
         }
 
         return null
     }
 
+    private fun findEditableNodes(root: AccessibilityNodeInfo, results: MutableList<AccessibilityNodeInfo>) {
+        if (root.isEditable) {
+            results.add(root)
+        }
+        for (i in 0 until root.childCount) {
+            val child = root.getChild(i) ?: continue
+            findEditableNodes(child, results)
+        }
+    }
+
     private fun findAndClickSendButton(rootNode: AccessibilityNodeInfo): Boolean {
-        // Common Zalo send button texts & content descriptions
-        val sendIdentifiers = listOf("Gửi", "Send", "btn_send", "chat_input_send_btn")
+        // 1. First try resource IDs or content descriptions
+        val sendButtonIds = listOf("btn_send", "chat_input_send_btn", "img_send", "send_btn", "btnSend", "send")
+        val allNodes = mutableListOf<AccessibilityNodeInfo>()
+        findAllNodes(rootNode, allNodes)
+
+        for (node in allNodes) {
+            val viewId = node.viewIdResourceName ?: ""
+            val cd = node.contentDescription?.toString() ?: ""
+            if (sendButtonIds.any { viewId.endsWith(it, ignoreCase = true) } ||
+                cd.contains("gửi", ignoreCase = true) || cd.contains("send", ignoreCase = true)) {
+                if (node.isClickable) {
+                    Log.d(TAG, "Clicked send button by viewId/cd: $viewId / $cd")
+                    return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                }
+                var parent = node.parent
+                while (parent != null) {
+                    if (parent.isClickable) {
+                        Log.d(TAG, "Clicked send button parent by viewId/cd: $viewId / $cd")
+                        return parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    }
+                    parent = parent.parent
+                }
+            }
+        }
+
+        val sendIdentifiers = listOf("Gửi", "Send", "Gửi tin nhắn")
         for (identifier in sendIdentifiers) {
             val nodes = rootNode.findAccessibilityNodeInfosByText(identifier)
             if (!nodes.isNullOrEmpty()) {
                 for (node in nodes) {
-                    if (node.isClickable) {
-                        return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    }
-                    var parent = node.parent
-                    while (parent != null) {
-                        if (parent.isClickable) {
-                            return parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    val text = node.text?.toString() ?: ""
+                    val cd = node.contentDescription?.toString() ?: ""
+                    if (text.equals(identifier, ignoreCase = true) || cd.equals(identifier, ignoreCase = true) || cd.contains(identifier, ignoreCase = true)) {
+                        if (node.isClickable) {
+                            Log.d(TAG, "Clicked send button by text/cd: $identifier")
+                            return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                         }
-                        parent = parent.parent
+                        var parent = node.parent
+                        while (parent != null) {
+                            if (parent.isClickable) {
+                                Log.d(TAG, "Clicked send button parent by text/cd: $identifier")
+                                return parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            }
+                            parent = parent.parent
+                        }
                     }
                 }
             }
         }
 
-        // Fallback: search for last image/button view in window content
+        // 2. Find input node, go to its parent container, and find the rightmost clickable ImageView/Button sibling or descendant
+        val inputNode = findMessageInputNode(rootNode)
+        if (inputNode != null) {
+            var container: AccessibilityNodeInfo? = inputNode.parent
+            while (container != null) {
+                val clickableViews = mutableListOf<AccessibilityNodeInfo>()
+                findClickableImageViewsOrButtons(container, clickableViews)
+                // Filter out the input node itself
+                clickableViews.removeIf { it == inputNode }
+
+                if (clickableViews.isNotEmpty()) {
+                    // Pick the rightmost clickable view (highest bounds.right or last)
+                    val rightmost = clickableViews.maxByOrNull { view ->
+                        val bounds = android.graphics.Rect()
+                        view.getBoundsInScreen(bounds)
+                        bounds.right
+                    } ?: clickableViews.last()
+
+                    if (rightmost.isClickable) {
+                        Log.d(TAG, "Clicked rightmost send icon in input container")
+                        return rightmost.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    }
+                }
+                container = container.parent
+                if (container == rootNode) break
+            }
+        }
+
+        // 3. Fallback: Search all clickable ImageViews/Buttons in the window
         val imageViews = mutableListOf<AccessibilityNodeInfo>()
         findNodesByClassName(rootNode, "android.widget.ImageView", imageViews)
-        for (iv in imageViews.reversed()) {
-            val cd = iv.contentDescription?.toString() ?: ""
-            if (cd.contains("Gửi", ignoreCase = true) || cd.contains("Send", ignoreCase = true)) {
-                if (iv.isClickable) return iv.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                var p = iv.parent
-                while (p != null) {
-                    if (p.isClickable) return p.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    p = p.parent
-                }
+        val bottomClickableImageViews = imageViews.filter { iv -> iv.isClickable }
+        if (bottomClickableImageViews.isNotEmpty()) {
+            val rightmostBottom = bottomClickableImageViews.maxByOrNull { iv ->
+                val bounds = android.graphics.Rect()
+                iv.getBoundsInScreen(bounds)
+                bounds.right
+            }
+            if (rightmostBottom != null && rightmostBottom.isClickable) {
+                Log.d(TAG, "Clicked rightmost ImageView as send button fallback")
+                return rightmostBottom.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             }
         }
 
         return false
+    }
+
+    private fun findClickableImageViewsOrButtons(root: AccessibilityNodeInfo, results: MutableList<AccessibilityNodeInfo>) {
+        val className = root.className?.toString() ?: ""
+        if (root.isClickable && (className.contains("ImageView") || className.contains("Button") || className.contains("TextView"))) {
+            results.add(root)
+        }
+        for (i in 0 until root.childCount) {
+            val child = root.getChild(i) ?: continue
+            findClickableImageViewsOrButtons(child, results)
+        }
+    }
+
+    private fun findAllNodes(root: AccessibilityNodeInfo, results: MutableList<AccessibilityNodeInfo>) {
+        results.add(root)
+        for (i in 0 until root.childCount) {
+            val child = root.getChild(i) ?: continue
+            findAllNodes(child, results)
+        }
     }
 
     private fun findNodesByClassName(
@@ -252,6 +422,7 @@ class ZaloAccessibilityService : AccessibilityService() {
         private var isPendingActionActive = false
         private var currentPendingMessage: String? = null
         private var currentAutoAddFriend = false
+        private var isActionInProgress = false
 
         fun isAccessibilityEnabled(context: Context): Boolean {
             val am = context.getSystemService(AccessibilityManager::class.java)
@@ -288,9 +459,11 @@ class ZaloAccessibilityService : AccessibilityService() {
             currentPendingMessage = messageText
             currentAutoAddFriend = autoAddFriend
             isPendingActionActive = true
+            isActionInProgress = false
         }
 
         fun clearPendingAction() {
+            isActionInProgress = false
             isPendingActionActive = false
             currentPendingMessage = null
         }
