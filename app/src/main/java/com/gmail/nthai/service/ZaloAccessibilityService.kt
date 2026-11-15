@@ -31,7 +31,7 @@ class ZaloAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event == null || event.packageName != "com.zing.zalo") return
+        if (event?.packageName != "com.zing.zalo") return
 
         val rootNode = rootInActiveWindow ?: return
 
@@ -74,7 +74,7 @@ class ZaloAccessibilityService : AccessibilityService() {
             "Không tìm thấy kết quả",
             "Số điện thoại này không sử dụng Zalo",
             "Đường dẫn không hợp lệ",
-            "Trang này không tồn tại"
+            "Trang này không tồn tại",
         )
 
         for (text in notFoundTexts) {
@@ -84,7 +84,7 @@ class ZaloAccessibilityService : AccessibilityService() {
                 isPendingActionActive = false
                 currentPendingMessage = null
                 _sendEvents.tryEmit(SendResult.NotFound(reason = text))
-                
+
                 performDoubleBack()
 
                 return true
@@ -95,11 +95,31 @@ class ZaloAccessibilityService : AccessibilityService() {
 
     private fun performDoubleBack() {
         performGlobalAction(GLOBAL_ACTION_BACK)
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            performGlobalAction(GLOBAL_ACTION_BACK)
-        }, 500)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+            {
+                performGlobalAction(GLOBAL_ACTION_BACK)
+            },
+            500,
+        )
     }
 
+    private fun performTripleBack() {
+        performGlobalAction(GLOBAL_ACTION_BACK)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+            {
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                    {
+                        performGlobalAction(GLOBAL_ACTION_BACK)
+                    },
+                    400,
+                )
+            },
+            400,
+        )
+    }
+
+    @Suppress("UsePropertyAccessSyntax")
     private fun handleAutoSendFlow(rootNode: AccessibilityNodeInfo) {
         if (isActionInProgress) return
         val message = currentPendingMessage ?: return
@@ -141,20 +161,29 @@ class ZaloAccessibilityService : AccessibilityService() {
 
             Log.d(TAG, "Text set/pasted. Scheduling Send button click after 600ms...")
 
-            // 3. Wait 600ms for Zalo UI to update and enable Send button, then click Send
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                val latestRoot = rootInActiveWindow
-                if (latestRoot != null && isPendingActionActive) {
-                    val sendClicked = findAndClickSendButton(latestRoot)
-                    Log.d(TAG, "Send button clicked result: $sendClicked")
-                    if (sendClicked) {
+            // 3. Wait 300ms for Zalo UI to update and enable Send button, then click Send
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                {
+                    val latestRoot = rootInActiveWindow
+                    if (isPendingActionActive) {
+                        val sendClicked = latestRoot?.let { findAndClickSendButton(it) } ?: false
+                        Log.d(TAG, "Send button clicked result: $sendClicked")
                         isPendingActionActive = false
                         currentPendingMessage = null
                         _sendEvents.tryEmit(SendResult.Success)
+
+                        // Return to AutoSms by performing global back actions after message is sent
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                            {
+                                performTripleBack()
+                            },
+                            500,
+                        )
                     }
-                }
-                isActionInProgress = false
-            }, 600)
+                    isActionInProgress = false
+                },
+                300,
+            )
         }
     }
 
@@ -166,7 +195,14 @@ class ZaloAccessibilityService : AccessibilityService() {
                 for (node in nodes) {
                     val text = node.text?.toString() ?: ""
                     val cd = node.contentDescription?.toString() ?: ""
-                    if (text.equals(identifier, ignoreCase = true) || cd.equals(identifier, ignoreCase = true) || text.contains(identifier, ignoreCase = true) || cd.contains(identifier, ignoreCase = true)) {
+                    if (text.equals(identifier, ignoreCase = true) || cd.equals(
+                            identifier,
+                            ignoreCase = true,
+                        ) || text.contains(identifier, ignoreCase = true) || cd.contains(
+                            identifier,
+                            ignoreCase = true,
+                        )
+                    ) {
                         if (node.isClickable) {
                             Log.d(TAG, "Clicked Chat button directly: $identifier")
                             return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
@@ -238,7 +274,8 @@ class ZaloAccessibilityService : AccessibilityService() {
                 for (node in hintNodes) {
                     var curr: AccessibilityNodeInfo? = node
                     while (curr != null) {
-                        if (curr.isEditable || curr.className?.toString()?.contains("EditText") == true) {
+                        val isEditText = curr.className?.toString()?.contains("EditText") == true
+                        if (curr.isEditable || isEditText) {
                             return curr
                         }
                         curr = curr.parent
@@ -250,7 +287,10 @@ class ZaloAccessibilityService : AccessibilityService() {
         return null
     }
 
-    private fun findEditableNodes(root: AccessibilityNodeInfo, results: MutableList<AccessibilityNodeInfo>) {
+    private fun findEditableNodes(
+        root: AccessibilityNodeInfo,
+        results: MutableList<AccessibilityNodeInfo>,
+    ) {
         if (root.isEditable) {
             results.add(root)
         }
@@ -262,7 +302,8 @@ class ZaloAccessibilityService : AccessibilityService() {
 
     private fun findAndClickSendButton(rootNode: AccessibilityNodeInfo): Boolean {
         // 1. First try resource IDs or content descriptions
-        val sendButtonIds = listOf("btn_send", "chat_input_send_btn", "img_send", "send_btn", "btnSend", "send")
+        val sendButtonIds =
+            listOf("btn_send", "chat_input_send_btn", "img_send", "send_btn", "btnSend", "send")
         val allNodes = mutableListOf<AccessibilityNodeInfo>()
         findAllNodes(rootNode, allNodes)
 
@@ -293,7 +334,11 @@ class ZaloAccessibilityService : AccessibilityService() {
                 for (node in nodes) {
                     val text = node.text?.toString() ?: ""
                     val cd = node.contentDescription?.toString() ?: ""
-                    if (text.equals(identifier, ignoreCase = true) || cd.equals(identifier, ignoreCase = true) || cd.contains(identifier, ignoreCase = true)) {
+                    if (text.equals(identifier, ignoreCase = true) || cd.equals(
+                            identifier,
+                            ignoreCase = true,
+                        ) || cd.contains(identifier, ignoreCase = true)
+                    ) {
                         if (node.isClickable) {
                             Log.d(TAG, "Clicked send button by text/cd: $identifier")
                             return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
@@ -349,7 +394,7 @@ class ZaloAccessibilityService : AccessibilityService() {
                 iv.getBoundsInScreen(bounds)
                 bounds.right
             }
-            if (rightmostBottom != null && rightmostBottom.isClickable) {
+            if (rightmostBottom?.isClickable == true) {
                 Log.d(TAG, "Clicked rightmost ImageView as send button fallback")
                 return rightmostBottom.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             }
@@ -358,9 +403,15 @@ class ZaloAccessibilityService : AccessibilityService() {
         return false
     }
 
-    private fun findClickableImageViewsOrButtons(root: AccessibilityNodeInfo, results: MutableList<AccessibilityNodeInfo>) {
+    private fun findClickableImageViewsOrButtons(
+        root: AccessibilityNodeInfo,
+        results: MutableList<AccessibilityNodeInfo>,
+    ) {
         val className = root.className?.toString() ?: ""
-        if (root.isClickable && (className.contains("ImageView") || className.contains("Button") || className.contains("TextView"))) {
+        if (root.isClickable && (className.contains("ImageView") || className.contains("Button") || className.contains(
+                "TextView",
+            ))
+        ) {
             results.add(root)
         }
         for (i in 0 until root.childCount) {
@@ -369,7 +420,10 @@ class ZaloAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun findAllNodes(root: AccessibilityNodeInfo, results: MutableList<AccessibilityNodeInfo>) {
+    private fun findAllNodes(
+        root: AccessibilityNodeInfo,
+        results: MutableList<AccessibilityNodeInfo>
+    ) {
         results.add(root)
         for (i in 0 until root.childCount) {
             val child = root.getChild(i) ?: continue
@@ -382,7 +436,7 @@ class ZaloAccessibilityService : AccessibilityService() {
         targetClass: String,
         results: MutableList<AccessibilityNodeInfo>
     ) {
-        if (root.className != null && root.className.toString() == targetClass) {
+        if (root.className?.toString() == targetClass) {
             results.add(root)
         }
         for (i in 0 until root.childCount) {
@@ -412,7 +466,8 @@ class ZaloAccessibilityService : AccessibilityService() {
         private const val TAG = "ZaloAccessibility"
         private var instance: ZaloAccessibilityService? = null
 
-        private val _isServiceActive = MutableStateFlow(false)
+        private val _isServiceActive = MutableStateFlow(value = false)
+
         @Suppress("unused")
         val isServiceActive: StateFlow<Boolean> = _isServiceActive.asStateFlow()
 
@@ -429,9 +484,10 @@ class ZaloAccessibilityService : AccessibilityService() {
                 ?: return false
             val enabledServices =
                 am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
-            val isEnabledInList = enabledServices.any {
-                it.resolveInfo.serviceInfo.packageName == context.packageName &&
-                        it.resolveInfo.serviceInfo.name == ZaloAccessibilityService::class.java.name
+            val isEnabledInList = enabledServices.any { serviceInfo ->
+                val pkgMatch = serviceInfo.resolveInfo.serviceInfo.packageName == context.packageName
+                val nameMatch = serviceInfo.resolveInfo.serviceInfo.name == ZaloAccessibilityService::class.java.name
+                pkgMatch && nameMatch
             }
             if (isEnabledInList) return true
 
@@ -467,5 +523,6 @@ class ZaloAccessibilityService : AccessibilityService() {
             isPendingActionActive = false
             currentPendingMessage = null
         }
+
     }
 }
