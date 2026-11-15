@@ -121,14 +121,29 @@ class ZaloSendingEngine @Inject constructor(
                 }
 
                 // 3. Wait for send result from ZaloAccessibilityService or timeout
-                val sendResult = withTimeoutOrNull(15000L) {
+                val sendResult = withTimeoutOrNull(6000L) {
                     ZaloAccessibilityService.sendEvents.firstOrNull()
                 }
 
+                if (sendResult == null) {
+                    try {
+                        val bringIntent = Intent(context, com.gmail.nthai.MainActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                        }
+                        context.startActivity(bringIntent)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to bring app to front on timeout", e)
+                    }
+                }
+
                 val isSuccess = sendResult is ZaloAccessibilityService.SendResult.Success
+                val isNotFound = sendResult is ZaloAccessibilityService.SendResult.NotFound
                 val statusStr = if (isSuccess) "SENT_SUCCESS" else "FAILED"
-                val noteStr =
-                    if (isSuccess) "Đã gửi qua Trợ năng Zalo" else "Không thể tự động gửi Zalo"
+                val noteStr = when {
+                    isSuccess -> "Đã gửi qua Trợ năng Zalo"
+                    isNotFound -> "Số điện thoại chưa đăng ký Zalo hoặc không hợp lệ"
+                    else -> "Không thể tự động gửi Zalo"
+                }
 
                 zaloRepository.updateRecipientStatus(recipient.id, statusStr, noteStr)
                 zaloRepository.addLog(

@@ -2,7 +2,9 @@ package com.gmail.nthai.service
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.text.TextUtils
@@ -10,6 +12,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
+import com.gmail.nthai.MainActivity
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -17,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+@SuppressLint("AccessibilityPolicy")
 class ZaloAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
@@ -33,7 +37,77 @@ class ZaloAccessibilityService : AccessibilityService() {
 
         // If auto-send is active, attempt to execute pending send actions
         if (isPendingActionActive) {
+            // First check if Zalo opened a WebView (indicating web error page / profile not found / invalid number)
+            if (handleWebViewError(rootNode)) {
+                return
+            }
+            // Then check if Zalo is showing user/page not found error screen via text
+            if (handleNotFoundScreen(rootNode)) {
+                return
+            }
             handleAutoSendFlow(rootNode)
+        }
+    }
+
+    private fun handleWebViewError(rootNode: AccessibilityNodeInfo): Boolean {
+        val webViews = mutableListOf<AccessibilityNodeInfo>()
+        findNodesByClassName(rootNode, "android.webkit.WebView", webViews)
+        if (webViews.isNotEmpty()) {
+            Log.w(TAG, "Detected Zalo WebView error/web page screen (invalid number)")
+            isPendingActionActive = false
+            currentPendingMessage = null
+            _sendEvents.tryEmit(SendResult.NotFound(reason = "Số điện thoại chưa đăng ký Zalo hoặc không hợp lệ (WebView)"))
+
+            performDoubleBack()
+            return true
+        }
+        return false
+    }
+
+    private fun handleNotFoundScreen(rootNode: AccessibilityNodeInfo): Boolean {
+        val notFoundTexts = listOf(
+            "Trang này không tìm thấy hoặc không hợp lệ",
+            "Không tìm thấy tài khoản",
+            "Số điện thoại chưa đăng ký Zalo",
+            "Không tìm thấy người dùng",
+            "Tài khoản không tồn tại",
+            "Không tìm thấy kết quả",
+            "Số điện thoại này không sử dụng Zalo",
+            "Đường dẫn không hợp lệ",
+            "Trang này không tồn tại"
+        )
+
+        for (text in notFoundTexts) {
+            val nodes = rootNode.findAccessibilityNodeInfosByText(text)
+            if (!nodes.isNullOrEmpty()) {
+                Log.w(TAG, "Detected not found screen with text: $text")
+                isPendingActionActive = false
+                currentPendingMessage = null
+                _sendEvents.tryEmit(SendResult.NotFound(reason = text))
+                
+                performDoubleBack()
+
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun performDoubleBack() {
+        performGlobalAction(GLOBAL_ACTION_BACK)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            performGlobalAction(GLOBAL_ACTION_BACK)
+        }, 500)
+    }
+
+    private fun bringAppToFront() {
+        try {
+            val intent = Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to bring app to front", e)
         }
     }
 
@@ -61,6 +135,7 @@ class ZaloAccessibilityService : AccessibilityService() {
                 isPendingActionActive = false
                 currentPendingMessage = null
                 _sendEvents.tryEmit(SendResult.Success)
+                bringAppToFront()
             }
         }
     }
@@ -172,6 +247,7 @@ class ZaloAccessibilityService : AccessibilityService() {
 
     sealed class SendResult {
         data object Success : SendResult()
+        data class NotFound(val reason: String) : SendResult()
         data class Error(val reason: String) : SendResult()
     }
 
@@ -180,6 +256,7 @@ class ZaloAccessibilityService : AccessibilityService() {
         private var instance: ZaloAccessibilityService? = null
 
         private val _isServiceActive = MutableStateFlow(false)
+        @Suppress("unused")
         val isServiceActive: StateFlow<Boolean> = _isServiceActive.asStateFlow()
 
         private val _sendEvents = MutableSharedFlow<SendResult>(extraBufferCapacity = 10)
@@ -190,9 +267,8 @@ class ZaloAccessibilityService : AccessibilityService() {
         private var currentAutoAddFriend = false
 
         fun isAccessibilityEnabled(context: Context): Boolean {
-            val am =
-                context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-                    ?: return false
+            val am = context.getSystemService(AccessibilityManager::class.java)
+                ?: return false
             val enabledServices =
                 am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
             val isEnabledInList = enabledServices.any {
