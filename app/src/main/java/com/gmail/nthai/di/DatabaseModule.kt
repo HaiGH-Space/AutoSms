@@ -72,6 +72,13 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE sim_configs ADD COLUMN minDelaySec INTEGER NOT NULL DEFAULT 40")
+            db.execSQL("ALTER TABLE sim_configs ADD COLUMN maxDelaySec INTEGER NOT NULL DEFAULT 50")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -80,7 +87,16 @@ object DatabaseModule {
             AppDatabase::class.java,
             "auto_sms_database"
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+            .addMigrations(
+                MIGRATION_1_2,
+                MIGRATION_4_5,
+                MIGRATION_5_6,
+                MIGRATION_6_7,
+                MIGRATION_7_8,
+                MIGRATION_8_9,
+                MIGRATION_9_10,
+                MIGRATION_11_12
+            )
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
@@ -96,4 +112,12 @@ object DatabaseModule {
 
     @Provides
     fun provideSendingLogDao(db: AppDatabase): SendingLogDao = db.sendingLogDao()
+
+    @Provides
+    fun provideZaloRecipientDao(db: AppDatabase): com.gmail.nthai.data.local.dao.ZaloRecipientDao =
+        db.zaloRecipientDao()
+
+    @Provides
+    fun provideZaloSendingLogDao(db: AppDatabase): com.gmail.nthai.data.local.dao.ZaloSendingLogDao =
+        db.zaloSendingLogDao()
 }

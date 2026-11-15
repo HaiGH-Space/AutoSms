@@ -8,6 +8,8 @@ data class SimConfig(
     val simSlot: Int, // 1 for SIM 1, 2 for SIM 2
     val carrierName: String = "",
     val dailyLimit: Int = getDefaultDailyLimit(carrierName),
+    val minDelaySec: Int = 40,
+    val maxDelaySec: Int = 50,
     val sentCountToday: Int = 0,
     val lastResetDate: String = ""
 ) {
@@ -27,13 +29,17 @@ data class SimConfig(
                 normalized.contains("vietnamobile", ignoreCase = true) -> DEFAULT_VIETNAMOBILE_LIMIT
                 normalized.contains("viettel", ignoreCase = true) -> DEFAULT_VIETTEL_LIMIT
                 normalized.contains("vinaphone", ignoreCase = true) ||
-                    normalized.contains("vina", ignoreCase = true) -> DEFAULT_VINAPHONE_LIMIT
+                        normalized.contains("vina", ignoreCase = true) -> DEFAULT_VINAPHONE_LIMIT
+
                 normalized.contains("mobifone", ignoreCase = true) ||
-                    normalized.contains("mobi", ignoreCase = true) -> DEFAULT_MOBIFONE_LIMIT
+                        normalized.contains("mobi", ignoreCase = true) -> DEFAULT_MOBIFONE_LIMIT
+
                 normalized.contains("gmobile", ignoreCase = true) ||
-                    normalized.contains("beeline", ignoreCase = true) -> DEFAULT_GMOBILE_LIMIT
+                        normalized.contains("beeline", ignoreCase = true) -> DEFAULT_GMOBILE_LIMIT
+
                 normalized.contains("wintel", ignoreCase = true) ||
-                    normalized.contains("reddi", ignoreCase = true) -> DEFAULT_WINTEL_LIMIT
+                        normalized.contains("reddi", ignoreCase = true) -> DEFAULT_WINTEL_LIMIT
+
                 normalized.contains("itel", ignoreCase = true) -> DEFAULT_ITEL_LIMIT
                 else -> DEFAULT_UNKNOWN_LIMIT
             }

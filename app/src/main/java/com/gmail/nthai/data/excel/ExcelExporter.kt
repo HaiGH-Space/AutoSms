@@ -16,7 +16,16 @@ class ExcelExporter {
             val sheet = workbook.createSheet("Báo cáo gửi SMS")
 
             val headerRow = sheet.createRow(0)
-            val headers = arrayOf("STT", "Tên KH", "SĐT", "SIM", "Nội dung tin nhắn", "Thời gian", "Trạng thái", "Ghi chú lỗi")
+            val headers = arrayOf(
+                "STT",
+                "Tên KH",
+                "SĐT",
+                "SIM",
+                "Nội dung tin nhắn",
+                "Thời gian",
+                "Trạng thái",
+                "Ghi chú lỗi"
+            )
 
             for (i in headers.indices) {
                 val cell = headerRow.createCell(i)

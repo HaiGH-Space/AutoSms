@@ -5,9 +5,8 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.LogRecord
+import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
@@ -19,6 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -46,7 +46,8 @@ class ProgressViewModel @Inject constructor(
             .mapValues { (_, customerLogs) -> customerLogs.maxBy { it.timestamp } }
 
         (1..2).associateWith { simSlot ->
-            val isSimActive = states[simSlot] is SendingServiceState.Running || states[simSlot] is SendingServiceState.Paused
+            val isSimActive =
+                states[simSlot] is SendingServiceState.Running || states[simSlot] is SendingServiceState.Paused
             customers.filter { it.sendSimSlot == simSlot }.sumOf { customer ->
                 customer.phone.split(',')
                     .map(String::trim)

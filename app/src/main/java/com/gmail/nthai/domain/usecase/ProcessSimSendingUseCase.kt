@@ -57,7 +57,8 @@ class ProcessSimSendingUseCase @Inject constructor(
                     continue
                 }
 
-                val displayName = customer.customFields.values.firstOrNull { it.isNotBlank() } ?: recipient
+                val displayName =
+                    customer.customFields.values.firstOrNull { it.isNotBlank() } ?: recipient
                 val content = if (template != null && template.content.isNotBlank()) {
                     parseSpintaxUseCase(template.content, customer.copy(phone = recipient))
                 } else {
@@ -115,18 +116,35 @@ class ProcessSimSendingUseCase @Inject constructor(
         val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(simSlot)
         if (currentSubId == null || currentSubId == -1) {
             val errorMsg = "Không tìm thấy SIM $simSlot đang hoạt động trên thiết bị."
-            recordFailedLogsForSim(simSlot, customers, existingLogsByCustomer, template, errorMsg, sessionStartTime, onReportSmsFailure)
+            recordFailedLogsForSim(
+                simSlot,
+                customers,
+                existingLogsByCustomer,
+                template,
+                errorMsg,
+                sessionStartTime,
+                onReportSmsFailure
+            )
             return errorMsg
         }
 
         if (template.content.isBlank()) {
             val errorMsg = "Chưa chọn mẫu tin nhắn hoặc mẫu tin nhắn đang để trống."
-            recordFailedLogsForSim(simSlot, customers, existingLogsByCustomer, template, errorMsg, sessionStartTime, onReportSmsFailure)
+            recordFailedLogsForSim(
+                simSlot,
+                customers,
+                existingLogsByCustomer,
+                template,
+                errorMsg,
+                sessionStartTime,
+                onReportSmsFailure
+            )
             return errorMsg
         }
 
         var config = simConfigRepository.getSimConfigBySlot(simSlot)
-        val carrier = simManagerWrapper.getActiveSims().find { it.simSlot == simSlot }?.carrierName.orEmpty()
+        val carrier =
+            simManagerWrapper.getActiveSims().find { it.simSlot == simSlot }?.carrierName.orEmpty()
         val defaultCarrierLimit = SimConfig.getDefaultDailyLimit(carrier)
 
         if (config == null) {
@@ -204,33 +222,60 @@ class ProcessSimSendingUseCase @Inject constructor(
                     currentMinute = currentTime.get(Calendar.MINUTE)
                 )) {
                     is ValidationResult.OutsideTimeFrame -> {
-                        val errorMsg = "Ngoài khung giờ làm việc (${rule.startHour.toString().padStart(2, '0')}:${rule.startMinute.toString().padStart(2, '0')} - ${rule.endHour.toString().padStart(2, '0')}:${rule.endMinute.toString().padStart(2, '0')})."
+                        val errorMsg = "Ngoài khung giờ làm việc (${
+                            rule.startHour.toString().padStart(2, '0')
+                        }:${
+                            rule.startMinute.toString().padStart(2, '0')
+                        } - ${rule.endHour.toString().padStart(2, '0')}:${
+                            rule.endMinute.toString().padStart(2, '0')
+                        })."
                         val remainingCustomers = customers.subList(customerIndex, customers.size)
-                        recordFailedLogsForSim(simSlot, remainingCustomers, existingLogsByCustomer, template, errorMsg, sessionStartTime, onReportSmsFailure)
+                        recordFailedLogsForSim(
+                            simSlot,
+                            remainingCustomers,
+                            existingLogsByCustomer,
+                            template,
+                            errorMsg,
+                            sessionStartTime,
+                            onReportSmsFailure
+                        )
                         return errorMsg
                     }
+
                     is ValidationResult.ExceededLimit -> {
-                        val errorMsg = "SIM $simSlot đã đạt hạn mức gửi ${constraint.dailyLimit} tin/ngày."
+                        val errorMsg =
+                            "SIM $simSlot đã đạt hạn mức gửi ${constraint.dailyLimit} tin/ngày."
                         val remainingCustomers = customers.subList(customerIndex, customers.size)
-                        recordFailedLogsForSim(simSlot, remainingCustomers, existingLogsByCustomer, template, errorMsg, sessionStartTime, onReportSmsFailure)
+                        recordFailedLogsForSim(
+                            simSlot,
+                            remainingCustomers,
+                            existingLogsByCustomer,
+                            template,
+                            errorMsg,
+                            sessionStartTime,
+                            onReportSmsFailure
+                        )
                         return errorMsg
                     }
+
                     ValidationResult.Valid -> Unit
                 }
 
                 val updatedCustomFields = customer.customFields.toMutableMap()
                 updatedCustomFields.keys.filter { key ->
                     key.equals("sdt", ignoreCase = true) ||
-                        key.equals("sđt", ignoreCase = true) ||
-                        key.equals("phone", ignoreCase = true) ||
-                        key.equals(rule.phoneColumnName, ignoreCase = true)
+                            key.equals("sđt", ignoreCase = true) ||
+                            key.equals("phone", ignoreCase = true) ||
+                            key.equals(rule.phoneColumnName, ignoreCase = true)
                 }.forEach { key ->
                     updatedCustomFields[key] = recipient
                 }
 
-                val recipientCustomer = customer.copy(phone = recipient, customFields = updatedCustomFields)
+                val recipientCustomer =
+                    customer.copy(phone = recipient, customFields = updatedCustomFields)
                 val messageContent = parseSpintaxUseCase(template.content, recipientCustomer)
-                val displayName = customer.customFields.values.firstOrNull { it.isNotBlank() } ?: recipient
+                val displayName =
+                    customer.customFields.values.firstOrNull { it.isNotBlank() } ?: recipient
                 val logRecord = LogRecord(
                     id = previousLog?.takeIf { it.status == LogStatus.FAILED }?.id ?: 0,
                     customerId = customer.id,
@@ -277,11 +322,13 @@ class ProcessSimSendingUseCase @Inject constructor(
                     val latestLogsByPhone = recipients.mapNotNull { phone ->
                         allCustomerLogs.filter { it.phone == phone }.maxByOrNull { it.timestamp }
                     }
-                    val finishedLogs = latestLogsByPhone.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
+                    val finishedLogs =
+                        latestLogsByPhone.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
 
                     if (finishedLogs.size >= recipients.size) {
                         val hasFailed = finishedLogs.any { it.status == LogStatus.FAILED }
-                        val newStatus = if (hasFailed) CustomerStatus.FAILED else CustomerStatus.SENT
+                        val newStatus =
+                            if (hasFailed) CustomerStatus.FAILED else CustomerStatus.SENT
                         customerRepository.updateCustomerStatus(customer.id, newStatus)
                     }
                 }
@@ -290,9 +337,10 @@ class ProcessSimSendingUseCase @Inject constructor(
                 onProgressUpdate(sent, total, displayName, null)
 
                 if (sent < total) {
+                    val currentSimConfig = simConfigRepository.getSimConfigBySlot(simSlot) ?: config
                     var secondsRemaining = (calculateNextDelayUseCase(
-                        rule.minDelaySec,
-                        rule.maxDelaySec
+                        currentSimConfig.minDelaySec,
+                        currentSimConfig.maxDelaySec
                     ) / 1000L).toInt()
                     while (secondsRemaining > 0) {
                         while (isPaused(simSlot) && !isStopped(simSlot)) {
@@ -317,13 +365,15 @@ class ProcessSimSendingUseCase @Inject constructor(
     ): Int {
         return customers.sumOf { customer ->
             val existingLogs = existingLogsByCustomer[customer.id].orEmpty()
-            customer.phone.split(',').map(String::trim).filter(String::isNotBlank).count { recipient ->
-                val latestLog = existingLogs
-                    .filter { it.phone == recipient }
-                    .maxByOrNull { it.timestamp }
-                val isPendingInCurrentSession = latestLog?.status == LogStatus.PENDING && latestLog.timestamp >= sessionStartTime
-                latestLog?.status != LogStatus.SENT_SUCCESS && !isPendingInCurrentSession
-            }
+            customer.phone.split(',').map(String::trim).filter(String::isNotBlank)
+                .count { recipient ->
+                    val latestLog = existingLogs
+                        .filter { it.phone == recipient }
+                        .maxByOrNull { it.timestamp }
+                    val isPendingInCurrentSession =
+                        latestLog?.status == LogStatus.PENDING && latestLog.timestamp >= sessionStartTime
+                    latestLog?.status != LogStatus.SENT_SUCCESS && !isPendingInCurrentSession
+                }
         }
     }
 }

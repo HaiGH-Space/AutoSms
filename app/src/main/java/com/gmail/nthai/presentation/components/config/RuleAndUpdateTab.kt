@@ -78,6 +78,7 @@ fun RuleAndUpdateTab(
                 }
             )
         }
+
         is UpdateState.Downloading -> {
             DownloadProgressDialog(
                 progressPercent = state.progressPercent,
@@ -88,6 +89,7 @@ fun RuleAndUpdateTab(
                 }
             )
         }
+
         is UpdateState.Downloaded -> {
             DownloadedInstallDialog(
                 apkFile = state.apkFile,
@@ -103,6 +105,7 @@ fun RuleAndUpdateTab(
                 }
             )
         }
+
         is UpdateState.NoUpdateAvailable -> {
             NoUpdateAvailableDialog(
                 currentVersionName = state.currentVersionName,
@@ -111,6 +114,7 @@ fun RuleAndUpdateTab(
                 }
             )
         }
+
         is UpdateState.Error -> {
             UpdateErrorDialog(
                 errorMessage = state.message,
@@ -119,6 +123,7 @@ fun RuleAndUpdateTab(
                 }
             )
         }
+
         else -> {}
     }
 
@@ -173,15 +178,19 @@ fun RuleAndUpdateTab(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Outlined.Shuffle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(
+                            Icons.Outlined.Shuffle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                         Text(
-                            "Khoảng nghỉ ngẫu nhiên",
+                            "Khoảng nghỉ mặc định",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Text(
-                        "Ứng dụng chọn thời gian chờ trong khoảng này giữa các tin nhắn.",
+                        "Thời gian giãn cách đã được chuyển sang cấu hình riêng cho từng SIM tại tab 'Hạn mức SIM'. Bạn có thể thay đổi thời gian nghỉ của SIM 1 và SIM 2 tại đó.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -224,7 +233,11 @@ fun RuleAndUpdateTab(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Outlined.AccessTime, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(
+                            Icons.Outlined.AccessTime,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                         Text(
                             "Khung giờ gửi trong ngày",
                             style = MaterialTheme.typography.titleSmall,
@@ -261,7 +274,9 @@ fun RuleAndUpdateTab(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("Bắt đầu", style = MaterialTheme.typography.labelMedium)
                                 Text(
-                                    "${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}",
+                                    "${
+                                        startHour.toString().padStart(2, '0')
+                                    }:${startMinute.toString().padStart(2, '0')}",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -293,7 +308,9 @@ fun RuleAndUpdateTab(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("Kết thúc", style = MaterialTheme.typography.labelMedium)
                                 Text(
-                                    "${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}",
+                                    "${endHour.toString().padStart(2, '0')}:${
+                                        endMinute.toString().padStart(2, '0')
+                                    }",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -314,7 +331,11 @@ fun RuleAndUpdateTab(
                         ) {
                             Text("Khung giờ gửi", style = MaterialTheme.typography.labelLarge)
                             Text(
-                                "${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')} – ${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}",
+                                "${startHour.toString().padStart(2, '0')}:${
+                                    startMinute.toString().padStart(2, '0')
+                                } – ${endHour.toString().padStart(2, '0')}:${
+                                    endMinute.toString().padStart(2, '0')
+                                }",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -359,7 +380,11 @@ fun RuleAndUpdateTab(
                                     endMinute,
                                     phoneColumnNameText
                                 )
-                                Toast.makeText(context, "Đã lưu cài đặt quy tắc!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "Đã lưu cài đặt quy tắc!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),

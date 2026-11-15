@@ -60,7 +60,8 @@ class UpdateViewModel @Inject constructor(
                     _updateState.value = UpdateState.UpdateAvailable(info)
                 } else {
                     if (isManualCheck) {
-                        _updateState.value = UpdateState.NoUpdateAvailable(updateRepository.getCurrentVersionName())
+                        _updateState.value =
+                            UpdateState.NoUpdateAvailable(updateRepository.getCurrentVersionName())
                     } else {
                         _updateState.value = UpdateState.Idle
                     }

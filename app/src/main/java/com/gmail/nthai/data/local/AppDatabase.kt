@@ -6,11 +6,15 @@ import com.gmail.nthai.data.local.dao.CustomerDao
 import com.gmail.nthai.data.local.dao.SendingLogDao
 import com.gmail.nthai.data.local.dao.SimConfigDao
 import com.gmail.nthai.data.local.dao.SmsTemplateDao
+import com.gmail.nthai.data.local.dao.ZaloRecipientDao
+import com.gmail.nthai.data.local.dao.ZaloSendingLogDao
 import com.gmail.nthai.data.local.entity.CustomerEntity
 import com.gmail.nthai.data.local.entity.SendingLogEntity
 import com.gmail.nthai.data.local.entity.SendingRuleEntity
 import com.gmail.nthai.data.local.entity.SimConfigEntity
 import com.gmail.nthai.data.local.entity.SmsTemplateEntity
+import com.gmail.nthai.data.local.entity.ZaloRecipientEntity
+import com.gmail.nthai.data.local.entity.ZaloSendingLogEntity
 
 @Database(
     entities = [
@@ -18,9 +22,11 @@ import com.gmail.nthai.data.local.entity.SmsTemplateEntity
         SmsTemplateEntity::class,
         SimConfigEntity::class,
         SendingRuleEntity::class,
-        SendingLogEntity::class
+        SendingLogEntity::class,
+        ZaloRecipientEntity::class,
+        ZaloSendingLogEntity::class
     ],
-    version = 10,
+    version = 12,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -28,4 +34,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun smsTemplateDao(): SmsTemplateDao
     abstract fun simConfigDao(): SimConfigDao
     abstract fun sendingLogDao(): SendingLogDao
+    abstract fun zaloRecipientDao(): ZaloRecipientDao
+    abstract fun zaloSendingLogDao(): ZaloSendingLogDao
 }

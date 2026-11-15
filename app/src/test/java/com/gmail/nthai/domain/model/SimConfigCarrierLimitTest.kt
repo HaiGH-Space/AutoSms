@@ -24,7 +24,8 @@ class SimConfigCarrierLimitTest {
         val viettelSim = SimConfig(subscriptionId = 1, simSlot = 1, carrierName = "Viettel")
         assertEquals(40, viettelSim.dailyLimit)
 
-        val vietnamobileSim = SimConfig(subscriptionId = 1, simSlot = 1, carrierName = "Vietnamobile")
+        val vietnamobileSim =
+            SimConfig(subscriptionId = 1, simSlot = 1, carrierName = "Vietnamobile")
         assertEquals(100, vietnamobileSim.dailyLimit)
 
         val vinaSim = SimConfig(subscriptionId = 2, simSlot = 2, carrierName = "VinaPhone")

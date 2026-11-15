@@ -11,8 +11,6 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.gmail.nthai.R
-import com.gmail.nthai.domain.model.CustomerStatus
-import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.SmsTemplate
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
@@ -45,16 +43,19 @@ sealed class SendingServiceState {
         val secondsUntilNext: Int? = null,
         val failedCount: Int = 0
     ) : SendingServiceState()
+
     data class Paused(
         val sentCount: Int,
         val totalCount: Int,
         val failedCount: Int = 0
     ) : SendingServiceState()
+
     data class Finished(
         val sentCount: Int,
         val totalCount: Int,
         val failedCount: Int = 0
     ) : SendingServiceState()
+
     data class Error(
         val message: String,
         val sentCount: Int = 0,
@@ -66,11 +67,16 @@ sealed class SendingServiceState {
 @AndroidEntryPoint
 class SmsForegroundService : Service() {
 
-    @Inject lateinit var customerRepository: CustomerRepository
-    @Inject lateinit var templateRepository: TemplateRepository
-    @Inject lateinit var simConfigRepository: SimConfigRepository
-    @Inject lateinit var sendingLogRepository: SendingLogRepository
-    @Inject lateinit var processSimSendingUseCase: ProcessSimSendingUseCase
+    @Inject
+    lateinit var customerRepository: CustomerRepository
+    @Inject
+    lateinit var templateRepository: TemplateRepository
+    @Inject
+    lateinit var simConfigRepository: SimConfigRepository
+    @Inject
+    lateinit var sendingLogRepository: SendingLogRepository
+    @Inject
+    lateinit var processSimSendingUseCase: ProcessSimSendingUseCase
 
     private val serviceJob = Job()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
@@ -101,12 +107,15 @@ class SmsForegroundService : Service() {
                     (1..2).forEach { startSendingProcess(it) }
                 }
             }
+
             ACTION_PAUSE -> {
                 controlSlots(simSlot) { slot -> pauseSlot(slot) }
             }
+
             ACTION_RESUME -> {
                 controlSlots(simSlot) { slot -> resumeSlot(slot) }
             }
+
             ACTION_STOP -> {
                 controlSlots(simSlot) { slot -> stopSlot(slot) }
             }
@@ -186,7 +195,11 @@ class SmsForegroundService : Service() {
                 val existingLogsByCustomer = pendingCustomers.associate { customer ->
                     customer.id to sendingLogRepository.getLogsForCustomer(customer.id)
                 }
-                val currentTotal = processSimSendingUseCase.calculateTotal(pendingCustomers, existingLogsByCustomer, sessionStartTime)
+                val currentTotal = processSimSendingUseCase.calculateTotal(
+                    pendingCustomers,
+                    existingLogsByCustomer,
+                    sessionStartTime
+                )
                 synchronized(progressLock) {
                     totalCounts[simSlot] = currentTotal
                     sentCounts[simSlot] = 0
@@ -234,16 +247,26 @@ class SmsForegroundService : Service() {
                         (sentCounts[simSlot] ?: 0) to (totalCounts[simSlot] ?: 0)
                     }
                     val state = error?.let {
-                        SendingServiceState.Error(it, counts.first, counts.second, currentFailedCount(simSlot))
-                    } ?: SendingServiceState.Finished(counts.first, counts.second, currentFailedCount(simSlot))
+                        SendingServiceState.Error(
+                            it,
+                            counts.first,
+                            counts.second,
+                            currentFailedCount(simSlot)
+                        )
+                    } ?: SendingServiceState.Finished(
+                        counts.first,
+                        counts.second,
+                        currentFailedCount(simSlot)
+                    )
                     updateSimState(simSlot, state)
                 }
             } catch (e: Exception) {
                 if (!stoppedSlots.contains(simSlot)) {
                     val errorMsg = e.message ?: "Lỗi hệ thống khi gửi SMS bằng SIM $simSlot."
                     try {
-                        val pendingCustomers = customerRepository.getSelectedCustomersForSending().first()
-                            .filter { it.sendSimSlot == simSlot }
+                        val pendingCustomers =
+                            customerRepository.getSelectedCustomersForSending().first()
+                                .filter { it.sendSimSlot == simSlot }
                         if (pendingCustomers.isNotEmpty()) {
                             val existingLogsByCustomer = pendingCustomers.associate { customer ->
                                 customer.id to sendingLogRepository.getLogsForCustomer(customer.id)
@@ -257,7 +280,8 @@ class SmsForegroundService : Service() {
                                 sessionStartTime = sessionStartTime
                             ) { slot, logId -> reportSmsFailure(slot, logId) }
                         }
-                    } catch (_: Exception) {}
+                    } catch (_: Exception) {
+                    }
 
                     val counts = synchronized(progressLock) {
                         (sentCounts[simSlot] ?: 0) to (totalCounts[simSlot] ?: 0)
@@ -330,7 +354,12 @@ class SmsForegroundService : Service() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun updateNotification(title: String, progress: Int, maxProgress: Int, isPaused: Boolean = false) {
+    private fun updateNotification(
+        title: String,
+        progress: Int,
+        maxProgress: Int,
+        isPaused: Boolean = false
+    ) {
         val notification = buildNotification(title, progress, maxProgress, isPaused)
         val manager = getSystemService(NotificationManager::class.java)
         try {
@@ -340,7 +369,12 @@ class SmsForegroundService : Service() {
         }
     }
 
-    private fun buildNotification(title: String, progress: Int, maxProgress: Int, isPaused: Boolean): android.app.Notification {
+    private fun buildNotification(
+        title: String,
+        progress: Int,
+        maxProgress: Int,
+        isPaused: Boolean
+    ): android.app.Notification {
         val stopIntent = Intent(this, SmsForegroundService::class.java).apply {
             action = ACTION_STOP
             putExtra(EXTRA_SIM_SLOT, 0)
@@ -355,7 +389,10 @@ class SmsForegroundService : Service() {
                 putExtra(EXTRA_SIM_SLOT, 0)
             }
             val resumePendingIntent = PendingIntent.getService(
-                this, 1, resumeIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                this,
+                1,
+                resumeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             NotificationCompat.Action.Builder(0, "Tiếp tục", resumePendingIntent).build()
         } else {
@@ -364,7 +401,10 @@ class SmsForegroundService : Service() {
                 putExtra(EXTRA_SIM_SLOT, 0)
             }
             val pausePendingIntent = PendingIntent.getService(
-                this, 2, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                this,
+                2,
+                pauseIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             NotificationCompat.Action.Builder(0, "Tạm dừng", pausePendingIntent).build()
         }
@@ -414,7 +454,8 @@ class SmsForegroundService : Service() {
         }
 
         private val failureCountLock = Any()
-        private val failedLogIdsBySlot = mutableMapOf(1 to mutableSetOf<Long>(), 2 to mutableSetOf<Long>())
+        private val failedLogIdsBySlot =
+            mutableMapOf(1 to mutableSetOf<Long>(), 2 to mutableSetOf<Long>())
 
         private val _serviceStates = MutableStateFlow<Map<Int, SendingServiceState>>(
             mapOf(1 to SendingServiceState.Idle, 2 to SendingServiceState.Idle)

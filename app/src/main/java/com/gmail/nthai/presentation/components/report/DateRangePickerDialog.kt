@@ -68,7 +68,7 @@ fun DateRangePickerDialog(
                     TextButton(
                         onClick = onApply,
                         enabled = state.selectedStartDateMillis != null &&
-                            state.selectedEndDateMillis != null
+                                state.selectedEndDateMillis != null
                     ) {
                         Text("Áp dụng")
                     }

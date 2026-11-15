@@ -177,7 +177,9 @@ fun SelectPhoneColumnDialog(
                                 Text(
                                     text = mode.description,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        alpha = 0.8f
+                                    )
                                     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                                 )
                             }

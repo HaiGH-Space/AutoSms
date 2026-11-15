@@ -1,7 +1,7 @@
 {
-  "versionCode": 7,
-  "versionName": "0.1.6",
-  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.6/app-release.apk",
-  "releaseNotes": "- Hỗ trợ các chế độ nhập Excel (Thay thế, Thêm nối tiếp, Bỏ qua trùng SĐT)\n- Thêm tính năng đặt lại trạng thái gửi tin nhắn theo phạm vi linh hoạt\n- Tối ưu hóa logic SMS retry và xác định trạng thái gửi theo từng SĐT\n- Hỗ trợ biến mẫu tin nhắn sử dụng dấu ngoặc đơn (single-brace)\n- Cập nhật cơ chế thay thế danh sách khách hàng nhập vào một cách atomic\n- Tối ưu truy vấn cơ sở dữ liệu và nâng cao trải nghiệm người dùng\n- Tính năng gửi tự động Zalo sẽ sớm ra mắt",
+  "versionCode": 8,
+  "versionName": "0.1.7",
+  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.7/app-release.apk",
+  "releaseNotes": "[BẢN ALPHA - có thể chưa ổn định]\n- Mới: tự động gửi tin nhắn Zalo qua Trợ năng Android\n- Quản lý người nhận Zalo: thêm, xóa, nhập Excel, tìm kiếm/lọc theo trạng thái và gửi lại người nhận lỗi\n- Cấu hình nội dung tin nhắn, Spintax, tự động kết bạn, chỉ gửi người chưa gửi và khoảng trễ gửi\n- Theo dõi tiến trình gửi Zalo; hỗ trợ tạm dừng, tiếp tục, dừng chiến dịch và xem nhật ký\n- Bổ sung hướng dẫn bật quyền Trợ năng; cải thiện xử lý lỗi, điều hướng, nhận diện nút gửi và dán tin nhắn bằng clipboard dự phòng\n- Cải thiện khả năng gửi trên thiết bị cấu hình thấp với cơ chế thử lại nút gửi\n- Remake lớn giao diện ứng dụng: làm mới hệ thống thiết kế, điều hướng và các màn hình chính, khách hàng, cấu hình SIM, tiến trình gửi, báo cáo và Zalo\n- Bổ sung thanh tìm kiếm và các thành phần giao diện dùng chung\n- Thêm các chế độ nhập Excel: thay thế, nối tiếp và bỏ qua số điện thoại trùng\n- Bổ sung đặt lại trạng thái gửi theo phạm vi; cải thiện retry SMS và ghi nhận kết quả gửi theo từng số điện thoại",
   "forceUpdate": true
 }

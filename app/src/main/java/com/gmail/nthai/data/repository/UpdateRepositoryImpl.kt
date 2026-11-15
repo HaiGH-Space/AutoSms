@@ -26,7 +26,8 @@ class UpdateRepositoryImpl @Inject constructor(
 
     companion object {
         const val KEY_UPDATE_URL = "custom_update_url"
-        const val DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/HaiGH-Space/AutoSms/master/update.json"
+        const val DEFAULT_UPDATE_URL =
+            "https://raw.githubusercontent.com/HaiGH-Space/AutoSms/master/update.json"
     }
 
     override fun getUpdateUrl(): String {
@@ -172,7 +173,8 @@ class UpdateRepositoryImpl @Inject constructor(
 
     override fun clearOldApks() {
         try {
-            val downloadsDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
+            val downloadsDir =
+                context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
             downloadsDir?.listFiles()?.forEach { file ->
                 if (file.name.endsWith(".apk", ignoreCase = true)) {
                     file.delete()
@@ -207,6 +209,7 @@ class UpdateRepositoryImpl @Inject constructor(
                 HttpURLConnection.HTTP_SEE_OTHER,
                 307,
                 308 -> true
+
                 else -> false
             }
             if (isRedirect) {

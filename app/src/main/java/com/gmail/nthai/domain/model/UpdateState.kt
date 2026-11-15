@@ -12,6 +12,7 @@ sealed interface UpdateState {
         val bytesDownloaded: Long,
         val totalBytes: Long
     ) : UpdateState
+
     data class Downloaded(val apkFile: File, val updateInfo: UpdateInfo) : UpdateState
     data class Error(val message: String) : UpdateState
 }

@@ -8,7 +8,11 @@ import kotlin.random.Random
 
 class ParseSpintaxUseCase {
 
-    operator fun invoke(template: String, customer: Customer, random: Random = Random.Default): String {
+    operator fun invoke(
+        template: String,
+        customer: Customer,
+        random: Random = Random.Default
+    ): String {
         var result = COLUMN_VARIABLE_REGEX.replace(template) { match ->
             val colName = match.groupValues[1].trim()
             customer.customFields.entries.find { (key, _) ->

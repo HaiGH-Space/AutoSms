@@ -12,6 +12,7 @@ interface UpdateRepository {
         outputFile: File,
         onProgress: (progressPercent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit
     ): Result<File>
+
     fun clearOldApks()
     fun getCurrentVersionCode(): Int
     fun getCurrentVersionName(): String

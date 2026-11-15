@@ -65,6 +65,7 @@ import java.io.IOException
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(
+    showTopBar: Boolean = true,
     viewModel: ReportViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -83,7 +84,11 @@ fun ReportScreen(
         if (rangeStartMillis == null || rangeEndMillis == null) {
             "Khoảng ngày"
         } else {
-            "${DateTimeUtils.formatPickerDate(rangeStartMillis!!)} – ${DateTimeUtils.formatPickerDate(rangeEndMillis!!)}"
+            "${DateTimeUtils.formatPickerDate(rangeStartMillis!!)} – ${
+                DateTimeUtils.formatPickerDate(
+                    rangeEndMillis!!
+                )
+            }"
         }
     }
 
@@ -102,9 +107,14 @@ fun ReportScreen(
                     Result.failure(error)
                 }
                 result.onSuccess {
-                    Toast.makeText(context, "Đã xuất báo cáo Excel thành công!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Đã xuất báo cáo Excel thành công!", Toast.LENGTH_SHORT)
+                        .show()
                 }.onFailure { error ->
-                    Toast.makeText(context, "Xuất file thất bại: ${error.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        context,
+                        "Xuất file thất bại: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -112,35 +122,37 @@ fun ReportScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            "Báo cáo",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            "Thống kê và lịch sử gửi tin",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            if (showTopBar) {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                "Báo cáo",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Thống kê và lịch sử gửi tin",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { showClearConfirmation = true },
+                            enabled = logs.isNotEmpty()
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Xóa toàn bộ lịch sử",
+                                tint = if (logs.isNotEmpty()) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { showClearConfirmation = true },
-                        enabled = logs.isNotEmpty()
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Xóa toàn bộ lịch sử",
-                            tint = if (logs.isNotEmpty()) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -244,7 +256,11 @@ fun ReportScreen(
                             TextButton(
                                 onClick = { viewModel.clearFilters() }
                             ) {
-                                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
                                 Text("Xóa lọc")
                             }
                         }
@@ -261,7 +277,13 @@ fun ReportScreen(
                             onClick = { viewModel.setSelectedSimSlot(null) },
                             label = { Text("Tất cả SIM") },
                             leadingIcon = if (selectedSimSlot == null) {
-                                { Icon(Icons.Default.SimCard, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                                {
+                                    Icon(
+                                        Icons.Default.SimCard,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             } else null
                         )
                         FilterChip(
@@ -279,7 +301,11 @@ fun ReportScreen(
                             onClick = { showDatePicker = true },
                             label = { Text(dateRangeLabel, maxLines = 1) },
                             leadingIcon = {
-                                Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Icon(
+                                    Icons.Default.DateRange,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
                             }
                         )
                     }

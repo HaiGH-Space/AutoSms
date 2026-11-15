@@ -52,7 +52,8 @@ class SmsNotificationHelper(private val context: Context) {
         )
 
         val pauseIntent = Intent(context, SmsForegroundService::class.java).apply {
-            action = if (isPaused) SmsForegroundService.ACTION_RESUME else SmsForegroundService.ACTION_PAUSE
+            action =
+                if (isPaused) SmsForegroundService.ACTION_RESUME else SmsForegroundService.ACTION_PAUSE
         }
         val pausePendingIntent = PendingIntent.getService(
             context,

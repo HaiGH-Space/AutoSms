@@ -33,8 +33,12 @@ class SendingLogRepositoryImpl(
         return sendingLogDao.markLogSuccessIfPending(id)
     }
 
-    override suspend fun markLogFailedAndGetPreviousStatus(id: Long, errorMessage: String?): LogStatus? {
-        val previousStatusStr = sendingLogDao.markLogFailedAndGetPreviousStatus(id, errorMessage) ?: return null
+    override suspend fun markLogFailedAndGetPreviousStatus(
+        id: Long,
+        errorMessage: String?
+    ): LogStatus? {
+        val previousStatusStr =
+            sendingLogDao.markLogFailedAndGetPreviousStatus(id, errorMessage) ?: return null
         return try {
             LogStatus.valueOf(previousStatusStr)
         } catch (_: Exception) {

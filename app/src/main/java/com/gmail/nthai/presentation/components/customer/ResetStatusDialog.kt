@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -40,6 +41,8 @@ fun ResetStatusDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Text(
                 "Đặt lại trạng thái gửi tin",
@@ -68,6 +71,7 @@ fun ResetStatusDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { selectedScope = scope },
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.surfaceVariant
@@ -100,7 +104,9 @@ fun ResetStatusDialog(
                                         ResetStatusScope.SELECTED_ONLY -> "Đặt lại cho các khách hàng đang được tích chọn và cho phép gửi lại"
                                     },
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        alpha = 0.8f
+                                    )
                                     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                                 )
                             }
@@ -110,8 +116,11 @@ fun ResetStatusDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(selectedScope) }) {
-                Text("Xác nhận đặt lại")
+            Button(
+                onClick = { onConfirm(selectedScope) },
+                shape = RoundedCornerShape(9999.dp)
+            ) {
+                Text("Xác nhận đặt lại", fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {

@@ -4,6 +4,14 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -15,30 +23,35 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.SimCard
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,14 +60,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.presentation.components.LoadingDialog
 import com.gmail.nthai.presentation.components.SelectPhoneColumnDialog
+import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
 import com.gmail.nthai.presentation.components.customer.CustomerDetailDialog
 import com.gmail.nthai.presentation.components.customer.CustomerItemCard
 import com.gmail.nthai.presentation.components.customer.ResetStatusDialog
@@ -65,8 +83,10 @@ import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerListScreen(
-    simSlot: Int,
-    onBack: () -> Unit,
+    simSlot: Int = 1,
+    showTopBar: Boolean = true,
+    onBack: (() -> Unit)? = null,
+    onStartSending: (() -> Unit)? = null,
     viewModel: CustomerViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -91,7 +111,8 @@ fun CustomerListScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             viewModel.prepareExcelImportWithUri(context, uri) { err ->
-                Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG)
+                    .show()
             }
         }
     }
@@ -102,48 +123,124 @@ fun CustomerListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Quay lại trang chủ"
-                        )
-                    }
-                },
-                title = {
-                    Column {
-                        Text(
-                            "Khách hàng",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            if (simCarrierName != null) "Danh sách gửi bằng SIM $simSlot ($simCarrierName)" else "Danh sách gửi bằng SIM $simSlot",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                actions = {
-                    if (customers.isNotEmpty()) {
-                        IconButton(onClick = { showResetDialog = true }, enabled = !isSending) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Đặt lại trạng thái gửi")
+            if (showTopBar) {
+                TopAppBar(
+                    navigationIcon = {
+                        if (onBack != null) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Quay lại",
+                                    tint = Color(0xFF171717)
+                                )
+                            }
                         }
-                        IconButton(onClick = { viewModel.deleteAllCustomers() }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Xóa tất cả")
+                    },
+                    title = {
+                        Column {
+                            Text(
+                                "Khách hàng",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF171717)
+                            )
+                            Text(
+                                if (simCarrierName != null) "SIM $selectedSimSlot · $simCarrierName" else "SIM $selectedSimSlot",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 11.sp
+                                ),
+                                color = Color(0xFF888888)
+                            )
                         }
-                    }
-                }
-            )
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                            }
+                        ) {
+                            Icon(
+                                Icons.Default.FileUpload,
+                                contentDescription = "Nhập Excel",
+                                tint = Color(0xFF171717)
+                            )
+                        }
+                        if (customers.isNotEmpty()) {
+                            IconButton(onClick = { showResetDialog = true }, enabled = !isSending) {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = "Đặt lại trạng thái",
+                                    tint = Color(0xFF888888)
+                                )
+                            }
+                            IconButton(onClick = { viewModel.deleteAllCustomers() }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Xóa tất cả",
+                                    tint = Color(0xFFEE0000)
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color(0xFFFFFFFF)
+                    )
+                )
+            }
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                }
+        bottomBar = {
+            AnimatedVisibility(
+                visible = selectedCustomerCount > 0 && onStartSending != null,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
             ) {
-                Icon(Icons.Default.FileDownload, contentDescription = "Nhập Excel")
+                Surface(
+                    color = Color(0xFFFFFFFF),
+                    border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "ĐÃ CHỌN GỬI",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = Color(0xFF888888)
+                            )
+                            Text(
+                                text = "$selectedCustomerCount liên hệ (SIM $selectedSimSlot)",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF171717)
+                            )
+                        }
+                        Button(
+                            onClick = { onStartSending?.invoke() },
+                            shape = RoundedCornerShape(9999.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF171717),
+                                contentColor = Color(0xFFFFFFFF)
+                            ),
+                            contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Send,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Bắt đầu gửi", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
             }
         }
     ) { innerPadding ->
@@ -151,125 +248,123 @@ fun CustomerListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .background(Color(0xFFFAFAFA))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Card(
+            // SIM Slot Switcher Tabs
+            SecondaryTabRow(
+                selectedTabIndex = selectedSimSlot - 1,
+                containerColor = Color(0xFFFFFFFF),
+                contentColor = Color(0xFF171717),
+                indicator = {
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(selectedSimSlot - 1),
+                        color = Color(0xFF171717)
+                    )
+                },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 2.dp, bottom = 6.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                    .clip(RoundedCornerShape(9999.dp))
+                    .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(9999.dp))
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.People,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Column {
-                            Text(
-                                "TỔNG KHÁCH HÀNG",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                customers.size.toString(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                (1..2).forEach { slot ->
+                    val config = simConfigs.find { it.simSlot == slot }
+                    val label =
+                        if (!config?.carrierName.isNullOrBlank()) "SIM $slot (${config?.carrierName})" else "SIM $slot"
+                    Tab(
+                        selected = selectedSimSlot == slot,
+                        onClick = { viewModel.selectSimSlot(slot) },
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.SimCard,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp),
+                                    tint = if (selectedSimSlot == slot) Color(0xFF171717) else Color(
+                                        0xFF888888
+                                    )
+                                )
+                                Text(
+                                    label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (selectedSimSlot == slot) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (selectedSimSlot == slot) Color(0xFF171717) else Color(
+                                        0xFF888888
+                                    )
+                                )
+                            }
                         }
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            "ĐÃ CHỌN GỬI",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            "$selectedCustomerCount khách",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.updateSearchQuery(it) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Tìm theo tên, SĐT, mã HĐ...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                singleLine = true,
-                shape = MaterialTheme.shapes.large
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                FilterChip(
-                    selected = selectedFilter == CustomerFilter.ALL,
-                    onClick = { viewModel.updateFilter(CustomerFilter.ALL) },
-                    label = { Text("Tất cả") }
-                )
-                FilterChip(
-                    selected = selectedFilter == CustomerFilter.PENDING,
-                    onClick = { viewModel.updateFilter(CustomerFilter.PENDING) },
-                    label = { Text("Chưa gửi") }
-                )
-                FilterChip(
-                    selected = selectedFilter == CustomerFilter.SENT,
-                    onClick = { viewModel.updateFilter(CustomerFilter.SENT) },
-                    label = { Text("Thành công") }
-                )
-                FilterChip(
-                    selected = selectedFilter == CustomerFilter.FAILED,
-                    onClick = { viewModel.updateFilter(CustomerFilter.FAILED) },
-                    label = { Text("Lỗi") }
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                CustomerCarrierFilter.entries.forEach { carrierFilter ->
-                    FilterChip(
-                        selected = selectedCarrierFilter == carrierFilter,
-                        onClick = { viewModel.updateCarrierFilter(carrierFilter) },
-                        label = { Text(carrierFilter.label) }
                     )
                 }
             }
 
+            // Search Bar
+            AutoSmsSearchBar(
+                query = searchQuery,
+                onQueryChange = { viewModel.updateSearchQuery(it) },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = "Tìm theo tên, số điện thoại, mã HĐ..."
+            )
+
+            // Filters Section (2 separate rows with tight vertical spacing)
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Status Filter Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    VercelFilterPill(
+                        selected = selectedFilter == CustomerFilter.ALL,
+                        text = "Tất cả",
+                        onClick = { viewModel.updateFilter(CustomerFilter.ALL) }
+                    )
+                    VercelFilterPill(
+                        selected = selectedFilter == CustomerFilter.PENDING,
+                        text = "Chờ gửi",
+                        onClick = { viewModel.updateFilter(CustomerFilter.PENDING) }
+                    )
+                    VercelFilterPill(
+                        selected = selectedFilter == CustomerFilter.SENT,
+                        text = "Thành công",
+                        onClick = { viewModel.updateFilter(CustomerFilter.SENT) }
+                    )
+                    VercelFilterPill(
+                        selected = selectedFilter == CustomerFilter.FAILED,
+                        text = "Lỗi",
+                        onClick = { viewModel.updateFilter(CustomerFilter.FAILED) }
+                    )
+                }
+
+                // Carrier Filter Chips
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    CustomerCarrierFilter.entries.forEach { carrierFilter ->
+                        VercelFilterPill(
+                            selected = selectedCarrierFilter == carrierFilter,
+                            text = carrierFilter.label,
+                            onClick = { viewModel.updateCarrierFilter(carrierFilter) }
+                        )
+                    }
+                }
+            }
+
+            // Select All & Counters Bar
             if (customers.isNotEmpty()) {
                 val allSelected = customers.all { it.isSelected }
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 2.dp),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -279,30 +374,40 @@ fun CustomerListScreen(
                     ) {
                         Checkbox(
                             checked = allSelected,
-                            onCheckedChange = { viewModel.selectAll(it) }
+                            onCheckedChange = { viewModel.selectAll(it) },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Color(0xFF171717),
+                                checkmarkColor = Color(0xFFFFFFFF),
+                                uncheckedColor = Color(0xFF888888)
+                            )
                         )
                         Text(
-                            if (allSelected) "Bỏ chọn tất cả" else "Chọn tất cả",
+                            text = if (allSelected) "Bỏ chọn tất cả" else "Chọn tất cả",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF171717)
                         )
                     }
 
-                    Text(
-                        text = if (simCarrierName != null) {
-                            "Đã chọn (SIM $selectedSimSlot - $simCarrierName): $selectedCustomerCount"
-                        } else {
-                            "Đã chọn (SIM $selectedSimSlot): $selectedCustomerCount"
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(9999.dp),
+                        color = Color(0xFFFFFFFF),
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
+                    ) {
+                        Text(
+                            text = "Đã chọn: $selectedCustomerCount / ${customers.size}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Color(0xFF171717),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
-
+            // Customer List or Empty State
             if (customers.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -310,11 +415,53 @@ fun CustomerListScreen(
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Chưa có dữ liệu khách hàng.\nBấm nút 'Nhập Excel' để thêm danh sách.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(0.9f),
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFFFFFFFF),
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = "CHƯA CÓ LIÊN HỆ",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = Color(0xFF888888)
+                            )
+                            Text(
+                                text = "Nạp danh sách từ file Excel (.xlsx, .xls) để phân bổ gửi tin.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF666666),
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Button(
+                                onClick = {
+                                    filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                                },
+                                shape = RoundedCornerShape(9999.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF171717),
+                                    contentColor = Color(0xFFFFFFFF)
+                                )
+                            ) {
+                                Icon(
+                                    Icons.Default.FileUpload,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Nhập file Excel", fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
                 }
             } else {
                 LazyColumn(
@@ -323,11 +470,7 @@ fun CustomerListScreen(
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(
-                        items = customers,
-                        key = { it.id },
-                        contentType = { "customer_item" }
-                    ) { customer ->
+                    items(customers, key = { it.id }) { customer ->
                         CustomerItemCard(
                             customer = customer,
                             onToggleSelection = { viewModel.toggleCustomerSelection(customer) },
@@ -335,9 +478,19 @@ fun CustomerListScreen(
                             onClick = { selectedCustomer = customer }
                         )
                     }
+                    item {
+                        Spacer(modifier = Modifier.height(60.dp))
+                    }
                 }
             }
         }
+    }
+
+    selectedCustomer?.let { customer ->
+        CustomerDetailDialog(
+            customer = customer,
+            onDismiss = { selectedCustomer = null }
+        )
     }
 
     pendingImportState?.let { state ->
@@ -350,15 +503,21 @@ fun CustomerListScreen(
             onConfirm = {
                 viewModel.confirmImport { result ->
                     result.onSuccess { count ->
-                        Toast.makeText(context, "Đã nhập $count khách hàng", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Đã nhập thành công $count khách hàng",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }.onFailure { err ->
-                        Toast.makeText(context, "Lỗi đọc file Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(
+                            context,
+                            "Lỗi đọc file Excel: ${err.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             },
-            onDismiss = {
-                viewModel.cancelImport()
-            }
+            onDismiss = { viewModel.cancelImport() }
         )
     }
 
@@ -366,7 +525,11 @@ fun CustomerListScreen(
         ResetStatusDialog(
             onConfirm = { scope ->
                 viewModel.resetCustomerStatus(scope) {
-                    Toast.makeText(context, "Đã đặt lại trạng thái về 'Chưa gửi'", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Đã đặt lại trạng thái về 'Chờ gửi'",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 showResetDialog = false
             },
@@ -374,14 +537,31 @@ fun CustomerListScreen(
         )
     }
 
-    selectedCustomer?.let { customer ->
-        CustomerDetailDialog(
-            customer = customer,
-            onDismiss = { selectedCustomer = null }
-        )
-    }
-
     if (isImporting) {
         LoadingDialog(message = importLoadingMessage)
+    }
+}
+
+@Composable
+private fun VercelFilterPill(
+    selected: Boolean,
+    text: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(9999.dp),
+        color = if (selected) Color(0xFF171717) else Color(0xFFFFFFFF),
+        border = BorderStroke(1.dp, if (selected) Color(0xFF171717) else Color(0xFFEBEBEB))
+    ) {
+        Text(
+            text = text,
+            color = if (selected) Color(0xFFFFFFFF) else Color(0xFF4D4D4D),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 12.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+            ),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+        )
     }
 }

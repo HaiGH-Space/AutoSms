@@ -20,7 +20,8 @@ class ExcelParser {
         return runCatching {
             val workbook = WorkbookFactory.create(inputStream)
             try {
-                val sheet = workbook.getSheetAt(0) ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
+                val sheet = workbook.getSheetAt(0)
+                    ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
 
                 val customers = mutableListOf<Customer>()
                 val seenPhones = mutableSetOf<String>()
@@ -43,11 +44,12 @@ class ExcelParser {
                             break
                         } else if (candidatePhoneCol == -1 && (
                                     valStr.contains(targetPhoneHeader) ||
-                                    valStr.contains("sđt") ||
-                                    valStr.contains("sdt") ||
-                                    valStr.contains("thoại") ||
-                                    valStr.contains("phone")
-                                )) {
+                                            valStr.contains("sđt") ||
+                                            valStr.contains("sdt") ||
+                                            valStr.contains("thoại") ||
+                                            valStr.contains("phone")
+                                    )
+                        ) {
                             candidatePhoneCol = c
                         }
                     }
@@ -65,7 +67,8 @@ class ExcelParser {
                 for (r in startRowIndex..sheet.lastRowNum) {
                     val row = sheet.getRow(r) ?: continue
 
-                    val rawPhone = if (phoneCol != -1) getCellValueAsString(row.getCell(phoneCol)) else ""
+                    val rawPhone =
+                        if (phoneCol != -1) getCellValueAsString(row.getCell(phoneCol)) else ""
                     val normalizedPhones = cleanAndFilterPhoneNumbers(rawPhone)
 
                     if (normalizedPhones.isEmpty()) continue
@@ -85,7 +88,10 @@ class ExcelParser {
                         val itemCustomFields = rowCustomFields.toMutableMap()
                         headers.forEach { header ->
                             val h = header.lowercase(Locale.ROOT)
-                            if (h == targetPhoneHeader || h == "sdt" || h == "sđt" || h == "phone" || h.contains("thoại")) {
+                            if (h == targetPhoneHeader || h == "sdt" || h == "sđt" || h == "phone" || h.contains(
+                                    "thoại"
+                                )
+                            ) {
                                 itemCustomFields[header] = singlePhone
                             }
                         }
@@ -111,7 +117,8 @@ class ExcelParser {
         return runCatching {
             val workbook = WorkbookFactory.create(inputStream)
             try {
-                val sheet = workbook.getSheetAt(0) ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
+                val sheet = workbook.getSheetAt(0)
+                    ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
                 var headers = emptyList<String>()
                 for (r in 0..sheet.lastRowNum.coerceAtMost(10)) {
                     val row = sheet.getRow(r) ?: continue
@@ -177,6 +184,7 @@ class ExcelParser {
                     }
                 }
             }
+
             CellType.BOOLEAN -> cell.booleanCellValue.toString()
             CellType.FORMULA -> {
                 try {
@@ -185,6 +193,7 @@ class ExcelParser {
                     cell.stringCellValue.trim()
                 }
             }
+
             else -> ""
         }
     }
