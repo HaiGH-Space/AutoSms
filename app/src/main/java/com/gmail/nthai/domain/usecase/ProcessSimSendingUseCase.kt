@@ -337,9 +337,10 @@ class ProcessSimSendingUseCase @Inject constructor(
                 onProgressUpdate(sent, total, displayName, null)
 
                 if (sent < total) {
+                    val currentSimConfig = simConfigRepository.getSimConfigBySlot(simSlot) ?: config
                     var secondsRemaining = (calculateNextDelayUseCase(
-                        rule.minDelaySec,
-                        rule.maxDelaySec
+                        currentSimConfig.minDelaySec,
+                        currentSimConfig.maxDelaySec
                     ) / 1000L).toInt()
                     while (secondsRemaining > 0) {
                         while (isPaused(simSlot) && !isStopped(simSlot)) {

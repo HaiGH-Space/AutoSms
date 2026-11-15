@@ -8,6 +8,8 @@ data class SimConfig(
     val simSlot: Int, // 1 for SIM 1, 2 for SIM 2
     val carrierName: String = "",
     val dailyLimit: Int = getDefaultDailyLimit(carrierName),
+    val minDelaySec: Int = 40,
+    val maxDelaySec: Int = 50,
     val sentCountToday: Int = 0,
     val lastResetDate: String = ""
 ) {

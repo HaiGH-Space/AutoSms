@@ -184,13 +184,13 @@ fun RuleAndUpdateTab(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            "Khoảng nghỉ ngẫu nhiên",
+                            "Khoảng nghỉ mặc định",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Text(
-                        "Ứng dụng chọn thời gian chờ trong khoảng này giữa các tin nhắn.",
+                        "Thời gian giãn cách đã được chuyển sang cấu hình riêng cho từng SIM tại tab 'Hạn mức SIM'. Bạn có thể thay đổi thời gian nghỉ của SIM 1 và SIM 2 tại đó.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

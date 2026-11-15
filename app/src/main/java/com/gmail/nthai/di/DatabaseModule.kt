@@ -72,6 +72,13 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE sim_configs ADD COLUMN minDelaySec INTEGER NOT NULL DEFAULT 40")
+            db.execSQL("ALTER TABLE sim_configs ADD COLUMN maxDelaySec INTEGER NOT NULL DEFAULT 50")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -87,7 +94,8 @@ object DatabaseModule {
                 MIGRATION_6_7,
                 MIGRATION_7_8,
                 MIGRATION_8_9,
-                MIGRATION_9_10
+                MIGRATION_9_10,
+                MIGRATION_11_12
             )
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()

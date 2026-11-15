@@ -26,7 +26,7 @@ import com.gmail.nthai.data.local.entity.ZaloSendingLogEntity
         ZaloRecipientEntity::class,
         ZaloSendingLogEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

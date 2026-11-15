@@ -8,6 +8,8 @@ data class SimConfigEntity(
     @PrimaryKey val simSlot: Int,
     val subscriptionId: Int,
     val dailyLimit: Int,
+    val minDelaySec: Int = 40,
+    val maxDelaySec: Int = 50,
     val sentCountToday: Int,
     val lastResetDate: String,
     val carrierName: String = ""

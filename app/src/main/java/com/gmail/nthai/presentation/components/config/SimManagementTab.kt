@@ -205,11 +205,11 @@ fun SimManagementTab(
                 SimSlotCard(
                     config = config,
                     hasPhonePermission = hasPhonePermission,
-                    onSaveLimit = { limit ->
-                        viewModel.updateSimLimit(config.simSlot, limit)
+                    onSaveConfig = { limit, minDelay, maxDelay ->
+                        viewModel.updateSimConfig(config.simSlot, limit, minDelay, maxDelay)
                         Toast.makeText(
                             context,
-                            "Đã cập nhật hạn mức SIM ${config.simSlot}",
+                            "Đã cập nhật cấu hình SIM ${config.simSlot}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -245,7 +245,7 @@ fun SimManagementTab(
 fun SimSlotCard(
     config: SimConfig,
     hasPhonePermission: Boolean,
-    onSaveLimit: (Int) -> Unit,
+    onSaveConfig: (limit: Int, minDelay: Int, maxDelay: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val carrierLabel = when {
@@ -316,7 +316,7 @@ fun SimSlotCard(
         }
 
         Text(
-            "ĐIỀU CHỈNH HẠN MỨC",
+            "ĐIỀU CHỈNH HẠN MỨC & KHOẢNG NGHỈ",
             style = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold
@@ -325,8 +325,20 @@ fun SimSlotCard(
         )
         Spacer(modifier = Modifier.height(4.dp))
         var limitText by remember(config.dailyLimit) { mutableStateOf(config.dailyLimit.toString()) }
+        var minDelayText by remember(config.minDelaySec) { mutableStateOf(config.minDelaySec.toString()) }
+        var maxDelayText by remember(config.maxDelaySec) { mutableStateOf(config.maxDelaySec.toString()) }
+
         val parsedLimit = limitText.toIntOrNull()
+        val parsedMinDelay = minDelayText.toIntOrNull()
+        val parsedMaxDelay = maxDelayText.toIntOrNull()
+
         val isLimitValid = parsedLimit != null && parsedLimit > 0
+        val isMinDelayValid = parsedMinDelay != null && parsedMinDelay >= 0
+        val isMaxDelayValid = parsedMaxDelay != null && parsedMinDelay != null && parsedMaxDelay >= parsedMinDelay
+        val isFormValid = isLimitValid && isMinDelayValid && isMaxDelayValid
+        val hasChanges = parsedLimit != config.dailyLimit ||
+                parsedMinDelay != config.minDelaySec ||
+                parsedMaxDelay != config.maxDelaySec
 
         OutlinedTextField(
             value = limitText,
@@ -354,6 +366,64 @@ fun SimSlotCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            OutlinedTextField(
+                value = minDelayText,
+                onValueChange = { minDelayText = it.filter(Char::isDigit) },
+                label = { Text("Trễ tối thiểu (giây)", fontSize = 12.sp) },
+                isError = !isMinDelayValid,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                shape = RoundedCornerShape(9999.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFFFFFFF),
+                    unfocusedContainerColor = Color(0xFFFFFFFF),
+                    focusedBorderColor = Color(0xFF171717),
+                    unfocusedBorderColor = Color(0xFFEBEBEB)
+                )
+            )
+
+            OutlinedTextField(
+                value = maxDelayText,
+                onValueChange = { maxDelayText = it.filter(Char::isDigit) },
+                label = { Text("Trễ tối đa (giây)", fontSize = 12.sp) },
+                isError = !isMaxDelayValid,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                shape = RoundedCornerShape(9999.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFFFFFFFF),
+                    unfocusedContainerColor = Color(0xFFFFFFFF),
+                    focusedBorderColor = Color(0xFF171717),
+                    unfocusedBorderColor = Color(0xFFEBEBEB)
+                )
+            )
+        }
+
+        if (!isMinDelayValid || !isMaxDelayValid) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = if (!isMinDelayValid) "Thời gian trễ tối thiểu phải ≥ 0."
+                else "Trễ tối đa phải lớn hơn hoặc bằng trễ tối thiểu.",
+                color = Color(0xFFEE0000),
+                style = MaterialTheme.typography.bodySmall
+            )
+        } else {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "SIM ${config.simSlot} nghỉ ngẫu nhiên từ ${parsedMinDelay}s đến ${parsedMaxDelay}s giữa các tin.",
+                color = Color(0xFF666666),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             if (config.carrierName.isNotBlank() && parsedLimit != defaultCarrierLimit) {
                 OutlinedButton(
                     onClick = { limitText = defaultCarrierLimit.toString() },
@@ -369,9 +439,11 @@ fun SimSlotCard(
             }
             Button(
                 onClick = {
-                    parsedLimit?.let { limit -> onSaveLimit(limit) }
+                    if (parsedLimit != null && parsedMinDelay != null && parsedMaxDelay != null) {
+                        onSaveConfig(parsedLimit, parsedMinDelay, parsedMaxDelay)
+                    }
                 },
-                enabled = isLimitValid && parsedLimit != config.dailyLimit,
+                enabled = isFormValid && hasChanges,
                 modifier = Modifier
                     .weight(1f)
                     .height(40.dp),
@@ -385,7 +457,7 @@ fun SimSlotCard(
             ) {
                 Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(15.dp))
                 Spacer(modifier = Modifier.padding(3.dp))
-                Text("Lưu hạn mức", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text("Lưu cấu hình SIM", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }

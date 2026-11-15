@@ -69,12 +69,16 @@ class ConfigViewModel @Inject constructor(
                 }
                 val sentToday = if (isSimSwapped) 0 else (saved?.sentCountToday ?: 0)
                 val lastReset = if (isSimSwapped) "" else (saved?.lastResetDate ?: "")
+                val minDelay = saved?.minDelaySec ?: 40
+                val maxDelay = saved?.maxDelaySec ?: 50
 
                 val config = SimConfig(
                     subscriptionId = targetSubId,
                     simSlot = slot,
                     carrierName = carrier,
                     dailyLimit = targetLimit,
+                    minDelaySec = minDelay,
+                    maxDelaySec = maxDelay,
                     sentCountToday = sentToday,
                     lastResetDate = lastReset
                 )
@@ -89,14 +93,25 @@ class ConfigViewModel @Inject constructor(
         }
     }
 
-    fun updateSimLimit(simSlot: Int, limit: Int) {
+    fun updateSimConfig(simSlot: Int, limit: Int, minDelay: Int, maxDelay: Int) {
         viewModelScope.launch {
             val current = _simConfigs.value.find { it.simSlot == simSlot }
                 ?: SimConfig(subscriptionId = -1, simSlot = simSlot)
-            val updated = current.copy(dailyLimit = limit)
+            val updated = current.copy(
+                dailyLimit = limit,
+                minDelaySec = minDelay,
+                maxDelaySec = maxDelay
+            )
             simConfigRepository.saveSimConfig(updated)
             loadSims()
         }
+    }
+
+    fun updateSimLimit(simSlot: Int, limit: Int) {
+        val current = _simConfigs.value.find { it.simSlot == simSlot }
+        val minDelay = current?.minDelaySec ?: 40
+        val maxDelay = current?.maxDelaySec ?: 50
+        updateSimConfig(simSlot, limit, minDelay, maxDelay)
     }
 
     fun updateRule(
