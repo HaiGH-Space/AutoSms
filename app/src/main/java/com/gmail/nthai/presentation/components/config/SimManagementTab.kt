@@ -123,7 +123,6 @@ fun SimManagementTab(
             Text(
                 text = "HẠN MỨC & TRẠNG THÁI SIM",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 ),
@@ -133,7 +132,7 @@ fun SimManagementTab(
             // System Permission Card
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = Color(0xFFFFFFFF),
                 border = BorderStroke(1.dp, if (hasPhonePermission && hasSmsPermission) Color(0xFFEBEBEB) else Color(0xFFF7D4D6))
             ) {
@@ -159,7 +158,7 @@ fun SimManagementTab(
                     }
                     Text(
                         "Đọc SIM: ${if (hasPhonePermission) "Đã cấp" else "Chưa cấp"}  ·  Gửi SMS: ${if (hasSmsPermission) "Đã cấp" else "Chưa cấp"}",
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF666666)
                     )
 
@@ -175,7 +174,7 @@ fun SimManagementTab(
                                 onClick = {
                                     permissionsLauncher.launch(PermissionUtils.getRequiredPermissions())
                                 },
-                                shape = RoundedCornerShape(6.dp),
+                                shape = RoundedCornerShape(9999.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF171717),
                                     contentColor = Color(0xFFFFFFFF)
@@ -268,14 +267,13 @@ fun SimSlotCard(
                 }
                 Surface(
                     color = Color(0xFFF5F5F5),
-                    shape = RoundedCornerShape(4.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     border = BorderStroke(1.dp, Color(0xFFEBEBEB))
                 ) {
                     Text(
                         text = carrierLabel,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp
                         ),
                         fontWeight = FontWeight.Medium,
@@ -296,9 +294,7 @@ fun SimSlotCard(
                 Text("Hạn mức hôm nay", style = MaterialTheme.typography.labelSmall, color = Color(0xFF888888))
                 Text(
                     "${config.sentCountToday} / ${config.dailyLimit} tin",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontFamily = FontFamily.Monospace
-                    ),
+                    style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF171717)
                 )
@@ -309,7 +305,7 @@ fun SimSlotCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
+                    .clip(RoundedCornerShape(9999.dp)),
                 color = if (progress >= 1f) Color(0xFFEE0000) else Color(0xFF171717),
                 trackColor = Color(0xFFEBEBEB)
             )
@@ -325,7 +321,6 @@ fun SimSlotCard(
             Text(
                 "ĐIỀU CHỈNH HẠN MỨC",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontFamily = FontFamily.Monospace,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
                 ),
@@ -347,7 +342,7 @@ fun SimSlotCard(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(6.dp),
+                shape = RoundedCornerShape(9999.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFFFFFFFF),
                     unfocusedContainerColor = Color(0xFFFFFFFF),
@@ -366,7 +361,7 @@ fun SimSlotCard(
                     OutlinedButton(
                         onClick = { limitText = defaultCarrierLimit.toString() },
                         modifier = Modifier.weight(1f).height(40.dp),
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(9999.dp),
                         border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
                     ) {
@@ -379,7 +374,7 @@ fun SimSlotCard(
                     },
                     enabled = isLimitValid && parsedLimit != config.dailyLimit,
                     modifier = Modifier.weight(1f).height(40.dp),
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF171717),
                         contentColor = Color(0xFFFFFFFF),

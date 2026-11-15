@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,7 +43,7 @@ fun LogRecordCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = Color(0xFFFFFFFF),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, Color(0xFFEBEBEB))
     ) {
         Column(
@@ -70,9 +69,7 @@ fun LogRecordCard(
                         text = log.customerName.firstOrNull()?.uppercase() ?: "?",
                         color = Color(0xFF171717),
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontFamily = FontFamily.Monospace
-                        )
+                        style = MaterialTheme.typography.labelMedium
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
@@ -87,7 +84,6 @@ fun LogRecordCard(
                     Text(
                         text = log.phone,
                         style = MaterialTheme.typography.bodySmall.copy(
-                            fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp
                         ),
                         color = Color(0xFF888888)
@@ -99,7 +95,6 @@ fun LogRecordCard(
                     Text(
                         text = DateTimeUtils.formatDateTime(log.timestamp),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
                             fontSize = 10.sp
                         ),
                         color = Color(0xFF888888)
@@ -133,7 +128,6 @@ fun LogRecordCard(
                     Text(
                         text = "SIM ${log.simSlot}",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp
                         ),
                         color = Color(0xFF888888)
@@ -146,9 +140,9 @@ fun LogRecordCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFFAFAFA))
-                        .border(1.dp, Color(0xFFF7D4D6), RoundedCornerShape(4.dp))
+                        .border(1.dp, Color(0xFFF7D4D6), RoundedCornerShape(12.dp))
                         .padding(horizontal = 10.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)

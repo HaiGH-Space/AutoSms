@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,10 +48,10 @@ fun StatusBadge(
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(9999.dp))
             .background(Color(0xFFFAFAFA))
-            .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(4.dp))
-            .padding(horizontal = 7.dp, vertical = 3.dp),
+            .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(9999.dp))
+            .padding(horizontal = 9.dp, vertical = 3.dp),
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -64,7 +63,6 @@ fun StatusBadge(
         Text(
             text = statusStyle.label,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             ),

@@ -181,7 +181,7 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(8.dp),
                             color = Color(0xFF171717),
                             modifier = Modifier.size(32.dp)
                         ) {
@@ -204,7 +204,6 @@ fun HomeScreen(
                             Text(
                                 "SMS Automation Platform",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
                                     fontSize = 11.sp
                                 ),
                                 color = Color(0xFF888888)
@@ -217,10 +216,10 @@ fun HomeScreen(
                         Row(
                             modifier = Modifier
                                 .padding(end = 12.dp)
-                                .clip(RoundedCornerShape(4.dp))
+                                .clip(RoundedCornerShape(9999.dp))
                                 .background(Color(0xFFFAFAFA))
-                                .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(9999.dp))
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
@@ -232,7 +231,6 @@ fun HomeScreen(
                             Text(
                                 "ĐANG GỬI",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 ),
@@ -268,7 +266,6 @@ fun HomeScreen(
             Text(
                 text = "TRẠNG THÁI SIM",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 ),
@@ -300,7 +297,6 @@ fun HomeScreen(
             Text(
                 text = "QUY TRÌNH THỰC HIỆN",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 ),
@@ -309,7 +305,7 @@ fun HomeScreen(
 
             // Step 1: Customer & Excel
             WorkflowStepCard(
-                stepTag = "[01]",
+                stepTag = "01",
                 title = "Nhập danh sách khách hàng",
                 description = "Nạp file Excel (.xlsx, .xls) hoặc quản lý liên hệ và phân bổ SIM.",
                 primaryButtonText = "Nhập Excel",
@@ -322,7 +318,7 @@ fun HomeScreen(
                     OutlinedButton(
                         onClick = { showResetDialog = true },
                         enabled = !isSending,
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(9999.dp),
                         border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF888888)),
                         modifier = Modifier.fillMaxWidth()
@@ -336,7 +332,7 @@ fun HomeScreen(
 
             // Step 2: Message Template
             WorkflowStepCard(
-                stepTag = "[02]",
+                stepTag = "02",
                 title = "Soạn thảo mẫu tin & Spintax",
                 description = "Cá nhân hóa nội dung với các biến {Tên_KH}, {Số_tiền} và trộn văn bản chống chặn.",
                 primaryButtonText = "Quản lý mẫu tin",
@@ -345,7 +341,7 @@ fun HomeScreen(
 
             // Step 3: Sending & Progress
             WorkflowStepCard(
-                stepTag = "[03]",
+                stepTag = "03",
                 title = "Khởi chạy & Giám sát tiến độ",
                 description = "Bắt đầu gửi tin tự động theo hạn mức và độ trễ ngẫu nhiên an toàn.",
                 primaryButtonText = "Mở trung tâm gửi tin",
@@ -444,7 +440,7 @@ private fun MetricTile(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         color = Color(0xFFFFFFFF),
         border = BorderStroke(1.dp, Color(0xFFEBEBEB))
     ) {
@@ -455,7 +451,6 @@ private fun MetricTile(
             Text(
                 text = eyebrow,
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontFamily = FontFamily.Monospace,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Medium
                 ),
@@ -463,9 +458,7 @@ private fun MetricTile(
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontFamily = FontFamily.Monospace
-                ),
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF171717)
             )
@@ -491,7 +484,7 @@ private fun ModernSimCard(
     Surface(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         color = Color(0xFFFFFFFF),
         border = BorderStroke(1.dp, Color(0xFFEBEBEB))
     ) {
@@ -507,19 +500,18 @@ private fun ModernSimCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(4.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     color = Color(0xFFF5F5F5),
                     border = BorderStroke(1.dp, Color(0xFFEBEBEB))
                 ) {
                     Text(
                         text = "SIM $simSlot",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         ),
                         color = Color(0xFF171717),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
 
@@ -541,7 +533,6 @@ private fun ModernSimCard(
                 Text(
                     text = "$assignedCount liên hệ · $readyCount chờ",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp
                     ),
                     color = Color(0xFF888888)
@@ -561,9 +552,7 @@ private fun ModernSimCard(
                         )
                         Text(
                             text = "$sentToday/$dailyLimit",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace
-                            ),
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF171717)
                         )
@@ -573,7 +562,7 @@ private fun ModernSimCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
+                            .clip(RoundedCornerShape(9999.dp)),
                         color = if (quotaProgress >= 0.9f) Color(0xFFEE0000) else Color(0xFF171717),
                         trackColor = Color(0xFFEBEBEB)
                     )
@@ -597,7 +586,7 @@ private fun WorkflowStepCard(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         color = Color(0xFFFFFFFF),
         border = BorderStroke(1.dp, if (highlight) Color(0xFF171717) else Color(0xFFEBEBEB))
     ) {
@@ -615,7 +604,6 @@ private fun WorkflowStepCard(
                 Text(
                     text = stepTag,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     ),
                     color = Color(0xFF171717)
@@ -645,7 +633,7 @@ private fun WorkflowStepCard(
                 Button(
                     onClick = onPrimaryClick,
                     modifier = Modifier.weight(1f).height(40.dp),
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF171717),
                         contentColor = Color(0xFFFFFFFF)
@@ -663,7 +651,7 @@ private fun WorkflowStepCard(
                     OutlinedButton(
                         onClick = onSecondaryClick,
                         modifier = Modifier.weight(1f).height(40.dp),
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(9999.dp),
                         border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = Color(0xFF171717)

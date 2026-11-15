@@ -1,7 +1,7 @@
 ---
 version: alpha
-name: Vercel-Inspired-design-analysis
-description: An inspired interpretation of Vercel's design language — a developer-platform brand whose surface is a stark black-and-ink duet on near-white canvas, broken at hero scale by a multi-color mesh gradient (cyan / blue / magenta / amber) that acts as the entire decorative system, paired with a custom geometric sans for headlines and a monospaced caption face for technical labels.
+name: AutoSms-Consumer-Design-Spec
+description: An adapted interpretation of Vercel's design language for consumer-friendly end-user tools (AutoSms). Combines a stark black-and-ink duet on near-white canvas with soft rounded corner geometry, default sans-serif typography across all UI text, pill-shaped buttons and badges, and clean non-technical formatting.
 
 colors:
   primary: "#171717"
@@ -122,11 +122,11 @@ typography:
 
 rounded:
   none: 0px
-  xs: 4px
-  sm: 6px
-  md: 8px
-  lg: 12px
-  xl: 16px
+  xs: 8px
+  sm: 12px
+  md: 16px
+  lg: 20px
+  xl: 24px
   pill-sm: 64px
   pill: 100px
   full: 9999px
@@ -161,14 +161,14 @@ components:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.on-primary}"
     typography: "{typography.body-sm-strong}"
-    rounded: "{rounded.sm}"
+    rounded: "{rounded.full}"
     padding: "0px {spacing.xs}"
     height: 28px
   nav-cta-login:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
     typography: "{typography.body-sm-strong}"
-    rounded: "{rounded.sm}"
+    rounded: "{rounded.full}"
     padding: "0px {spacing.xs}"
     height: 28px
   nav-cta-ask-ai:
@@ -176,7 +176,7 @@ components:
     textColor: "{colors.ink}"
     borderColor: "{colors.hairline}"
     typography: "{typography.body-sm-strong}"
-    rounded: "{rounded.sm}"
+    rounded: "{rounded.full}"
     padding: "0px {spacing.xs}"
     height: 28px
   button-primary:
@@ -249,7 +249,7 @@ components:
     textColor: "{colors.ink}"
     borderColor: "{colors.hairline}"
     typography: "{typography.body-sm}"
-    rounded: "{rounded.sm}"
+    rounded: "{rounded.full}"
     padding: "0px {spacing.sm}"
     height: 40px
   form-input-sm:
@@ -257,7 +257,7 @@ components:
     textColor: "{colors.ink}"
     borderColor: "{colors.hairline}"
     typography: "{typography.body-sm}"
-    rounded: "{rounded.sm}"
+    rounded: "{rounded.full}"
     padding: "0px {spacing.sm}"
     height: 32px
   form-input-lg:
@@ -265,7 +265,7 @@ components:
     textColor: "{colors.ink}"
     borderColor: "{colors.hairline}"
     typography: "{typography.body-md}"
-    rounded: "{rounded.sm}"
+    rounded: "{rounded.full}"
     padding: "0px {spacing.sm}"
     height: 48px
   badge-secondary:
@@ -399,9 +399,9 @@ Type is the second decisive voice. The brand's own custom geometric sans (Geist)
 Surfaces use a four-step ladder: `{colors.canvas}` (pure white for cards), `{colors.canvas-soft}` 98% (the page body), `{colors.canvas-soft-2}` 95% (occasional inset region), `{colors.primary}` (the deep ink-near-black used as the polarity-flipped band when a section needs the dark mode treatment). Shadows are exceptionally subtle — every elevated card carries a stacked shadow built from `0px 1px 1px #00000005` + `0px 2px 2px #0000000a` + an inset border. Cards never float on heavy drop-shadow; they sit on the page held by hairline + soft glow.
 
 **Key Characteristics:**
-- A single black-ink primary CTA `{colors.primary}` carries every conversion target, paired with white-on-white `button-secondary` for the secondary action. The brand uses 100 px pill shape for marketing CTAs and a tight 6 px square shape for in-app nav buttons.
-- A multi-stop mesh gradient (cyan-blue-magenta-amber) is the only decorative chrome — used at hero scale and inside feature-band atmospheric backdrops. It is the brand.
-- Every section eyebrow and small label uses the monospace face `{typography.caption-mono}` or `{typography.code}`; everything else is in the geometric sans.
+- A single black-ink primary CTA `{colors.primary}` carries every conversion target, paired with white-on-white `button-secondary` for the secondary action. All buttons, search bars, segmented tabs, chips, and status badges use pill/capsule shapes (`100px` / `9999px`).
+- Soft rounded corner hierarchy: Cards, metric tiles, and workflow cards use `16px` (`{rounded.md}`) to `20px` (`{rounded.lg}`) corners; floating modal dialogs use `20px` to `24px` (`{rounded.xl}`) corners.
+- Default sans-serif typography (`MaterialTheme.typography` / Geist / Inter / System) is used across all UI elements, status tags, step numbers, and counts. Forced monospace fonts and technical bracket notation `[]` are eliminated for a friendly, consumer-ready interface.
 - Subtle stacked-shadow elevation — three offsets layered with 4-12 % black opacity — never a single heavy drop-shadow.
 - A complete 100–1000 gray + blue + red + amber + green + teal + purple + pink colour scale exists as a system token set, but the marketing surface uses only the `100`, `1000`, and `700`-level tones; the rest stay in the design-system tokens for in-product surfaces.
 - An "Active CPU" pricing rhythm: `pricing-card` lays out 3-up on the pricing page with `pricing-card-featured` (Pro tier) polarity-flipped to `{colors.primary}` against white-card siblings.
@@ -477,8 +477,8 @@ A condensed display sans (`Space Grotesk`) is loaded as a third face for occasio
 
 ### Principles
 - **Negative tracking is part of the voice.** Display sizes use aggressive `-2.4` to `-0.6` px tracking. Reverting to default tracking breaks the brand.
-- **Sentence-case headlines, period-terminated.** Headlines like "Build and deploy on the AI Cloud." end with a deliberate period — that punctuation is part of the brand's voice.
-- **Mono for the technical layer only.** Section eyebrows, code blocks, terminal mockups. Body paragraphs never set in mono.
+- **Sentence-case headlines, period-terminated.** Headlines end with a deliberate period when applicable — that punctuation is part of the brand's voice.
+- **Sans-serif across all UI labels; Mono for code blocks only.** All section eyebrows, status badges, step tags, and UI labels use standard geometric sans-serif typography. Code blocks and terminal mockups retain monospaced styling.
 - **Weight 600 is the display ceiling.** The geometric sans never appears at 700 / 800. The brand reads as a calmer system because of this.
 
 ### Note on Font Substitutes
@@ -560,14 +560,13 @@ The brand uses STACKED shadows — multiple small offsets layered to fake natura
 | Token | Value | Use |
 |---|---|---|
 | `{rounded.none}` | 0px | Full-bleed hero / footer bands. |
-| `{rounded.xs}` | 4px | Tightest inline pill — the `nav-cta-signup` 6-px-radius button (mapped to `xs/sm`). |
-| `{rounded.sm}` | 6px | The brand's `--geist-radius` token — base UI radius for in-app buttons, form inputs, dropdown menus. |
-| `{rounded.md}` | 8px | The brand's `--geist-marketing-radius` token — feature cards, template cards. |
-| `{rounded.lg}` | 12px | Slightly larger card chrome (pricing-card variants). |
-| `{rounded.xl}` | 16px | Largest card chrome — when a card hosts a hero image cap. |
-| `{rounded.pill-sm}` | 64px | Tab-ghost pills inside the "AI Apps / Web Apps / Ecommerce / Marketing / Platforms" row. |
-| `{rounded.pill}` | 100px | The marketing CTA pill — `button-primary`, `button-secondary`, "Start Deploying" pill. |
-| `{rounded.full}` | 9999px | Icon-button circular containers, nav-link ghost pills. |
+| `{rounded.xs}` | 8px | Tightest rounded containers (e.g. icon boxes, sub-badges). |
+| `{rounded.sm}` | 12px | Inner card containers, status boxes, item rows. |
+| `{rounded.md}` | 16px | Feature cards, metric tiles, workflow step cards, progress cards. |
+| `{rounded.lg}` | 20px | Floating modal dialogs, large callout panels. |
+| `{rounded.xl}` | 24px | Extra-large theme surface containers and sheets. |
+| `{rounded.pill-sm}` | 64px | Tab-ghost pills inside secondary navigation. |
+| `{rounded.pill}` / `{rounded.full}` | 9999px | Primary/secondary buttons, search bars, segmented tabs, status badges, chips. |
 
 ### Photography Geometry
 - **Mesh gradient**: full-bleed 2-D atmospheric backdrop, never cropped to a frame; treated as the page's wallpaper.
@@ -715,25 +714,23 @@ The brand uses STACKED shadows — multiple small offsets layered to fake natura
 - Properties: `backgroundColor`, `rounded`, `padding`, `typography`
 
 
-## Do's and Don'ts
+### Do's and Don'ts
 
 ### Do
 - Reserve `{colors.primary}` (`#171717`) for primary CTAs across the page. Black ink IS the conversion target.
-- Use `{rounded.pill}` 100 px for every marketing-scale CTA and `{rounded.sm}` 6 px for nav-scale buttons. The two pill scales coexist deliberately.
-- Set every headline in `{typography.display-*}` weight 600, sentence-case, often period-terminated. Aggressive negative tracking is part of the voice.
-- Use the brand mesh gradient as atmospheric decoration at hero scale only — never miniaturise it to an icon, never reduce to a single colour.
-- Layer stacked shadows (multiple small offsets with inset hairline) rather than single heavy drops. The brand's elevation is calmer than Material.
+- Use `{rounded.pill}` / `{rounded.full}` (9999px) for all buttons, text inputs, search fields, segmented tab switchers, and status badges.
+- Use soft rounded corners (`16px`–`20px`) for cards and (`20px`–`24px`) for floating dialog modals.
+- Set UI text, step indicators, and status tags in default sans-serif typography (`MaterialTheme.typography`).
+- Layer stacked shadows (multiple small offsets with inset hairline) rather than single heavy drops.
 - Cycle page surfaces in `{colors.canvas-soft}` → `{colors.canvas}` → `{colors.primary}` polarity-flipped bands; the dark band IS the depth cue.
-- Set every code block and technical eyebrow in `{typography.code}` / `{typography.caption-mono}`. Mono is the voice of the platform.
 
 ### Don't
-- Don't introduce a sixth accent colour. The brand operates with ink + gray + the four-pair gradient palette; new accents flatten the voice.
+- Don't use sharp corners (4px/6px) or square borders on buttons, chips, text inputs, or status badges.
+- Don't force Monospace fonts or code-like bracket notation `[]` on end-user UI labels, step tags, or status badges.
+- Don't use full pill shapes (`9999px`) on full floating modal dialog windows (modal dialogs use `20px`–`24px` rounded containers).
+- Don't introduce a sixth accent colour. The brand operates with ink + gray + the four-pair gradient palette.
 - Don't render headlines in all-caps. Sentence-case + negative tracking is non-negotiable.
-- Don't drop a single heavy drop-shadow on cards. The brand's elevation is built from stacked small offsets + inset hairline rings.
-- Don't render the brand gradient at icon scale or in a single-colour reduced form. The gradient lives at hero scale only.
 - Don't promote the geometric sans to weight 700. The brand's display ceiling is 600.
-- Don't pair the marketing 100-px pill CTA shape with the 6-px nav radius on the same screen — pick a scale and stay there.
-- Don't set body paragraphs in the mono face. The mono is for code + technical labels only.
 
 
 ---

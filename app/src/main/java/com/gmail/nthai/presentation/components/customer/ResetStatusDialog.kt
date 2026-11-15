@@ -1,6 +1,7 @@
 package com.gmail.nthai.presentation.components.customer
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,6 +41,8 @@ fun ResetStatusDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Text(
                 "Đặt lại trạng thái gửi tin",
@@ -68,6 +71,7 @@ fun ResetStatusDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { selectedScope = scope },
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.surfaceVariant
@@ -110,8 +114,11 @@ fun ResetStatusDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(selectedScope) }) {
-                Text("Xác nhận đặt lại")
+            Button(
+                onClick = { onConfirm(selectedScope) },
+                shape = RoundedCornerShape(9999.dp)
+            ) {
+                Text("Xác nhận đặt lại", fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {

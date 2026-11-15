@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -60,7 +59,7 @@ fun CustomerItemCard(
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
         color = cardBackground,
         border = BorderStroke(if (customer.isSelected) 1.5.dp else 1.dp, borderColor)
     ) {
@@ -132,7 +131,6 @@ fun CustomerItemCard(
                         Text(
                             text = customer.phone,
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                fontFamily = FontFamily.Monospace,
                                 fontSize = 13.sp
                             ),
                             fontWeight = FontWeight.Medium,
@@ -165,7 +163,7 @@ fun CustomerDetailDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFFFFFFFF),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -182,7 +180,7 @@ fun CustomerDetailDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                CustomerDetailRow("Số điện thoại", customer.phone, isMono = true)
+                CustomerDetailRow("Số điện thoại", customer.phone)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -234,15 +232,14 @@ fun CarrierEstimateBadge(phone: String) {
 
     Surface(
         color = Color(0xFFF5F5F5),
-        shape = RoundedCornerShape(4.dp),
+        shape = RoundedCornerShape(9999.dp),
         border = BorderStroke(1.dp, Color(0xFFEBEBEB))
     ) {
         Text(
             text = carrierName,
             color = Color(0xFF171717),
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
             style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp
             ),
             fontWeight = FontWeight.Medium
@@ -251,7 +248,7 @@ fun CarrierEstimateBadge(phone: String) {
 }
 
 @Composable
-private fun CustomerDetailRow(label: String, value: String, isMono: Boolean = false) {
+private fun CustomerDetailRow(label: String, value: String) {
     Column {
         Text(
             text = label,
@@ -260,8 +257,7 @@ private fun CustomerDetailRow(label: String, value: String, isMono: Boolean = fa
         )
         Text(
             text = value,
-            style = if (isMono) MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)
-                    else MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF171717)
         )
@@ -278,10 +274,10 @@ fun StatusBadge(status: CustomerStatus) {
 
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(9999.dp))
             .background(Color(0xFFFAFAFA))
-            .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(4.dp))
-            .padding(horizontal = 6.dp, vertical = 2.dp),
+            .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(9999.dp))
+            .padding(horizontal = 8.dp, vertical = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -294,7 +290,6 @@ fun StatusBadge(status: CustomerStatus) {
             text = text,
             color = Color(0xFF171717),
             style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             )

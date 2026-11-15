@@ -151,7 +151,6 @@ fun CustomerListScreen(
                             Text(
                                 if (simCarrierName != null) "SIM $selectedSimSlot · $simCarrierName" else "SIM $selectedSimSlot",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
                                     fontSize = 11.sp
                                 ),
                                 color = Color(0xFF888888)
@@ -203,7 +202,6 @@ fun CustomerListScreen(
                             Text(
                                 text = "ĐÃ CHỌN GỬI",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium
                                 ),
@@ -211,16 +209,14 @@ fun CustomerListScreen(
                             )
                             Text(
                                 text = "$selectedCustomerCount liên hệ (SIM $selectedSimSlot)",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    fontFamily = FontFamily.Monospace
-                                ),
+                                style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF171717)
                             )
                         }
                         Button(
                             onClick = { onStartSending?.invoke() },
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(9999.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF171717),
                                 contentColor = Color(0xFFFFFFFF)
@@ -256,8 +252,8 @@ fun CustomerListScreen(
                     )
                 },
                 modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(6.dp))
+                    .clip(RoundedCornerShape(9999.dp))
+                    .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(9999.dp))
             ) {
                 (1..2).forEach { slot ->
                     val config = simConfigs.find { it.simSlot == slot }
@@ -278,9 +274,7 @@ fun CustomerListScreen(
                                 )
                                 Text(
                                     label,
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontFamily = FontFamily.Monospace
-                                    ),
+                                    style = MaterialTheme.typography.labelMedium,
                                     fontWeight = if (selectedSimSlot == slot) FontWeight.Bold else FontWeight.Normal,
                                     color = if (selectedSimSlot == slot) Color(0xFF171717) else Color(0xFF888888)
                                 )
@@ -305,7 +299,7 @@ fun CustomerListScreen(
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(6.dp),
+                shape = RoundedCornerShape(9999.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFFFFFFFF),
                     unfocusedContainerColor = Color(0xFFFFFFFF),
@@ -391,14 +385,13 @@ fun CustomerListScreen(
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(4.dp),
+                        shape = RoundedCornerShape(9999.dp),
                         color = Color(0xFFFFFFFF),
                         border = BorderStroke(1.dp, Color(0xFFEBEBEB))
                     ) {
                         Text(
                             text = "Đã chọn: $selectedCustomerCount / ${customers.size}",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
                             ),
@@ -419,7 +412,7 @@ fun CustomerListScreen(
                 ) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(0.9f),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(16.dp),
                         color = Color(0xFFFFFFFF),
                         border = BorderStroke(1.dp, Color(0xFFEBEBEB))
                     ) {
@@ -433,7 +426,6 @@ fun CustomerListScreen(
                             Text(
                                 text = "CHƯA CÓ LIÊN HỆ",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
                                     fontWeight = FontWeight.Bold
                                 ),
                                 color = Color(0xFF888888)
@@ -449,7 +441,7 @@ fun CustomerListScreen(
                                 onClick = {
                                     filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                                 },
-                                shape = RoundedCornerShape(6.dp),
+                                shape = RoundedCornerShape(9999.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color(0xFF171717),
                                     contentColor = Color(0xFFFFFFFF)

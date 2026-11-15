@@ -47,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -215,7 +214,6 @@ fun SimSendingProgressCard(
                     Text(
                         text = "${(progress * 100).toInt()}%",
                         style = MaterialTheme.typography.labelMedium.copy(
-                            fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold
                         ),
                         color = Color(0xFF171717)
@@ -249,7 +247,7 @@ fun SimSendingProgressCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp)),
+                    .clip(RoundedCornerShape(9999.dp)),
                 color = Color(0xFF171717),
                 trackColor = Color(0xFFEBEBEB)
             )
@@ -257,7 +255,7 @@ fun SimSendingProgressCard(
             // Current Sending Detail / Countdown
             if (state is SendingServiceState.Running) {
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = Color(0xFFFAFAFA),
                     border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
                     modifier = Modifier.fillMaxWidth()
@@ -283,7 +281,6 @@ fun SimSendingProgressCard(
                             Text(
                                 text = "⏱ Giãn cách: tin tiếp theo sau ${seconds}s",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontFamily = FontFamily.Monospace,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium
                                 ),
@@ -406,16 +403,13 @@ private fun ProgressStatBox(
     ) {
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontFamily = FontFamily.Monospace
-            ),
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = color
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp
             ),
             color = Color(0xFF888888)
@@ -442,10 +436,10 @@ private fun SendingStatusBadge(
 
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(9999.dp))
             .background(Color(0xFFFAFAFA))
-            .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(4.dp))
-            .padding(horizontal = 7.dp, vertical = 3.dp),
+            .border(1.dp, Color(0xFFEBEBEB), RoundedCornerShape(9999.dp))
+            .padding(horizontal = 9.dp, vertical = 3.dp),
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -459,7 +453,6 @@ private fun SendingStatusBadge(
             text = text,
             color = Color(0xFF171717),
             style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             ),

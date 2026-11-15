@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,7 +79,7 @@ fun SendingProgressScreen(
         AlertDialog(
             onDismissRequest = { showPermissionSettingsDialog = false },
             containerColor = Color(0xFFFFFFFF),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             title = { Text("Cần cấp quyền gửi SMS", fontWeight = FontWeight.Bold, color = Color(0xFF171717)) },
             text = {
                 Text(
@@ -148,7 +147,7 @@ fun SendingProgressScreen(
             // Summary Card
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = Color(0xFFFFFFFF),
                 border = BorderStroke(1.dp, Color(0xFFEBEBEB))
             ) {
@@ -163,7 +162,6 @@ fun SendingProgressScreen(
                         Text(
                             "ĐIỀU PHỐI SMS",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             ),
@@ -179,16 +177,13 @@ fun SendingProgressScreen(
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             plannedCount.toString(),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontFamily = FontFamily.Monospace
-                            ),
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF171717)
                         )
                         Text(
                             "TIN CẦN GỬI",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = FontFamily.Monospace,
                                 fontSize = 10.sp
                             ),
                             color = Color(0xFF888888)
@@ -231,7 +226,6 @@ fun SendingProgressScreen(
                     Text(
                         text = "NHẬT KÝ GỬI GẦN NHẤT",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         ),
@@ -240,7 +234,6 @@ fun SendingProgressScreen(
                     Text(
                         text = "${recentLogs.size}/${logs.size} tin",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp
                         ),
                         color = Color(0xFF888888)
