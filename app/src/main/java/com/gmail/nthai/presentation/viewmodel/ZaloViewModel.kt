@@ -60,6 +60,7 @@ class ZaloViewModel @Inject constructor(
     val delayRange = MutableStateFlow(10f..25f)
     val autoAddFriend = MutableStateFlow(true)
     val sendOnlyIfUnsent = MutableStateFlow(true)
+    val isLowSpecDevice = MutableStateFlow(false)
 
     private val _isAccessibilityEnabled = MutableStateFlow(false)
     val isAccessibilityEnabled: StateFlow<Boolean> = _isAccessibilityEnabled.asStateFlow()
@@ -144,7 +145,8 @@ class ZaloViewModel @Inject constructor(
             delayMinSec = minDelay,
             delayMaxSec = maxDelay,
             autoAddFriend = autoAddFriend.value,
-            sendOnlyIfUnsent = sendOnlyIfUnsent.value
+            sendOnlyIfUnsent = sendOnlyIfUnsent.value,
+            isLowSpecDevice = isLowSpecDevice.value
         )
     }
 

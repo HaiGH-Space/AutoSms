@@ -54,7 +54,8 @@ class ZaloSendingEngine @Inject constructor(
         delayMinSec: Int,
         delayMaxSec: Int,
         autoAddFriend: Boolean,
-        sendOnlyIfUnsent: Boolean
+        sendOnlyIfUnsent: Boolean,
+        isLowSpecDevice: Boolean = false
     ) {
         if (_progressState.value.isSending) return
 
@@ -70,13 +71,15 @@ class ZaloSendingEngine @Inject constructor(
                 return@launch
             }
 
+            val timeoutMs = if (isLowSpecDevice) 18000L else 12000L
+
             _progressState.update {
                 it.copy(
                     isSending = true,
                     isPaused = false,
                     sentCount = 0,
                     totalCount = pendingRecipients.size,
-                    statusMessage = "Đang bắt đầu chiến dịch gửi Zalo..."
+                    statusMessage = "Đang bắt đầu chiến dịch gửi Zalo (Thời gian chờ max ${timeoutMs / 1000}s)..."
                 )
             }
 
@@ -105,7 +108,7 @@ class ZaloSendingEngine @Inject constructor(
                 val messageText = parseSpintaxUseCase(messageTemplate, dummyCustomer)
 
                 // 1. Prepare ZaloAccessibilityService
-                ZaloAccessibilityService.prepareAutoSend(messageText, autoAddFriend)
+                ZaloAccessibilityService.prepareAutoSend(messageText, autoAddFriend, isLowSpecDevice)
 
                 // 2. Launch Zalo Deep Link
                 val cleanPhone = recipient.phone.replace(Regex("[^0-9+]"), "")
@@ -121,17 +124,17 @@ class ZaloSendingEngine @Inject constructor(
                 }
 
                 // 3. Wait for send result from ZaloAccessibilityService or timeout
-                val sendResult = withTimeoutOrNull(6000L) {
+                val sendResult = withTimeoutOrNull(timeoutMs) {
                     ZaloAccessibilityService.sendEvents.firstOrNull()
                 }
 
                 val isSuccess = sendResult is ZaloAccessibilityService.SendResult.Success
-                val isNotFound = sendResult is ZaloAccessibilityService.SendResult.NotFound
                 val statusStr = if (isSuccess) "SENT_SUCCESS" else "FAILED"
-                val noteStr = when {
-                    isSuccess -> "Đã gửi qua Trợ năng Zalo"
-                    isNotFound -> "Số điện thoại chưa đăng ký Zalo hoặc không hợp lệ"
-                    else -> "Không thể tự động gửi Zalo"
+                val noteStr = when (sendResult) {
+                    is ZaloAccessibilityService.SendResult.Success -> "Đã gửi qua Trợ năng Zalo"
+                    is ZaloAccessibilityService.SendResult.NotFound -> sendResult.reason
+                    is ZaloAccessibilityService.SendResult.Error -> sendResult.reason
+                    null -> "Zalo phản hồi chậm hoặc không mở được (Timeout ${timeoutMs / 1000}s)"
                 }
 
                 zaloRepository.updateRecipientStatus(recipient.id, statusStr, noteStr)
@@ -146,6 +149,13 @@ class ZaloSendingEngine @Inject constructor(
                         errorMessage = if (!isSuccess) noteStr else null
                     )
                 )
+
+                // Give device time to recover before bringing MainActivity back to front
+                if (isLowSpecDevice) {
+                    delay(1000)
+                } else {
+                    delay(500)
+                }
 
                 // Always bring app back to front after processing recipient
                 try {

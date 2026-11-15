@@ -74,6 +74,7 @@ fun ZaloScreen(
     val delayRange by viewModel.delayRange.collectAsState()
     val autoAddFriend by viewModel.autoAddFriend.collectAsState()
     val sendOnlyIfUnsent by viewModel.sendOnlyIfUnsent.collectAsState()
+    val isLowSpecDevice by viewModel.isLowSpecDevice.collectAsState()
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -206,6 +207,8 @@ fun ZaloScreen(
                     onAutoAddFriendChange = { viewModel.autoAddFriend.value = it },
                     sendOnlyIfUnsent = sendOnlyIfUnsent,
                     onSendOnlyIfUnsentChange = { viewModel.sendOnlyIfUnsent.value = it },
+                    isLowSpecDevice = isLowSpecDevice,
+                    onIsLowSpecDeviceChange = { viewModel.isLowSpecDevice.value = it },
                     onStartSending = {
                         viewModel.startCampaign()
                         Toast.makeText(

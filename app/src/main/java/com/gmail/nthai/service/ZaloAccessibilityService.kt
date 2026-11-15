@@ -159,32 +159,71 @@ class ZaloAccessibilityService : AccessibilityService() {
                 Log.e(TAG, "Failed to paste via clipboard", e)
             }
 
-            Log.d(TAG, "Text set/pasted. Scheduling Send button click after 600ms...")
+            Log.d(TAG, "Text set/pasted. Initiating Send button click retry loop...")
 
-            // 3. Wait 300ms for Zalo UI to update and enable Send button, then click Send
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
-                {
-                    val latestRoot = rootInActiveWindow
-                    if (isPendingActionActive) {
-                        val sendClicked = latestRoot?.let { findAndClickSendButton(it) } ?: false
-                        Log.d(TAG, "Send button clicked result: $sendClicked")
-                        isPendingActionActive = false
-                        currentPendingMessage = null
-                        _sendEvents.tryEmit(SendResult.Success)
+            val maxRetries = if (currentIsLowSpecDevice) 6 else 4
+            val retryDelayMs = if (currentIsLowSpecDevice) 500L else 300L
+            val postSendDelayMs = if (currentIsLowSpecDevice) 1000L else 600L
 
-                        // Return to AutoSms by performing global back actions after message is sent
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
-                            {
-                                performTripleBack()
-                            },
-                            500,
-                        )
-                    }
-                    isActionInProgress = false
-                },
-                300,
+            attemptClickSendWithRetry(
+                retryCount = 1,
+                maxRetries = maxRetries,
+                retryDelayMs = retryDelayMs,
+                postSendDelayMs = postSendDelayMs
             )
         }
+    }
+
+    private fun attemptClickSendWithRetry(
+        retryCount: Int,
+        maxRetries: Int,
+        retryDelayMs: Long,
+        postSendDelayMs: Long
+    ) {
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+            {
+                if (!isPendingActionActive) {
+                    isActionInProgress = false
+                    return@postDelayed
+                }
+
+                val latestRoot = rootInActiveWindow
+                val sendClicked = latestRoot?.let { findAndClickSendButton(it) } ?: false
+                Log.d(TAG, "Send button click attempt #$retryCount result: $sendClicked")
+
+                if (sendClicked) {
+                    isPendingActionActive = false
+                    currentPendingMessage = null
+                    _sendEvents.tryEmit(SendResult.Success)
+
+                    // Return to AutoSms by performing global back actions after message is sent
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                        {
+                            performTripleBack()
+                            isActionInProgress = false
+                        },
+                        postSendDelayMs
+                    )
+                } else {
+                    if (retryCount < maxRetries) {
+                        Log.d(TAG, "Retrying send button click ($retryCount/$maxRetries)...")
+                        attemptClickSendWithRetry(
+                            retryCount = retryCount + 1,
+                            maxRetries = maxRetries,
+                            retryDelayMs = retryDelayMs,
+                            postSendDelayMs = postSendDelayMs
+                        )
+                    } else {
+                        Log.w(TAG, "Failed to find/click Send button after $maxRetries retries")
+                        isPendingActionActive = false
+                        currentPendingMessage = null
+                        _sendEvents.tryEmit(SendResult.Error("Không tìm thấy nút gửi trên Zalo"))
+                        isActionInProgress = false
+                    }
+                }
+            },
+            retryDelayMs
+        )
     }
 
     private fun findAndClickChatButton(rootNode: AccessibilityNodeInfo): Boolean {
@@ -477,6 +516,7 @@ class ZaloAccessibilityService : AccessibilityService() {
         private var isPendingActionActive = false
         private var currentPendingMessage: String? = null
         private var currentAutoAddFriend = false
+        private var currentIsLowSpecDevice = false
         private var isActionInProgress = false
 
         fun isAccessibilityEnabled(context: Context): Boolean {
@@ -511,9 +551,14 @@ class ZaloAccessibilityService : AccessibilityService() {
             return false
         }
 
-        fun prepareAutoSend(messageText: String, autoAddFriend: Boolean) {
+        fun prepareAutoSend(
+            messageText: String,
+            autoAddFriend: Boolean,
+            isLowSpecDevice: Boolean = false
+        ) {
             currentPendingMessage = messageText
             currentAutoAddFriend = autoAddFriend
+            currentIsLowSpecDevice = isLowSpecDevice
             isPendingActionActive = true
             isActionInProgress = false
         }

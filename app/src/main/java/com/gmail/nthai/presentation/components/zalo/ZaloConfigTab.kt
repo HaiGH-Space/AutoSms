@@ -61,6 +61,8 @@ fun ZaloConfigTab(
     onAutoAddFriendChange: (Boolean) -> Unit = {},
     sendOnlyIfUnsent: Boolean = true,
     onSendOnlyIfUnsentChange: (Boolean) -> Unit = {},
+    isLowSpecDevice: Boolean = false,
+    onIsLowSpecDeviceChange: (Boolean) -> Unit = {},
     onStartSending: () -> Unit = {},
     onNextToRecipients: () -> Unit = {},
     onImportExcel: () -> Unit = {},
@@ -305,6 +307,38 @@ fun ZaloConfigTab(
                     Switch(
                         checked = sendOnlyIfUnsent,
                         onCheckedChange = onSendOnlyIfUnsentChange,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color(0xFFFFFFFF),
+                            checkedTrackColor = Color(0xFF171717),
+                            uncheckedThumbColor = Color(0xFF888888),
+                            uncheckedTrackColor = Color(0xFFEBEBEB)
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Tối ưu cho máy cấu hình yếu (Máy chậm)",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF171717)
+                        )
+                        Text(
+                            text = "Tăng thời gian chờ Zalo (18s), thêm lượt thử lại dán & bấm gửi để tránh lỗi timeout",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF666666)
+                        )
+                    }
+                    Switch(
+                        checked = isLowSpecDevice,
+                        onCheckedChange = onIsLowSpecDeviceChange,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color(0xFFFFFFFF),
                             checkedTrackColor = Color(0xFF171717),
