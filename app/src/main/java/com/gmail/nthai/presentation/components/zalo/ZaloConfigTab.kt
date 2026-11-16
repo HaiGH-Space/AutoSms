@@ -27,32 +27,45 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gmail.nthai.domain.model.SmsTemplate
 import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ZaloConfigTab(
     isAccessibilityEnabled: Boolean = false,
+    templates: List<SmsTemplate> = emptyList(),
+    selectedTemplateId: Long? = null,
+    onSelectTemplate: (SmsTemplate) -> Unit = {},
     messageContent: String = "{Xin chào|Chào} {ten_khach}, bên em đang có chương trình ưu đãi tri ân khách hàng. Vui lòng nhắn tin lại để nhận mã giảm giá nhé!",
     onMessageContentChange: (String) -> Unit = {},
     delayRange: ClosedFloatingPointRange<Float> = 10f..25f,
@@ -135,6 +148,87 @@ fun ZaloConfigTab(
                 )
             }
         ) {
+            if (templates.isNotEmpty()) {
+                var isDropdownExpanded by remember { mutableStateOf(false) }
+                val selectedTemplate = templates.find { it.id == selectedTemplateId }
+
+                Text(
+                    text = "Chọn mẫu tin từ mục Quản lý:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF171717)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = isDropdownExpanded,
+                    onExpandedChange = { isDropdownExpanded = it },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = selectedTemplate?.title ?: "Chọn mẫu tin nhắn...",
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF171717),
+                            unfocusedBorderColor = Color(0xFFEBEBEB),
+                            focusedContainerColor = Color(0xFFFFFFFF),
+                            unfocusedContainerColor = Color(0xFFFFFFFF)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                            .fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = isDropdownExpanded,
+                        onDismissRequest = { isDropdownExpanded = false },
+                        modifier = Modifier.background(Color(0xFFFFFFFF))
+                    ) {
+                        templates.forEach { templateItem ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = templateItem.title,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF171717)
+                                            )
+                                            if (templateItem.isSelected) {
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = "(Mặc định SMS)",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = Color(0xFF0070F3),
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
+                                        if (templateItem.content.isNotBlank()) {
+                                            Text(
+                                                text = templateItem.content,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color(0xFF666666)
+                                            )
+                                        }
+                                    }
+                                },
+                                onClick = {
+                                    onSelectTemplate(templateItem)
+                                    isDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
             OutlinedTextField(
                 value = messageContent,
                 onValueChange = onMessageContentChange,
@@ -202,14 +296,8 @@ fun ZaloConfigTab(
         }
 
         // 3. Sending Interval & Anti-Block Settings
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFFFFFFF),
-            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        AutoSmsCardContainer {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Schedule,
                         contentDescription = null,
@@ -347,7 +435,6 @@ fun ZaloConfigTab(
                         )
                     )
                 }
-            }
         }
 
         // 5. Main Action Buttons

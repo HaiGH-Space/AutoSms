@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -38,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -290,34 +290,20 @@ fun TemplateEditorScreen(
             }
 
             // 5. Live Preview
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Xem thử nội dung gửi:",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        IconButton(onClick = { viewModel.generateRandomPreview() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Thử lại ngẫu nhiên")
-                        }
+            AutoSmsCardContainer(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                title = "Xem thử nội dung gửi:",
+                titleAction = {
+                    IconButton(onClick = { viewModel.generateRandomPreview() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Thử lại ngẫu nhiên")
                     }
-
-                    Text(
-                        text = previewText.ifBlank { "(Nhập nội dung mẫu tin để xem thử)" },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
                 }
+            ) {
+                Text(
+                    text = previewText.ifBlank { "(Nhập nội dung mẫu tin để xem thử)" },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))

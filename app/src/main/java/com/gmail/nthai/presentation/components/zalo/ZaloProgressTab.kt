@@ -2,6 +2,7 @@ package com.gmail.nthai.presentation.components.zalo
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -55,33 +56,6 @@ fun ZaloProgressTab(
     val totalCount = if (progressState.totalCount > 0) progressState.totalCount else 1
     val currentRecipient = progressState.currentRecipient
     val countdownSeconds = progressState.countdownSeconds
-
-    val displayLogs = if (logs.isEmpty() && !isSending) {
-        listOf(
-            LogRecord(
-                id = 1,
-                customerId = 101,
-                customerName = "Nguyễn Văn Anh",
-                phone = "0987654321",
-                messageContent = "{Xin chào|Chào} Nguyễn Văn Anh, bên em có ưu đãi mã giảm giá 20% cho đơn hàng đầu tiên.",
-                simSlot = 0,
-                status = LogStatus.SENT_SUCCESS,
-                timestamp = System.currentTimeMillis() - 1000 * 60 * 12
-            ),
-            LogRecord(
-                id = 2,
-                customerId = 102,
-                customerName = "Trần Thị Bình",
-                phone = "0912345678",
-                messageContent = "Chào bạn, đã tự động bấm gửi lời mời kết bạn & dán tin nhắn trên Zalo.",
-                simSlot = 0,
-                status = LogStatus.SENT_SUCCESS,
-                timestamp = System.currentTimeMillis() - 1000 * 60 * 8
-            )
-        )
-    } else {
-        logs
-    }
 
     Column(
         modifier = Modifier
@@ -248,12 +222,27 @@ fun ZaloProgressTab(
         )
 
         // 3. Log List (Using App's standard LogRecordCard)
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(displayLogs, key = { it.id }) { log ->
-                LogRecordCard(log = log, compact = true)
+        if (logs.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Chưa có nhật ký gửi Zalo",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF888888)
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(logs, key = { it.id }) { log ->
+                    LogRecordCard(log = log, compact = true)
+                }
             }
         }
     }
@@ -263,6 +252,19 @@ fun ZaloProgressTab(
 @Composable
 fun ZaloProgressTabPreview() {
     MaterialTheme {
-        ZaloProgressTab()
+        ZaloProgressTab(
+            logs = listOf(
+                LogRecord(
+                    id = 1,
+                    customerId = 101,
+                    customerName = "Nguyễn Văn Anh",
+                    phone = "0987654321",
+                    messageContent = "Chào bạn, bên em có ưu đãi mã giảm giá.",
+                    simSlot = 0,
+                    status = LogStatus.SENT_SUCCESS,
+                    timestamp = System.currentTimeMillis() - 1000 * 60 * 12
+                )
+            )
+        )
     }
 }

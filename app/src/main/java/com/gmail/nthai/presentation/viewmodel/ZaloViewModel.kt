@@ -8,7 +8,9 @@ import com.gmail.nthai.data.excel.ExcelParser
 import com.gmail.nthai.data.local.dao.ZaloRecipientStatsEntity
 import com.gmail.nthai.data.local.mapper.toEntity
 import com.gmail.nthai.domain.model.LogRecord
+import com.gmail.nthai.domain.model.SmsTemplate
 import com.gmail.nthai.domain.model.ZaloRecipient
+import com.gmail.nthai.domain.repository.TemplateRepository
 import com.gmail.nthai.domain.repository.ZaloRepository
 import com.gmail.nthai.service.ZaloAccessibilityService
 import com.gmail.nthai.service.ZaloSendingEngine
@@ -27,7 +29,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ZaloViewModel @Inject constructor(
     private val zaloRepository: ZaloRepository,
-    private val zaloSendingEngine: ZaloSendingEngine
+    private val zaloSendingEngine: ZaloSendingEngine,
+    private val templateRepository: TemplateRepository
 ) : ViewModel() {
 
     val recipients: StateFlow<List<ZaloRecipient>> = zaloRepository.observeRecipients()
@@ -53,6 +56,15 @@ class ZaloViewModel @Inject constructor(
 
     val progressState: StateFlow<ZaloSendingProgressState> = zaloSendingEngine.progressState
 
+    val templates: StateFlow<List<SmsTemplate>> = templateRepository.getAllTemplates()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val selectedTemplateId = MutableStateFlow<Long?>(null)
+
     // Config state
     val messageContent = MutableStateFlow(
         "{Xin chào|Chào} {ten_khach}, bên em đang có chương trình ưu đãi tri ân khách hàng. Vui lòng nhắn tin lại để nhận mã giảm giá nhé!"
@@ -66,6 +78,25 @@ class ZaloViewModel @Inject constructor(
     val isAccessibilityEnabled: StateFlow<Boolean> = _isAccessibilityEnabled.asStateFlow()
 
     private val excelParser = ExcelParser()
+
+    init {
+        viewModelScope.launch {
+            templates.collect { list ->
+                if (list.isNotEmpty() && selectedTemplateId.value == null) {
+                    val defaultSelected = list.firstOrNull { it.isSelected } ?: list.first()
+                    selectedTemplateId.value = defaultSelected.id
+                    if (messageContent.value.isBlank() || messageContent.value.startsWith("{Xin chào|Chào} {ten_khach}")) {
+                        messageContent.value = defaultSelected.content
+                    }
+                }
+            }
+        }
+    }
+
+    fun selectTemplate(template: SmsTemplate) {
+        selectedTemplateId.value = template.id
+        messageContent.value = template.content
+    }
 
     fun checkAccessibilityStatus(context: Context) {
         val enabled = ZaloAccessibilityService.isAccessibilityEnabled(context)

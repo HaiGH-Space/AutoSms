@@ -29,8 +29,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-
 import com.gmail.nthai.domain.model.ImportMode
+import com.gmail.nthai.presentation.components.common.SelectionOption
+import com.gmail.nthai.presentation.components.common.SelectionOptionCard
 
 @Composable
 fun LoadingDialog(message: String) {
@@ -145,46 +146,15 @@ fun SelectPhoneColumnDialog(
                 )
 
                 ImportMode.entries.forEach { mode ->
-                    val isSelected = mode == selectedImportMode
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelectImportMode(mode) },
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = { onSelectImportMode(mode) }
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = mode.label,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                                    else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = mode.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(
-                                        alpha = 0.8f
-                                    )
-                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                    }
+                    SelectionOptionCard(
+                        option = SelectionOption(
+                            value = mode,
+                            title = mode.label,
+                            description = mode.description
+                        ),
+                        isSelected = mode == selectedImportMode,
+                        onSelect = { onSelectImportMode(it) }
+                    )
                 }
             }
         },

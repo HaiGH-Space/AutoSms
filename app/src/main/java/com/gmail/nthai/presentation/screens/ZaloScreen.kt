@@ -69,6 +69,8 @@ fun ZaloScreen(
     val logs by viewModel.logs.collectAsState()
     val progressState by viewModel.progressState.collectAsState()
     val isAccessibilityEnabled by viewModel.isAccessibilityEnabled.collectAsState()
+    val templates by viewModel.templates.collectAsState()
+    val selectedTemplateId by viewModel.selectedTemplateId.collectAsState()
     val messageContent by viewModel.messageContent.collectAsState()
     val delayRange by viewModel.delayRange.collectAsState()
     val autoAddFriend by viewModel.autoAddFriend.collectAsState()
@@ -188,6 +190,9 @@ fun ZaloScreen(
             when (selectedTab) {
                 0 -> ZaloConfigTab(
                     isAccessibilityEnabled = isAccessibilityEnabled,
+                    templates = templates,
+                    selectedTemplateId = selectedTemplateId,
+                    onSelectTemplate = { viewModel.selectTemplate(it) },
                     messageContent = messageContent,
                     onMessageContentChange = { viewModel.messageContent.value = it },
                     delayRange = delayRange,
