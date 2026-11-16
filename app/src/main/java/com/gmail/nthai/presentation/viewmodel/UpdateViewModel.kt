@@ -51,13 +51,20 @@ class UpdateViewModel @Inject constructor(
 
     fun checkForUpdate(isManualCheck: Boolean = false, urlOverride: String? = null) {
         viewModelScope.launch {
-            _updateState.value = UpdateState.Checking
+            if (isManualCheck) {
+                _updateState.value = UpdateState.Checking
+            }
 
-            val result = updateRepository.checkForUpdate(urlOverride)
+            val result = updateRepository.checkForUpdate(isManualCheck, urlOverride)
             result.onSuccess { info ->
                 val currentCode = updateRepository.getCurrentVersionCode()
                 if (info.versionCode > currentCode) {
-                    _updateState.value = UpdateState.UpdateAvailable(info)
+                    val dismissedCode = updateRepository.getDismissedVersionCode()
+                    if (!isManualCheck && info.versionCode <= dismissedCode) {
+                        _updateState.value = UpdateState.Idle
+                    } else {
+                        _updateState.value = UpdateState.UpdateAvailable(info)
+                    }
                 } else {
                     if (isManualCheck) {
                         _updateState.value =
@@ -75,6 +82,13 @@ class UpdateViewModel @Inject constructor(
                     _updateState.value = UpdateState.Idle
                 }
             }
+        }
+    }
+
+    fun dismissUpdate(versionCode: Int) {
+        viewModelScope.launch {
+            updateRepository.setDismissedVersionCode(versionCode)
+            _updateState.value = UpdateState.Idle
         }
     }
 

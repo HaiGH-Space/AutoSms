@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="autosms_primary">#FF176B55</color>
-    <color name="autosms_primary_variant">#FF103D32</color>
-    <color name="autosms_secondary">#FF8A5A20</color>
-    <color name="autosms_secondary_variant">#FF3E2A10</color>
-    <color name="autosms_surface">#FFFEFFFE</color>
+    <color name="autosms_primary">#FF171717</color>
+    <color name="autosms_primary_variant">#FF000000</color>
+    <color name="autosms_secondary">#FF0070F3</color>
+    <color name="autosms_secondary_variant">#FF0761D1</color>
+    <color name="autosms_surface">#FFFAFAFA</color>
+    <color name="autosms_splash_bg">#FF171717</color>
+    <color name="autosms_hairline">#FFEBEB</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

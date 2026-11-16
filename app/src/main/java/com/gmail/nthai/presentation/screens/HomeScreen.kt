@@ -36,8 +36,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -129,7 +128,7 @@ fun HomeScreen(
             UpdateAvailableDialog(
                 updateInfo = state.updateInfo,
                 onUpdateConfirm = { updateViewModel.startDownload(context, state.updateInfo) },
-                onDismiss = { updateViewModel.dismissState() }
+                onDismiss = { updateViewModel.dismissUpdate(state.updateInfo.versionCode) }
             )
         }
 
@@ -176,39 +175,21 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            AutoSmsTopAppBar(
+                title = "AutoSms",
+                subtitle = "SMS Automation Platform",
+                leadingContent = {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFF171717),
+                        modifier = Modifier.size(32.dp)
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF171717),
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.AutoMirrored.Outlined.Send,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFFFFFF),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                "AutoSms",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF171717)
-                            )
-                            Text(
-                                "SMS Automation Platform",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 11.sp
-                                ),
-                                color = Color(0xFF888888)
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.AutoMirrored.Outlined.Send,
+                                contentDescription = null,
+                                tint = Color(0xFFFFFFFF),
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
@@ -234,16 +215,13 @@ fun HomeScreen(
                                 "ĐANG GỬI",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 ),
                                 color = Color(0xFF171717)
                             )
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFFFFFFF)
-                )
+                }
             )
         }
     ) { innerPadding ->
@@ -269,7 +247,7 @@ fun HomeScreen(
                 text = "TRẠNG THÁI SIM",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 ),
                 color = Color(0xFF888888)
             )
@@ -300,7 +278,7 @@ fun HomeScreen(
                 text = "QUY TRÌNH THỰC HIỆN",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 ),
                 color = Color(0xFF888888)
             )
@@ -483,7 +461,7 @@ private fun MetricTile(
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF171717)
             )
         }
@@ -533,7 +511,7 @@ private fun ModernSimCard(
                         text = "SIM $simSlot",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         ),
                         color = Color(0xFF171717),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -554,7 +532,7 @@ private fun ModernSimCard(
                 Text(
                     text = if (carrierName.isNotBlank()) carrierName else if (detected) "Đã nhận diện" else "Chưa lắp SIM",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF171717),
                     maxLines = 1
                 )
@@ -581,7 +559,7 @@ private fun ModernSimCard(
                         Text(
                             text = "$sentToday/$dailyLimit",
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF171717)
                         )
                     }
@@ -632,7 +610,7 @@ private fun WorkflowStepCard(
                 Text(
                     text = stepTag,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     ),
                     color = Color(0xFF171717)
                 )
@@ -643,7 +621,7 @@ private fun WorkflowStepCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF171717)
                     )
                     Text(

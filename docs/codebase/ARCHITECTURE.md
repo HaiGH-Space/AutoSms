@@ -49,8 +49,8 @@
 ### 5) Known Architectural Risks
 
 - **Foreground Service Android 14/15 Constraints**: `SmsForegroundService` uses `foregroundServiceType="dataSync"`. Modern Android versions enforce strict timeout limits (typically 6 hours max runtime) and kill long-running `dataSync` services if not carefully bounded.
-- **Accessibility Service Brittle Automation**: `ZaloAccessibilityService` interacts with an external, third-party closed-source application (`com.zing.zalo`) via accessibility node tree scraping (`findAccessibilityNodeInfosByText("Kết bạn")`, input view actions). Any internal UI modification in the Zalo Android app breaks the automation flow without compile-time warning.
-- **Destructive SQLite Fallback**: `DatabaseModule.kt` configures `fallbackToDestructiveMigration(dropAllTables = true)`. Because migration `10 -> 11` is missing, upgrading to database schema v11 drops all user tables and historical logs.
+- **Accessibility Service Brittle Automation**: `ZaloAccessibilityService` interacts with an external, third-party closed-source application (`com.zing.zalo`) via accessibility node tree scraping (`findAccessibilityNodeInfosByText("Kết bạn")`, input view actions). Any internal UI modification in the Zalo Android app breaks the automation flow without compile-time warning. Recent improvements (WebView error detection, clipboard paste fallback, retry mechanisms, and low-spec device adaptations) substantially reduce freeze issues but remain sensitive to Zalo layout changes.
+- **Destructive SQLite Fallback**: `DatabaseModule.kt` configures `fallbackToDestructiveMigration(dropAllTables = true)`. Because migration `10 -> 11` is missing (despite `11 -> 12` being added), upgrading from database schema v10 drops all user tables and historical logs.
 
 ### 6) Evidence
 

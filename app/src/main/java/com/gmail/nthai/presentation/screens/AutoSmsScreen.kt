@@ -17,8 +17,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -42,17 +41,8 @@ fun AutoSmsScreen(
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Tự động gửi SMS",
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717)
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFFFFFFF)
-                    )
+                AutoSmsTopAppBar(
+                    title = "Tự động gửi SMS"
                 )
                 TabRow(
                     selectedTabIndex = selectedTab,

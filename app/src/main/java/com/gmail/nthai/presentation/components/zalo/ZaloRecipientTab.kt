@@ -74,49 +74,7 @@ fun ZaloRecipientTab(
     var newCustomerName by remember { mutableStateOf("") }
     var newCustomerPhone by remember { mutableStateOf("") }
 
-    val displayList =
-        if (recipients.isEmpty() && searchQuery.isEmpty() && selectedFilter == "ALL") {
-            remember {
-                listOf(
-                    ZaloRecipient(
-                        1,
-                        "Nguyễn Văn Anh",
-                        "0987654321",
-                        isZaloFriend = true,
-                        status = LogStatus.SENT_SUCCESS,
-                        note = "Đã gửi tin & ảnh thành công"
-                    ),
-                    ZaloRecipient(
-                        2,
-                        "Trần Thị Bình",
-                        "0912345678",
-                        isZaloFriend = false,
-                        status = LogStatus.PENDING,
-                        note = "Đã bật tự động kết bạn"
-                    ),
-                    ZaloRecipient(
-                        3,
-                        "Lê Văn Cường",
-                        "0933445566",
-                        isZaloFriend = true,
-                        status = LogStatus.FAILED,
-                        note = "SĐT chưa mở tài khoản Zalo"
-                    ),
-                    ZaloRecipient(
-                        4,
-                        "Phạm Minh Đức",
-                        "0977889900",
-                        isZaloFriend = false,
-                        status = LogStatus.PENDING,
-                        note = "Chờ gửi"
-                    )
-                )
-            }
-        } else {
-            recipients
-        }
-
-    val filteredList = displayList.filter { customer ->
+    val filteredList = recipients.filter { customer ->
         val matchesSearch =
             customer.name.contains(searchQuery, ignoreCase = true) || customer.phone.contains(
                 searchQuery
@@ -130,10 +88,10 @@ fun ZaloRecipientTab(
         matchesSearch && matchesFilter
     }
 
-    val totalCount = displayList.size
-    val pendingCount = displayList.count { it.status == LogStatus.PENDING }
-    val successCount = displayList.count { it.status == LogStatus.SENT_SUCCESS }
-    val failedCount = displayList.count { it.status == LogStatus.FAILED }
+    val totalCount = recipients.size
+    val pendingCount = recipients.count { it.status == LogStatus.PENDING }
+    val successCount = recipients.count { it.status == LogStatus.SENT_SUCCESS }
+    val failedCount = recipients.count { it.status == LogStatus.FAILED }
 
     Column(
         modifier = Modifier
@@ -301,7 +259,7 @@ fun ZaloRecipientTab(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Không tìm thấy số điện thoại phù hợp",
+                    text = if (recipients.isEmpty()) "Chưa có SĐT nào. Hãy thêm mới hoặc Nhập từ Excel" else "Không tìm thấy số điện thoại phù hợp",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF888888)
                 )
@@ -514,6 +472,18 @@ private fun ZaloCustomerCard(
 @Composable
 fun ZaloRecipientTabPreview() {
     MaterialTheme {
-        ZaloRecipientTab(onImportExcel = {})
+        ZaloRecipientTab(
+            recipients = listOf(
+                ZaloRecipient(
+                    1,
+                    "Nguyễn Văn Anh",
+                    "0987654321",
+                    isZaloFriend = true,
+                    status = LogStatus.SENT_SUCCESS,
+                    note = "Đã gửi tin & ảnh thành công"
+                )
+            ),
+            onImportExcel = {}
+        )
     }
 }

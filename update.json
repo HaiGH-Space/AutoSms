@@ -1,8 +1,8 @@
 {
-  "versionCode": 8,
-  "versionName": "0.1.7",
-  "releaseType": "alpha",
-  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.7/app-release.apk",
-  "releaseNotes": "[BẢN ALPHA - có thể chưa ổn định]\n- Mới: tự động gửi tin nhắn Zalo qua Trợ năng Android\n- Quản lý người nhận Zalo: thêm, xóa, nhập Excel, tìm kiếm/lọc theo trạng thái và gửi lại người nhận lỗi\n- Cấu hình nội dung tin nhắn, Spintax, tự động kết bạn, chỉ gửi người chưa gửi và khoảng trễ gửi\n- Theo dõi tiến trình gửi Zalo; hỗ trợ tạm dừng, tiếp tục, dừng chiến dịch và xem nhật ký\n- Bổ sung hướng dẫn bật quyền Trợ năng; cải thiện xử lý lỗi, điều hướng, nhận diện nút gửi và dán tin nhắn bằng clipboard dự phòng\n- Cải thiện khả năng gửi trên thiết bị cấu hình thấp với cơ chế thử lại nút gửi\n- Remake lớn giao diện ứng dụng: làm mới hệ thống thiết kế, điều hướng và các màn hình chính, khách hàng, cấu hình SIM, tiến trình gửi, báo cáo và Zalo\n- Bổ sung thanh tìm kiếm và các thành phần giao diện dùng chung\n- Thêm các chế độ nhập Excel: thay thế, nối tiếp và bỏ qua số điện thoại trùng\n- Bổ sung đặt lại trạng thái gửi theo phạm vi; cải thiện retry SMS và ghi nhận kết quả gửi theo từng số điện thoại",
+  "versionCode": 9,
+  "versionName": "0.1.8",
+  "releaseType": "beta",
+  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.8/app-release.apk",
+  "releaseNotes": "[BẢN BETA]\n- Đồng bộ thanh tiêu đề ứng dụng (AutoSmsTopAppBar) trên tất cả các màn hình\n- Thêm hộp thoại lựa chọn dùng chung GenericSelectionDialog & SelectionOptionCard\n- Tái cấu trúc ResetStatusDialog và ExcelImportDialogs sang GenericSelectionDialog giúp giao diện đồng nhất\n- Nâng cấp màn hình Báo cáo (ReportScreen): bộ lọc chip dạng pill, thẻ thống kê ReportMetricCard cải tiến và hỗ trợ cuộn linh hoạt\n- Cải thiện thẻ lịch sử LogRecordCard và huy hiệu trạng thái StatusBadge\n- Hỗ trợ chọn mẫu tin nhắn trực tiếp từ mục Quản lý trong cấu hình gửi Zalo (ZaloConfigTab)\n- Bổ sung huy hiệu phân loại phiên bản ReleaseTypeBadge (Alpha / Beta / Chính thức) và hỗ trợ cuộn nội dung ghi chú cập nhật trong UpdateDialogs\n- Cập nhật bộ icon launcher thích ứng (Adaptive Icons), icon đơn sắc monochrome và làm mới bảng màu thương hiệu\n- Bổ sung tài liệu kiến trúc, cấu trúc dự án và tài nguyên logo SVG",
   "forceUpdate": false
 }

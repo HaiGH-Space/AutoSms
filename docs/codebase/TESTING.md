@@ -31,7 +31,7 @@
 
 | Scope | Covered? | Typical target | Notes |
 |-------|----------|----------------|-------|
-| Unit | Yes | Domain UseCases (`ParseSpintaxUseCase`, `DetectVietnameseCarrierUseCase`, `CalculateNextDelayUseCase`, `ValidateSendingConstraintUseCase`, `ProcessSimSendingUseCase`), `SimConfigCarrierLimit`, `ExcelParser` | Focused strictly on pure business logic, regex evaluation, and spreadsheet data transformation |
+| Unit | Yes | Domain UseCases (`ParseSpintaxUseCase`, `DetectVietnameseCarrierUseCase`, `CalculateNextDelayUseCase`, `ValidateSendingConstraintUseCase`, `ProcessSimSendingUseCase`), `SimConfigCarrierLimit`, `ExcelParser` | Focused strictly on pure business logic, regex evaluation, and spreadsheet data transformation. `ProcessSimSendingUseCaseTest` thoroughly tests SMS dispatch, carrier limits, and error handling. |
 | Integration | Partial | Room DAOs and database migrations | No standalone automated Room migration tests; basic in-memory test setup |
 | E2E / UI | Partial | `AppNavigationTest.kt` in `androidTest` | Validates Compose navigation graph transitions via `androidx.compose.ui.test.junit4` |
 

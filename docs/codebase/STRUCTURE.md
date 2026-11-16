@@ -14,6 +14,7 @@
 | `settings.gradle.kts` | Defines project name (`AutoSms`) and included modules (`:app`) | `settings.gradle.kts` |
 | `gradle.properties` | JVM configuration, daemon settings, and Android Gradle Plugin flags | `gradle.properties` |
 | `update.json` | Remote metadata endpoint for checking in-app application version updates | `update.json` |
+| `docs/assets/logo.svg` | Vector brand mark and app icon in SVG format used across documentation and GitHub display | `docs/assets/logo.svg` |
 | `README.md` | Stated project purpose, feature set, requirements, and build instructions | `README.md` |
 
 ### 2) Entry Points
@@ -42,7 +43,7 @@
 
 - File naming pattern: PascalCase for Kotlin files and classes (`CustomerRepositoryImpl.kt`, `HomeScreen.kt`, `SmsForegroundService.kt`), snake_case for XML resources (`activity_main.xml`, `zalo_accessibility_config.xml`).
 - Directory organization pattern: Layered Clean Architecture (`data`, `domain`, `presentation`, `service`, `di`, `util`) inside base package `com.gmail.nthai`.
-- Presentation sub-organization: Grouped by functional component type: `screens/` (top-level composables), `components/` (sub-divided by feature: `config/`, `customer/`, `progress/`, `report/`, `zalo/`), `viewmodel/`, and `navigation/`.
+- Presentation sub-organization: Grouped by functional component type: `screens/` (top-level composables), `components/` (sub-divided by feature: `common/` for shared components like `AutoSmsCardContainer`, `AutoSmsSearchBar`, `AutoSmsTopAppBar`, `StatusBadge`, `GenericSelectionDialog`; and feature folders `config/`, `customer/`, `progress/`, `report/`, `zalo/`), `viewmodel/`, and `navigation/`.
 - Import aliasing or path conventions: Explicit package imports matching Maven artifact namespaces or local domain paths; no wildcard imports.
 
 ### 5) Evidence
