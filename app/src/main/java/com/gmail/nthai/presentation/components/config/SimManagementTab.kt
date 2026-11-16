@@ -40,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -219,18 +220,10 @@ fun SimManagementTab(
     }
 
     if (showTopBar) {
-        @OptIn(ExperimentalMaterial3Api::class)
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            "Quản lý SIM",
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717)
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFFFFFFF))
+                AutoSmsTopAppBar(
+                    title = "Quản lý SIM"
                 )
             }
         ) { innerPadding ->

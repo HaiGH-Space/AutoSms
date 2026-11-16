@@ -36,8 +36,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -129,7 +128,7 @@ fun HomeScreen(
             UpdateAvailableDialog(
                 updateInfo = state.updateInfo,
                 onUpdateConfirm = { updateViewModel.startDownload(context, state.updateInfo) },
-                onDismiss = { updateViewModel.dismissState() }
+                onDismiss = { updateViewModel.dismissUpdate(state.updateInfo.versionCode) }
             )
         }
 
@@ -176,39 +175,21 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            AutoSmsTopAppBar(
+                title = "AutoSms",
+                subtitle = "SMS Automation Platform",
+                leadingContent = {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFF171717),
+                        modifier = Modifier.size(32.dp)
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF171717),
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.AutoMirrored.Outlined.Send,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFFFFFF),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                "AutoSms",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF171717)
-                            )
-                            Text(
-                                "SMS Automation Platform",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 11.sp
-                                ),
-                                color = Color(0xFF888888)
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.AutoMirrored.Outlined.Send,
+                                contentDescription = null,
+                                tint = Color(0xFFFFFFFF),
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
@@ -240,10 +221,7 @@ fun HomeScreen(
                             )
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFFFFFFF)
-                )
+                }
             )
         }
     ) { innerPadding ->

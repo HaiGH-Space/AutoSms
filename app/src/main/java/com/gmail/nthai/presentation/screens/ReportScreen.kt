@@ -39,6 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -123,21 +124,9 @@ fun ReportScreen(
     Scaffold(
         topBar = {
             if (showTopBar) {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                "Báo cáo",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "Thống kê và lịch sử gửi tin",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    },
+                AutoSmsTopAppBar(
+                    title = "Báo cáo",
+                    subtitle = "Thống kê và lịch sử gửi tin",
                     actions = {
                         IconButton(
                             onClick = { showClearConfirmation = true },

@@ -24,9 +24,11 @@ class UpdateRepositoryImpl @Inject constructor(
 ) : UpdateRepository {
 
     private val prefs = context.getSharedPreferences("app_update_prefs", Context.MODE_PRIVATE)
+    private var hasAutoCheckedInSession = false
 
     companion object {
         const val KEY_UPDATE_URL = "custom_update_url"
+        const val KEY_DISMISSED_VERSION_CODE = "dismissed_version_code"
         const val DEFAULT_UPDATE_URL =
             "https://raw.githubusercontent.com/HaiGH-Space/AutoSms/master/update.json"
     }
@@ -38,6 +40,16 @@ class UpdateRepositoryImpl @Inject constructor(
     override suspend fun saveUpdateUrl(url: String) {
         withContext(Dispatchers.IO) {
             prefs.edit { putString(KEY_UPDATE_URL, url.trim()) }
+        }
+    }
+
+    override fun getDismissedVersionCode(): Int {
+        return prefs.getInt(KEY_DISMISSED_VERSION_CODE, 0)
+    }
+
+    override suspend fun setDismissedVersionCode(versionCode: Int) {
+        withContext(Dispatchers.IO) {
+            prefs.edit { putInt(KEY_DISMISSED_VERSION_CODE, versionCode) }
         }
     }
 
@@ -81,8 +93,14 @@ class UpdateRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun checkForUpdate(urlOverride: String?): Result<UpdateInfo> {
+    override suspend fun checkForUpdate(isManualCheck: Boolean, urlOverride: String?): Result<UpdateInfo> {
         return withContext(Dispatchers.IO) {
+            if (!isManualCheck && hasAutoCheckedInSession) {
+                return@withContext Result.failure(Exception("Already auto-checked in this session"))
+            }
+            if (!isManualCheck) {
+                hasAutoCheckedInSession = true
+            }
             try {
                 val targetUrl = urlOverride?.ifBlank { null } ?: getUpdateUrl()
                 val connection = openConnectionWithRedirects(targetUrl)

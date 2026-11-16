@@ -6,7 +6,7 @@ import java.io.File
 interface UpdateRepository {
     fun getUpdateUrl(): String
     suspend fun saveUpdateUrl(url: String)
-    suspend fun checkForUpdate(urlOverride: String? = null): Result<UpdateInfo>
+    suspend fun checkForUpdate(isManualCheck: Boolean = false, urlOverride: String? = null): Result<UpdateInfo>
     suspend fun downloadApk(
         downloadUrl: String,
         outputFile: File,
@@ -16,4 +16,6 @@ interface UpdateRepository {
     fun clearOldApks()
     fun getCurrentVersionCode(): Int
     fun getCurrentVersionName(): String
+    fun getDismissedVersionCode(): Int
+    suspend fun setDismissedVersionCode(versionCode: Int)
 }

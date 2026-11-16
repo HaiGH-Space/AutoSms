@@ -29,8 +29,7 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -118,17 +117,10 @@ fun ZaloScreen(
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Tự động gửi Zalo",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717)
-                        )
-                    },
-                    navigationIcon = {
-                        if (showTopBarBackIcon) {
+                AutoSmsTopAppBar(
+                    title = "Tự động gửi Zalo",
+                    navigationIcon = if (showTopBarBackIcon) {
+                        {
                             IconButton(onClick = onBack) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -137,10 +129,7 @@ fun ZaloScreen(
                                 )
                             }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFFFFFFF)
-                    )
+                    } else null
                 )
                 SecondaryTabRow(
                     selectedTabIndex = selectedTab,

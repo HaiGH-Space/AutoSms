@@ -50,8 +50,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -124,9 +123,11 @@ fun CustomerListScreen(
     Scaffold(
         topBar = {
             if (showTopBar) {
-                TopAppBar(
-                    navigationIcon = {
-                        if (onBack != null) {
+                AutoSmsTopAppBar(
+                    title = "Khách hàng",
+                    subtitle = if (simCarrierName != null) "SIM $selectedSimSlot · $simCarrierName" else "SIM $selectedSimSlot",
+                    navigationIcon = if (onBack != null) {
+                        {
                             IconButton(onClick = onBack) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack,
@@ -135,24 +136,7 @@ fun CustomerListScreen(
                                 )
                             }
                         }
-                    },
-                    title = {
-                        Column {
-                            Text(
-                                "Khách hàng",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF171717)
-                            )
-                            Text(
-                                if (simCarrierName != null) "SIM $selectedSimSlot · $simCarrierName" else "SIM $selectedSimSlot",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 11.sp
-                                ),
-                                color = Color(0xFF888888)
-                            )
-                        }
-                    },
+                    } else null,
                     actions = {
                         IconButton(
                             onClick = {
@@ -181,10 +165,7 @@ fun CustomerListScreen(
                                 )
                             }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFFFFFFF)
-                    )
+                    }
                 )
             }
         },

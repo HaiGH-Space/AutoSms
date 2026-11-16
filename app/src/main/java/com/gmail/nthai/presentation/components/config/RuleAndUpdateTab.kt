@@ -32,7 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +74,7 @@ fun RuleAndUpdateTab(
                     updateViewModel.startDownload(context, state.updateInfo)
                 },
                 onDismiss = {
-                    updateViewModel.dismissState()
+                    updateViewModel.dismissUpdate(state.updateInfo.versionCode)
                 }
             )
         }
@@ -466,8 +466,8 @@ fun RuleAndUpdateTab(
     if (showTopBar) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Quy định & Cập nhật", fontWeight = FontWeight.Bold) }
+                AutoSmsTopAppBar(
+                    title = "Quy định & Cập nhật"
                 )
             }
         ) { innerPadding ->
