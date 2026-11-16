@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.edit
+import com.gmail.nthai.domain.model.ReleaseType
 import com.gmail.nthai.domain.model.UpdateInfo
 import com.gmail.nthai.domain.repository.UpdateRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -105,6 +106,8 @@ class UpdateRepositoryImpl @Inject constructor(
                 val downloadUrl = json.optString("downloadUrl", "")
                 val releaseNotes = json.optString("releaseNotes", "")
                 val forceUpdate = json.optBoolean("forceUpdate", false)
+                val releaseTypeStr = json.optString("releaseType", "")
+                val releaseType = ReleaseType.from(releaseTypeStr, versionName, releaseNotes)
 
                 if (downloadUrl.isBlank()) {
                     return@withContext Result.failure(Exception("File JSON thiếu đường dẫn downloadUrl!"))
@@ -115,7 +118,8 @@ class UpdateRepositoryImpl @Inject constructor(
                     versionName = versionName,
                     downloadUrl = downloadUrl,
                     releaseNotes = releaseNotes,
-                    forceUpdate = forceUpdate
+                    forceUpdate = forceUpdate,
+                    releaseType = releaseType
                 )
                 Result.success(info)
             } catch (e: Exception) {
