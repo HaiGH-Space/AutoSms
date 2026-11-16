@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#242424"/>
+      <stop offset="100%" stop-color="#121212"/>
+    </linearGradient>
+  </defs>
+  <!-- Background with smooth rounded corners -->
+  <rect width="108" height="108" rx="24" fill="url(#bgGrad)"/>
+  <!-- Scaled group matching Android vector drawable (scale=0.8, pivot=54) -->
+  <g transform="translate(10.8, 10.8) scale(0.8)">
+    <!-- Speech bubble body -->
+    <path fill="#FFFFFF" d="M34,22 h40 c5.5,0 10,4.5 10,10 v28 c0,5.5 -4.5,10 -10,10 H52 L38,86 V70 H34 c-5.5,0 -10,-4.5 -10,-10 V32 c0,-5.5 4.5,-10 10,-10 z"/>
+    <!-- Lightning bolt inside speech bubble -->
+    <path fill="#171717" d="M56,30 L42,48 h11 l-3,14 15,-19 H53 l3,-11 z"/>
+  </g>
+</svg>

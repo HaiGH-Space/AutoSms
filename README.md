@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="app/src/main/res/mipmap-hdpi/ic_launcher.webp" alt="AutoSms Logo" width="96" height="96">
+  <img src="docs/assets/logo.svg" alt="AutoSms Logo" width="108" height="108">
   <h1>AutoSms</h1>
   <p><strong>Giải pháp Android tự động hóa gửi tin nhắn SMS cá nhân hóa từ Excel qua SIM thiết bị và gửi tin nhắn tự động qua Zalo.</strong></p>
 
@@ -15,12 +15,12 @@
 
 ## Overview
 
-**AutoSms** là ứng dụng di động Android chuyên dụng hỗ trợ doanh nghiệp, tổ chức và cá nhân kinh doanh tự động hóa quy trình chăm sóc khách hàng qua SMS và Zalo với mức độ cá nhân hóa cao.
+**AutoSms** là ứng dụng di động Android mã nguồn mở chuyên dụng hỗ trợ doanh nghiệp, tổ chức và cá nhân kinh doanh tự động hóa quy trình chăm sóc khách hàng qua SMS và Zalo với mức độ cá nhân hóa cao.
 
 Ứng dụng kết nối trực tiếp với file bảng tính Excel (`.xlsx`, `.xls`), tự động nhận diện dữ liệu liên hệ, hỗ trợ biến động cùng cú pháp Spintax chống spam, tự động tối ưu chi phí cước thông qua nhận diện nhà mạng Việt Nam và phân bổ linh hoạt giữa 2 khe SIM. Quy trình gửi SMS chạy ổn định trong nền qua Foreground Service, đồng thời tích hợp tính năng gửi tự động qua ứng dụng Zalo thông qua Android Accessibility Service.
 
 > [!NOTE]
-> Toàn bộ danh bạ, dữ liệu khách hàng, mẫu tin nhắn và lịch sử gửi được lưu trữ hoàn toàn cục bộ trên thiết bị qua SQLite (Room Database), bảo đảm tuyệt đối tính an toàn và quyền riêng tư thông tin.
+> Toàn bộ danh bạ, dữ liệu khách hàng, mẫu tin nhắn và lịch sử gửi được lưu trữ hoàn toàn cục bộ trên thiết bị qua SQLite (Room Database), bảo đảm an toàn và bảo mật thông tin.
 
 ---
 
@@ -29,6 +29,7 @@
 - **Nhập dữ liệu thông minh từ Excel**:
   - Hỗ trợ trực tiếp định dạng `.xlsx` và `.xls` qua thư viện Apache POI tối ưu.
   - Tự động quét và nhận diện các cột số điện thoại phổ biến (`SDT`, `Phone`, `Mobile`, `Điện thoại`,...).
+  - Đa dạng chế độ nhập: **Thay thế danh sách**, **Nối tiếp** và **Bỏ qua số trùng lặp**.
   - Trích xuất linh hoạt mọi cột dữ liệu tùy chỉnh (`{Ten_KH}`, `{So_Tien}`, `{Ma_HD}`, `{Ngay_Han}`,...).
 
 - **Động hóa nội dung & Công nghệ Spintax**:
@@ -43,25 +44,28 @@
 - **Quản lý & Cấu hình 2 khe SIM chuyên sâu**:
   - Giám sát trạng thái lắp SIM, tên nhà mạng và số điện thoại từng khe SIM.
   - Thiết lập định mức (quota) gửi SMS tối đa theo ngày cho từng khe SIM độc lập.
-  - Cấu hình khoảng trễ ngẫu nhiên an toàn giữa các lần gửi (ví dụ: `15` - `45` giây).
+  - Cấu hình khoảng trễ tối thiểu và tối đa ngẫu nhiên an toàn giữa các lần gửi (ví dụ: `40` - `50` giây).
   - Cài đặt khung giờ cho phép gửi tin trong ngày, tự động dừng ngoài giờ làm việc.
   - Tự động làm mới (reset) hạn mức mỗi ngày qua AndroidX WorkManager (`DailySmsWorker`).
 
 - **Gửi tin nhắn tự động qua Zalo**:
   - Mở trực tiếp cuộc trò chuyện Zalo theo số điện thoại qua deep link (`https://zalo.me/{phone}`).
   - Sử dụng **Android Accessibility Service** (`ZaloAccessibilityService`) để tự động điền tin nhắn và thực hiện thao tác gửi.
-  - Tự động quản lý danh sách người nhận Zalo, hỗ trợ import từ danh bạ khách hàng hiện có.
-  - Giám sát độ trễ và cơ chế timeout thông minh tránh gián đoạn.
+  - Tự động xử lý màn hình lỗi WebView, số chưa đăng ký Zalo hoặc tài khoản không tồn tại, tự động điều hướng quay lại màn hình chính.
+  - Cơ chế dán văn bản bằng clipboard dự phòng và hỗ trợ thiết bị cấu hình thấp với cơ chế retry nút gửi linh hoạt.
+  - Quản lý danh sách người nhận Zalo, hỗ trợ import từ Excel hoặc chuyển đổi từ danh bạ khách hàng.
 
 - **Tiến trình gửi nền bền bỉ (Foreground Service)**:
   - Khởi chạy tiến trình gửi SMS qua **Foreground Service** loại `dataSync`, duy trì hoạt động ngay cả khi ứng dụng bị thu nhỏ hoặc thiết bị khóa màn hình.
   - Thanh thông báo hệ thống trực quan cập nhật tiến độ theo thời gian thực (Đã gửi, Thất bại, Còn lại).
   - Hỗ trợ điều khiển trực tiếp: Tạm dừng (Pause), Tiếp tục (Resume) hoặc Hủy bỏ (Stop).
+  - Quản lý đặt lại trạng thái gửi linh hoạt theo phạm vi (Tất cả, Chỉ người đã gửi, Chỉ người được chọn).
 
-- **Thống kê, Báo cáo & Xuất Excel**:
+- **Giao diện hiện đại & Thống kê báo cáo**:
+  - Hệ thống thành phần giao diện nhất quán (`AutoSmsTopAppBar`, `AutoSmsCardContainer`, `AutoSmsSearchBar`, `StatusBadge`).
   - Lưu trữ chi tiết nhật ký trạng thái từng tin nhắn gửi (`SENT`, `DELIVERED`, `FAILED`).
   - Lọc báo cáo linh hoạt theo ngày/tháng hoặc khoảng thời gian tùy chọn.
-  - Hỗ trợ xuất toàn bộ báo cáo lịch sử gửi ra file Excel (.xlsx).
+  - Hỗ trợ xuất toàn bộ báo cáo lịch sử gửi ra file Excel (`.xlsx`).
 
 - **Tự động kiểm tra cập nhật ứng dụng**:
   - Tích hợp sẵn cơ chế kiểm tra phiên bản mới từ máy chủ từ xa qua metadata `update.json`.
@@ -80,7 +84,7 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 | **Điều hướng** | Navigation Compose 2.8.5 | Quản lý luồng chuyển màn hình trong kiến trúc Single-Activity |
 | **Kiến trúc** | Clean Architecture (Presentation, Domain, Data) | Phân tách rõ ràng UI, quy tắc nghiệp vụ và truy xuất dữ liệu |
 | **Dependency Injection** | Hilt (Dagger) 2.60.1 | Quản lý vòng đời phụ thuộc, tối ưu kiểm thử |
-| **Cơ sở dữ liệu** | Room Database 2.8.5 | Lưu trữ dữ liệu quan hệ cục bộ (Entity, DAO, TypeConverters) |
+| **Cơ sở dữ liệu** | Room Database 2.8.5 (Schema v12) | Lưu trữ dữ liệu quan hệ cục bộ (Entity, DAO, TypeConverters, Migrations) |
 | **Lập lịch nền** | WorkManager 2.10.0 | Lên lịch tự động reset hạn mức SIM hàng ngày |
 | **Xử lý Bảng tính** | Apache POI (`poi-ooxml` 5.2.5) | Đọc, phân tích và xuất file bảng tính Excel (`.xlsx`, `.xls`) |
 | **Bất đồng bộ** | Kotlin Coroutines 1.9.0 & StateFlow | Xử lý luồng dữ liệu phản ứng bất đồng bộ (Reactive Flow) |
@@ -117,7 +121,8 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 ### 1. Nhập danh sách khách hàng từ Excel
 1. Tại màn hình **Trang chủ**, nhấn **Nhập danh sách Excel**.
 2. Chọn tệp bảng tính (`.xlsx` hoặc `.xls`). Ứng dụng sẽ tự động phân tích và nhận diện các cột dữ liệu.
-3. Kiểm tra danh sách khách hàng và các biến dữ liệu đã được nạp thành công.
+3. Chọn chế độ nạp danh sách: Thay thế toàn bộ, Nối tiếp thêm mới hoặc Bỏ qua số trùng.
+4. Kiểm tra danh sách khách hàng và các biến dữ liệu đã được nạp thành công.
 
 ### 2. Soạn thảo Mẫu tin nhắn & Spintax
 1. Chọn tab **Mẫu tin nhắn** hoặc mục chỉnh sửa mẫu.
@@ -131,7 +136,7 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 1. Chuyển sang màn hình **Cấu hình** (hoặc tab SIM trong mục Quản lý).
 2. Thiết lập cho từng khe **SIM 1** và **SIM 2**:
    - Hạn mức tin nhắn tối đa gửi mỗi ngày.
-   - Khoảng trễ ngẫu nhiên giữa 2 tin liên tiếp (ví dụ: `20` - `45` giây).
+   - Khoảng trễ tối thiểu và tối đa giữa 2 tin liên tiếp (ví dụ: `40` - `50` giây).
    - Khung giờ hợp lệ cho phép gửi tin trong ngày.
 3. Bật tùy chọn ưu tiên gửi theo nhà mạng tương ứng để tối ưu cước phí viễn thông.
 
@@ -142,9 +147,10 @@ AutoSms được thiết kế chuẩn mực theo mô hình **Clean Architecture*
 
 ### 5. Gửi tin nhắn qua Zalo
 1. Điều hướng đến màn hình **Gửi Zalo**.
-2. Nhập danh sách số điện thoại cần gửi hoặc nạp từ tập khách hàng có sẵn.
+2. Nhập danh sách số điện thoại cần gửi hoặc nạp từ tập khách hàng có sẵn / import từ file Excel.
 3. Kích hoạt dịch vụ **AutoSms Accessibility Service** trong phần Cài đặt Trợ năng (Accessibility) của Android.
-4. Bấm **Bắt đầu gửi Zalo** và để ứng dụng tự động mở cuộc trò chuyện và gửi tin theo mẫu đã chọn.
+4. Bật tùy chọn thiết bị cấu hình thấp nếu cần thêm thời gian trễ và retry.
+5. Bấm **Bắt đầu gửi Zalo** và để ứng dụng tự động mở cuộc trò chuyện và gửi tin theo mẫu đã chọn.
 
 ### 6. Báo cáo & Xuất nhật ký
 1. Mở màn hình **Báo cáo**.
@@ -194,10 +200,12 @@ AutoSms/
 │   │   │   │   ├── presentation/     # Jetpack Compose UI (Screens, Components, ViewModels, Navigation, Theme)
 │   │   │   │   ├── service/          # Foreground Service, Zalo Accessibility Service, WorkManager Worker
 │   │   │   │   └── util/             # Tiện ích hệ thống (Permissions, DateTime, ApkInstaller)
-│   │   │   └── res/                  # Android Resources (Layouts, Drawables, Mipmaps, Values)
+│   │   │   └── res/                  # Android Resources (Drawables, Mipmaps, Values, Xml)
 │   │   └── test/                     # Unit Tests kiểm thử nghiệp vụ UseCase và Parser
 │   └── build.gradle.kts
 ├── docs/                             # Tài liệu kỹ thuật dự án (Architecture, Conventions, Stack,...)
+│   ├── assets/                       # Vector brand mark & SVG logo (logo.svg)
+│   └── codebase/                     # 7 tài liệu đặc tả codebase chi tiết
 ├── gradle/                           # Gradle Wrapper & Version Catalog (libs.versions.toml)
 └── build.gradle.kts
 ```
