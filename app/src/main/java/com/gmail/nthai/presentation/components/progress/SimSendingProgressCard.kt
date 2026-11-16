@@ -149,7 +149,7 @@ fun SimSendingProgressCard(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
         color = Color(0xFFFFFFFF),
         border = BorderStroke(1.dp, Color(0xFFEBEBEB))
     ) {

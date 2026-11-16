@@ -1,5 +1,6 @@
 package com.gmail.nthai.presentation.components.common
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,10 +16,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -44,15 +47,16 @@ fun <T> SelectionOptionCard(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    val borderColor = if (isSelected) Color(0xFF171717) else Color(0xFFEBEBEB)
+    val cardBackground = if (isSelected) Color(0xFFFAFAFA) else Color(0xFFFFFFFF)
+
+    Surface(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onSelect(option.value) },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-            else MaterialTheme.colorScheme.surfaceVariant
-        )
+        color = cardBackground,
+        border = BorderStroke(if (isSelected) 1.5.dp else 1.dp, borderColor)
     ) {
         Row(
             modifier = Modifier
@@ -62,25 +66,25 @@ fun <T> SelectionOptionCard(
         ) {
             RadioButton(
                 selected = isSelected,
-                onClick = { onSelect(option.value) }
+                onClick = { onSelect(option.value) },
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = Color(0xFF171717),
+                    unselectedColor = Color(0xFF888888)
+                )
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Text(
                     text = option.title,
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    color = Color(0xFF171717)
                 )
                 if (!option.description.isNullOrBlank()) {
                     Text(
                         text = option.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer.copy(
-                            alpha = 0.8f
-                        )
-                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        color = Color(0xFF666666)
                     )
                 }
             }
@@ -103,13 +107,14 @@ fun <T> GenericSelectionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(20.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color(0xFFFFFFFF),
         title = {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF171717)
             )
         },
         text = {
@@ -123,7 +128,7 @@ fun <T> GenericSelectionDialog(
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF4D4D4D)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
@@ -140,14 +145,18 @@ fun <T> GenericSelectionDialog(
         confirmButton = {
             Button(
                 onClick = { onConfirm(selectedOption) },
-                shape = RoundedCornerShape(9999.dp)
+                shape = RoundedCornerShape(9999.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF171717),
+                    contentColor = Color(0xFFFFFFFF)
+                )
             ) {
                 Text(confirmText, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(dismissText)
+                Text(dismissText, color = Color(0xFF888888))
             }
         }
     )

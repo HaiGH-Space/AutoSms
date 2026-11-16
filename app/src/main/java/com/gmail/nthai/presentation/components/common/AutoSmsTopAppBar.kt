@@ -43,7 +43,7 @@ fun AutoSmsTopAppBar(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF171717)
                     )
                     if (subtitle != null) {

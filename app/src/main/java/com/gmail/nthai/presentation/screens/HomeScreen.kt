@@ -215,7 +215,7 @@ fun HomeScreen(
                                 "ĐANG GỬI",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 ),
                                 color = Color(0xFF171717)
                             )
@@ -247,7 +247,7 @@ fun HomeScreen(
                 text = "TRẠNG THÁI SIM",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 ),
                 color = Color(0xFF888888)
             )
@@ -278,7 +278,7 @@ fun HomeScreen(
                 text = "QUY TRÌNH THỰC HIỆN",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 ),
                 color = Color(0xFF888888)
             )
@@ -461,7 +461,7 @@ private fun MetricTile(
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF171717)
             )
         }
@@ -511,7 +511,7 @@ private fun ModernSimCard(
                         text = "SIM $simSlot",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         ),
                         color = Color(0xFF171717),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -532,7 +532,7 @@ private fun ModernSimCard(
                 Text(
                     text = if (carrierName.isNotBlank()) carrierName else if (detected) "Đã nhận diện" else "Chưa lắp SIM",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF171717),
                     maxLines = 1
                 )
@@ -559,7 +559,7 @@ private fun ModernSimCard(
                         Text(
                             text = "$sentToday/$dailyLimit",
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF171717)
                         )
                     }
@@ -610,7 +610,7 @@ private fun WorkflowStepCard(
                 Text(
                     text = stepTag,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     ),
                     color = Color(0xFF171717)
                 )
@@ -621,7 +621,7 @@ private fun WorkflowStepCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF171717)
                     )
                     Text(
