@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.text.TextUtils
@@ -31,7 +32,15 @@ class ZaloAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event?.packageName != "com.zing.zalo") return
+        val packageName = event?.packageName?.toString() ?: return
+
+        // If returned to AutoSms, stop returning process immediately
+        if (packageName == applicationContext.packageName) {
+            isReturningToApp = false
+            return
+        }
+
+        if (packageName != "com.zing.zalo") return
 
         val rootNode = rootInActiveWindow ?: return
 
@@ -57,8 +66,6 @@ class ZaloAccessibilityService : AccessibilityService() {
             isPendingActionActive = false
             currentPendingMessage = null
             _sendEvents.tryEmit(SendResult.NotFound(reason = "Số điện thoại chưa đăng ký Zalo hoặc không hợp lệ (WebView)"))
-
-            performDoubleBack()
             return true
         }
         return false
@@ -84,40 +91,12 @@ class ZaloAccessibilityService : AccessibilityService() {
                 isPendingActionActive = false
                 currentPendingMessage = null
                 _sendEvents.tryEmit(SendResult.NotFound(reason = text))
-
-                performDoubleBack()
-
                 return true
             }
         }
         return false
     }
 
-    private fun performDoubleBack() {
-        performGlobalAction(GLOBAL_ACTION_BACK)
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
-            {
-                performGlobalAction(GLOBAL_ACTION_BACK)
-            },
-            500,
-        )
-    }
-
-    private fun performTripleBack() {
-        performGlobalAction(GLOBAL_ACTION_BACK)
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
-            {
-                performGlobalAction(GLOBAL_ACTION_BACK)
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
-                    {
-                        performGlobalAction(GLOBAL_ACTION_BACK)
-                    },
-                    400,
-                )
-            },
-            400,
-        )
-    }
 
     @Suppress("UsePropertyAccessSyntax")
     private fun handleAutoSendFlow(rootNode: AccessibilityNodeInfo) {
@@ -194,16 +173,8 @@ class ZaloAccessibilityService : AccessibilityService() {
                 if (sendClicked) {
                     isPendingActionActive = false
                     currentPendingMessage = null
+                    isActionInProgress = false
                     _sendEvents.tryEmit(SendResult.Success)
-
-                    // Return to AutoSms by performing global back actions after message is sent
-                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
-                        {
-                            performTripleBack()
-                            isActionInProgress = false
-                        },
-                        postSendDelayMs
-                    )
                 } else {
                     if (retryCount < maxRetries) {
                         Log.d(TAG, "Retrying send button click ($retryCount/$maxRetries)...")
@@ -518,6 +489,7 @@ class ZaloAccessibilityService : AccessibilityService() {
         private var currentAutoAddFriend = false
         private var currentIsLowSpecDevice = false
         private var isActionInProgress = false
+        private var isReturningToApp = false
 
         fun isAccessibilityEnabled(context: Context): Boolean {
             val am = context.getSystemService(AccessibilityManager::class.java)
@@ -567,6 +539,102 @@ class ZaloAccessibilityService : AccessibilityService() {
             isActionInProgress = false
             isPendingActionActive = false
             currentPendingMessage = null
+        }
+
+        fun cancelReturnToApp() {
+            isReturningToApp = false
+        }
+
+        /**
+         * Safely returns to AutoSms using AccessibilityService privileges:
+         * 1. Attempts to bring MainActivity to front from AccessibilityService context (permitted in Android 10+).
+         * 2. Runs a conditional BACK loop only while the foreground package is still Zalo,
+         *    stopping immediately as soon as AutoSms is detected.
+         */
+        fun returnToAutoSms(context: Context, delayMs: Long = 400L) {
+            val service = instance
+            if (service == null) {
+                Log.w(TAG, "returnToAutoSms: AccessibilityService instance is null! Falling back to context.startActivity")
+                // Fallback to normal activity start if accessibility service is unavailable
+                try {
+                    val bringIntent = Intent(context, com.gmail.nthai.MainActivity::class.java).apply {
+                        addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        )
+                    }
+                    context.startActivity(bringIntent)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed fallback bring app to front", e)
+                }
+                return
+            }
+
+            Log.d(TAG, "returnToAutoSms: Initiating return sequence (delay: ${delayMs}ms)")
+            isReturningToApp = true
+
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (!isReturningToApp) return@postDelayed
+
+                // 1. First trigger GLOBAL_ACTION_BACK to exit conversation/input in Zalo
+                service.performGlobalAction(GLOBAL_ACTION_BACK)
+
+                // 2. Try launching MainActivity from AccessibilityService (bypasses Android 10 background restrictions)
+                try {
+                    val intent = Intent(service, com.gmail.nthai.MainActivity::class.java).apply {
+                        addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        )
+                    }
+                    service.startActivity(intent)
+                    Log.d(TAG, "Launched AutoSms MainActivity from AccessibilityService")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error starting MainActivity from AccessibilityService", e)
+                }
+
+                // 3. Perform conditional back steps only while still on Zalo (max 3 attempts)
+                scheduleConditionalBack(service, attempt = 1, maxAttempts = 3, intervalMs = 400L)
+            }, delayMs)
+        }
+
+        private fun scheduleConditionalBack(
+            service: ZaloAccessibilityService,
+            attempt: Int,
+            maxAttempts: Int,
+            intervalMs: Long
+        ) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (!isReturningToApp) {
+                    Log.d(TAG, "Already back to AutoSms, stopping back sequence.")
+                    return@postDelayed
+                }
+
+                val currentRoot = service.rootInActiveWindow
+                val currentPkg = currentRoot?.packageName?.toString()
+
+                if (currentPkg == service.packageName) {
+                    Log.d(TAG, "AutoSms is now visible! Stopped back sequence.")
+                    isReturningToApp = false
+                    return@postDelayed
+                }
+
+                if (currentPkg == "com.zing.zalo" || currentPkg == null) {
+                    Log.d(TAG, "Still on Zalo (pkg: $currentPkg). Triggering GLOBAL_ACTION_BACK (attempt $attempt/$maxAttempts)...")
+                    service.performGlobalAction(GLOBAL_ACTION_BACK)
+
+                    if (attempt < maxAttempts) {
+                        scheduleConditionalBack(service, attempt + 1, maxAttempts, intervalMs)
+                    } else {
+                        isReturningToApp = false
+                    }
+                } else {
+                    Log.d(TAG, "Active window is external package ($currentPkg), aborting back sequence.")
+                    isReturningToApp = false
+                }
+            }, intervalMs)
         }
 
     }

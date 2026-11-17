@@ -150,24 +150,9 @@ class ZaloSendingEngine @Inject constructor(
                     )
                 )
 
-                // Give device time to recover before bringing MainActivity back to front
-                if (isLowSpecDevice) {
-                    delay(1000)
-                } else {
-                    delay(500)
-                }
-
-                // Always bring app back to front after processing recipient
-                try {
-                    val bringIntent = Intent(context, com.gmail.nthai.MainActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                    }
-                    context.startActivity(bringIntent)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to bring app to front", e)
-                }
-
-                ZaloAccessibilityService.clearPendingAction()
+                // Always bring app back to front after processing recipient using AccessibilityService + Conditional Back
+                val postDelay = if (isLowSpecDevice) 600L else 300L
+                ZaloAccessibilityService.returnToAutoSms(context, delayMs = postDelay)
 
                 val updatedSentCount = index + 1
                 _progressState.update {
@@ -229,6 +214,7 @@ class ZaloSendingEngine @Inject constructor(
     fun stopCampaign() {
         campaignJob?.cancel()
         ZaloAccessibilityService.clearPendingAction()
+        ZaloAccessibilityService.cancelReturnToApp()
         _progressState.update {
             it.copy(
                 isSending = false,

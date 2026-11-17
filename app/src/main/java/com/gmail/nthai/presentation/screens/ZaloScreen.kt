@@ -49,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.gmail.nthai.presentation.components.ExcelImportDialogs
 import com.gmail.nthai.presentation.components.zalo.ZaloConfigTab
 import com.gmail.nthai.presentation.components.zalo.ZaloProgressTab
 import com.gmail.nthai.presentation.components.zalo.ZaloRecipientTab
@@ -77,6 +78,10 @@ fun ZaloScreen(
     val sendOnlyIfUnsent by viewModel.sendOnlyIfUnsent.collectAsState()
     val isLowSpecDevice by viewModel.isLowSpecDevice.collectAsState()
 
+    val pendingImportState by viewModel.pendingImportState.collectAsState()
+    val isImporting by viewModel.isImporting.collectAsState()
+    val importLoadingMessage by viewModel.importLoadingMessage.collectAsState()
+
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
@@ -97,9 +102,9 @@ fun ZaloScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            viewModel.importExcelFile(context, uri)
-            Toast.makeText(context, "Đã nhập file Excel Zalo", Toast.LENGTH_SHORT).show()
-            selectedTab = 1 // Show in recipient list tab
+            viewModel.prepareExcelImportWithUri(context, uri) { err ->
+                Toast.makeText(context, "Lỗi đọc tiêu đề Excel Zalo: ${err.message}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -245,11 +250,31 @@ fun ZaloScreen(
                     logs = logs,
                     onPauseCampaign = { viewModel.pauseCampaign() },
                     onResumeCampaign = { viewModel.resumeCampaign() },
-                    onStopCampaign = { viewModel.stopCampaign() }
+                    onStopCampaign = { viewModel.stopCampaign() },
+                    onClearLogs = { viewModel.clearLogs() }
                 )
             }
         }
     }
+
+    ExcelImportDialogs(
+        isImporting = isImporting,
+        importLoadingMessage = importLoadingMessage,
+        pendingImportState = pendingImportState,
+        onSelectHeader = { viewModel.updateSelectedImportHeader(it) },
+        onSelectImportMode = { viewModel.updateSelectedImportMode(it) },
+        onConfirmImport = {
+            viewModel.confirmImport { result ->
+                result.onSuccess { count ->
+                    Toast.makeText(context, "Đã nhập thành công $count SĐT Zalo", Toast.LENGTH_SHORT).show()
+                    selectedTab = 1
+                }.onFailure { err ->
+                    Toast.makeText(context, "Lỗi nhập Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        },
+        onDismissImport = { viewModel.cancelImport() }
+    )
 }
 
 @Preview(showBackground = true)

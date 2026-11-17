@@ -69,8 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gmail.nthai.domain.model.Customer
-import com.gmail.nthai.presentation.components.LoadingDialog
-import com.gmail.nthai.presentation.components.SelectPhoneColumnDialog
+import com.gmail.nthai.presentation.components.ExcelImportDialogs
 import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
 import com.gmail.nthai.presentation.components.customer.CustomerDetailDialog
 import com.gmail.nthai.presentation.components.customer.CustomerItemCard
@@ -474,33 +473,31 @@ fun CustomerListScreen(
         )
     }
 
-    pendingImportState?.let { state ->
-        SelectPhoneColumnDialog(
-            headers = state.headers,
-            selectedHeader = state.selectedHeader,
-            onSelectHeader = { viewModel.updateSelectedImportHeader(it) },
-            selectedImportMode = state.selectedImportMode,
-            onSelectImportMode = { viewModel.updateSelectedImportMode(it) },
-            onConfirm = {
-                viewModel.confirmImport { result ->
-                    result.onSuccess { count ->
-                        Toast.makeText(
-                            context,
-                            "Đã nhập thành công $count khách hàng",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }.onFailure { err ->
-                        Toast.makeText(
-                            context,
-                            "Lỗi đọc file Excel: ${err.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+    ExcelImportDialogs(
+        isImporting = isImporting,
+        importLoadingMessage = importLoadingMessage,
+        pendingImportState = pendingImportState,
+        onSelectHeader = { viewModel.updateSelectedImportHeader(it) },
+        onSelectImportMode = { viewModel.updateSelectedImportMode(it) },
+        onConfirmImport = {
+            viewModel.confirmImport { result ->
+                result.onSuccess { count ->
+                    Toast.makeText(
+                        context,
+                        "Đã nhập thành công $count khách hàng",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }.onFailure { err ->
+                    Toast.makeText(
+                        context,
+                        "Lỗi đọc file Excel: ${err.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
-            },
-            onDismiss = { viewModel.cancelImport() }
-        )
-    }
+            }
+        },
+        onDismissImport = { viewModel.cancelImport() }
+    )
 
     if (showResetDialog) {
         ResetStatusDialog(
@@ -516,10 +513,6 @@ fun CustomerListScreen(
             },
             onDismiss = { showResetDialog = false }
         )
-    }
-
-    if (isImporting) {
-        LoadingDialog(message = importLoadingMessage)
     }
 }
 

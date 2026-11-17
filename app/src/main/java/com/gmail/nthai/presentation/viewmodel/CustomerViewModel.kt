@@ -31,6 +31,8 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import javax.inject.Inject
 
+import com.gmail.nthai.domain.model.PendingImportState
+
 enum class CustomerFilter {
     ALL, PENDING, SENT, FAILED
 }
@@ -46,13 +48,6 @@ enum class CustomerCarrierFilter(val label: String, val carrierName: String? = n
     ITEL("iTel", "iTel"),
     UNKNOWN("Không rõ")
 }
-
-data class PendingImportState(
-    val fileBytes: ByteArray,
-    val headers: List<String>,
-    val selectedHeader: String,
-    val selectedImportMode: ImportMode = ImportMode.REPLACE_ALL
-)
 
 @HiltViewModel
 class CustomerViewModel @Inject constructor(
