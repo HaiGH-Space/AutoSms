@@ -70,9 +70,9 @@ fun ZaloConfigTab(
     onMessageContentChange: (String) -> Unit = {},
     delayRange: ClosedFloatingPointRange<Float> = 20f..30f,
     onDelayRangeChange: (ClosedFloatingPointRange<Float>) -> Unit = {},
-    autoAddFriend: Boolean = true,
+    autoAddFriend: Boolean = false,
     onAutoAddFriendChange: (Boolean) -> Unit = {},
-    sendOnlyIfUnsent: Boolean = true,
+    sendOnlyIfUnsent: Boolean = false,
     onSendOnlyIfUnsentChange: (Boolean) -> Unit = {},
     isLowSpecDevice: Boolean = false,
     onIsLowSpecDeviceChange: (Boolean) -> Unit = {},
@@ -363,7 +363,6 @@ fun ZaloConfigTab(
                     Switch(
                         checked = autoAddFriend,
                         onCheckedChange = onAutoAddFriendChange,
-                        enabled = false,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color(0xFFFFFFFF),
                             checkedTrackColor = Color(0xFF171717),
@@ -396,7 +395,6 @@ fun ZaloConfigTab(
                     Switch(
                         checked = sendOnlyIfUnsent,
                         onCheckedChange = onSendOnlyIfUnsentChange,
-                        enabled = false,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color(0xFFFFFFFF),
                             checkedTrackColor = Color(0xFF171717),
@@ -429,7 +427,6 @@ fun ZaloConfigTab(
                     Switch(
                         checked = isLowSpecDevice,
                         onCheckedChange = onIsLowSpecDeviceChange,
-                        enabled = false,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color(0xFFFFFFFF),
                             checkedTrackColor = Color(0xFF171717),

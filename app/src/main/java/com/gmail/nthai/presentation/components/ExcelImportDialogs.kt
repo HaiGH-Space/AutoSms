@@ -30,8 +30,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.gmail.nthai.domain.model.ImportMode
+import com.gmail.nthai.domain.model.PendingImportState
 import com.gmail.nthai.presentation.components.common.SelectionOption
 import com.gmail.nthai.presentation.components.common.SelectionOptionCard
+
+@Composable
+fun ExcelImportDialogs(
+    isImporting: Boolean,
+    importLoadingMessage: String,
+    pendingImportState: PendingImportState?,
+    onSelectHeader: (String) -> Unit,
+    onSelectImportMode: (ImportMode) -> Unit,
+    onConfirmImport: () -> Unit,
+    onDismissImport: () -> Unit
+) {
+    if (isImporting) {
+        LoadingDialog(message = importLoadingMessage)
+    }
+
+    pendingImportState?.let { pendingState ->
+        SelectPhoneColumnDialog(
+            headers = pendingState.headers,
+            selectedHeader = pendingState.selectedHeader,
+            onSelectHeader = onSelectHeader,
+            selectedImportMode = pendingState.selectedImportMode,
+            onSelectImportMode = onSelectImportMode,
+            onConfirm = onConfirmImport,
+            onDismiss = onDismissImport
+        )
+    }
+}
 
 @Composable
 fun LoadingDialog(message: String) {

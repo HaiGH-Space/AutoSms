@@ -6,6 +6,7 @@ import com.gmail.nthai.data.local.dao.ZaloSendingLogDao
 import com.gmail.nthai.data.local.mapper.toDomain
 import com.gmail.nthai.data.local.mapper.toEntity
 import com.gmail.nthai.data.local.mapper.toZaloEntity
+import com.gmail.nthai.domain.model.ImportMode
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.ZaloRecipient
 import com.gmail.nthai.domain.repository.ZaloRepository
@@ -42,6 +43,41 @@ class ZaloRepositoryImpl @Inject constructor(
 
     override suspend fun insertRecipients(recipients: List<ZaloRecipient>) {
         zaloRecipientDao.insertRecipients(recipients.map { it.toEntity() })
+    }
+
+    override suspend fun importRecipients(recipients: List<ZaloRecipient>, mode: ImportMode): Int {
+        return when (mode) {
+            ImportMode.REPLACE_ALL -> {
+                zaloRecipientDao.deleteAllRecipients()
+                zaloRecipientDao.insertRecipients(recipients.map { it.toEntity() })
+                recipients.size
+            }
+
+            ImportMode.APPEND -> {
+                zaloRecipientDao.insertRecipients(recipients.map { it.toEntity() })
+                recipients.size
+            }
+
+            ImportMode.SKIP_DUPLICATES -> {
+                val existingPhones = HashSet<String>()
+                zaloRecipientDao.getAllRecipientPhones().forEach { raw ->
+                    raw.split(',').map(String::trim).filter(String::isNotEmpty)
+                        .forEach { existingPhones.add(it) }
+                }
+                val filtered = mutableListOf<ZaloRecipient>()
+                for (recipient in recipients) {
+                    val recipientPhones = recipient.phone.split(',').map(String::trim).filter(String::isNotEmpty)
+                    if (recipientPhones.isNotEmpty() && recipientPhones.none { existingPhones.contains(it) }) {
+                        filtered.add(recipient)
+                        existingPhones.addAll(recipientPhones)
+                    }
+                }
+                if (filtered.isNotEmpty()) {
+                    zaloRecipientDao.insertRecipients(filtered.map { it.toEntity() })
+                }
+                filtered.size
+            }
+        }
     }
 
     override suspend fun insertRecipient(recipient: ZaloRecipient): Long {

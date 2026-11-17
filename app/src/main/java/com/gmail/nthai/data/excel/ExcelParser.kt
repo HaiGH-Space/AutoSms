@@ -37,20 +37,43 @@ class ExcelParser {
                         .map { getCellValueAsString(row.getCell(it)).trim() }
 
                     var candidatePhoneCol = -1
-                    for ((c, header) in rowHeaders.withIndex()) {
-                        val valStr = header.lowercase(Locale.ROOT)
-                        if (valStr == targetPhoneHeader || valStr == "sdt" || valStr == "sđt") {
-                            candidatePhoneCol = c
-                            break
-                        } else if (candidatePhoneCol == -1 && (
-                                    valStr.contains(targetPhoneHeader) ||
-                                            valStr.contains("sđt") ||
-                                            valStr.contains("sdt") ||
-                                            valStr.contains("thoại") ||
-                                            valStr.contains("phone")
-                                    )
-                        ) {
-                            candidatePhoneCol = c
+
+                    // 1. Exact match with targetPhoneHeader
+                    if (targetPhoneHeader.isNotEmpty()) {
+                        for ((c, header) in rowHeaders.withIndex()) {
+                            if (header.lowercase(Locale.ROOT) == targetPhoneHeader) {
+                                candidatePhoneCol = c
+                                break
+                            }
+                        }
+                    }
+
+                    // 2. Contains match with targetPhoneHeader
+                    if (candidatePhoneCol == -1 && targetPhoneHeader.isNotEmpty()) {
+                        for ((c, header) in rowHeaders.withIndex()) {
+                            if (header.lowercase(Locale.ROOT).contains(targetPhoneHeader)) {
+                                candidatePhoneCol = c
+                                break
+                            }
+                        }
+                    }
+
+                    // 3. Fallback to default phone keywords
+                    if (candidatePhoneCol == -1) {
+                        for ((c, header) in rowHeaders.withIndex()) {
+                            val valStr = header.lowercase(Locale.ROOT)
+                            if (valStr == "sdt" || valStr == "sđt" || valStr == "phone") {
+                                candidatePhoneCol = c
+                                break
+                            } else if (candidatePhoneCol == -1 && (
+                                        valStr.contains("sđt") ||
+                                                valStr.contains("sdt") ||
+                                                valStr.contains("thoại") ||
+                                                valStr.contains("phone")
+                                        )
+                            ) {
+                                candidatePhoneCol = c
+                            }
                         }
                     }
 
@@ -86,13 +109,10 @@ class ExcelParser {
                             continue
                         }
                         val itemCustomFields = rowCustomFields.toMutableMap()
-                        headers.forEach { header ->
-                            val h = header.lowercase(Locale.ROOT)
-                            if (h == targetPhoneHeader || h == "sdt" || h == "sđt" || h == "phone" || h.contains(
-                                    "thoại"
-                                )
-                            ) {
-                                itemCustomFields[header] = singlePhone
+                        if (phoneCol in 0 until headers.size) {
+                            val phoneHeader = headers[phoneCol]
+                            if (phoneHeader.isNotBlank()) {
+                                itemCustomFields[phoneHeader] = singlePhone
                             }
                         }
 

@@ -178,4 +178,30 @@ class ExcelParserTest {
         assertEquals("0987654321", imported[1].phone)
         assertEquals("Lê Cường", imported[1].customFields["Tên"])
     }
+
+    @Test
+    fun `imports using exact user selected column even if default sdt column exists`() {
+        val output = ByteArrayOutputStream()
+        XSSFWorkbook().use { workbook ->
+            val sheet = workbook.createSheet("Khách hàng")
+            val header = sheet.createRow(0)
+            listOf("Họ tên", "sdt", "Số Zalo Cá Nhân")
+                .forEachIndexed { index, value -> header.createCell(index).setCellValue(value) }
+
+            val row1 = sheet.createRow(1)
+            row1.createCell(0).setCellValue("Nguyễn An")
+            row1.createCell(1).setCellValue("0911111111")
+            row1.createCell(2).setCellValue("0999999999")
+
+            workbook.write(output)
+        }
+
+        val imported = ExcelParser()
+            .parseCustomers(ByteArrayInputStream(output.toByteArray()), phoneColumnName = "Số Zalo Cá Nhân")
+            .getOrThrow()
+
+        assertEquals(1, imported.size)
+        assertEquals("0999999999", imported[0].phone)
+        assertEquals("Nguyễn An", imported[0].customFields["Họ tên"])
+    }
 }

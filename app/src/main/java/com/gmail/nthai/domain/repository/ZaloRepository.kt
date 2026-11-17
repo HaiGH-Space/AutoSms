@@ -1,6 +1,7 @@
 package com.gmail.nthai.domain.repository
 
 import com.gmail.nthai.data.local.dao.ZaloRecipientStatsEntity
+import com.gmail.nthai.domain.model.ImportMode
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.ZaloRecipient
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +12,7 @@ interface ZaloRepository {
     fun observeLogs(): Flow<List<LogRecord>>
     suspend fun getPendingRecipients(): List<ZaloRecipient>
     suspend fun insertRecipients(recipients: List<ZaloRecipient>)
+    suspend fun importRecipients(recipients: List<ZaloRecipient>, mode: ImportMode): Int
     suspend fun insertRecipient(recipient: ZaloRecipient): Long
     suspend fun updateRecipientStatus(id: Long, status: String, note: String)
     suspend fun deleteRecipient(id: Long)

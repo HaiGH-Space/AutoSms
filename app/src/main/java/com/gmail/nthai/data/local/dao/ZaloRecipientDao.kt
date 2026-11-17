@@ -33,6 +33,9 @@ interface ZaloRecipientDao {
     @Query("SELECT * FROM zalo_recipients ORDER BY id ASC")
     fun getAllRecipients(): Flow<List<ZaloRecipientEntity>>
 
+    @Query("SELECT phone FROM zalo_recipients")
+    suspend fun getAllRecipientPhones(): List<String>
+
     @Query("SELECT * FROM zalo_recipients WHERE status = 'PENDING' ORDER BY id ASC")
     fun getPendingRecipients(): Flow<List<ZaloRecipientEntity>>
 
