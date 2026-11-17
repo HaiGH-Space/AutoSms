@@ -1,8 +1,8 @@
 {
-  "versionCode": 9,
-  "versionName": "0.1.8",
+  "versionCode": 10,
+  "versionName": "0.1.9",
   "releaseType": "beta",
-  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.8/app-release.apk",
-  "releaseNotes": "[BẢN BETA]\n- Đồng bộ thanh tiêu đề ứng dụng (AutoSmsTopAppBar) trên tất cả các màn hình\n- Thêm hộp thoại lựa chọn dùng chung GenericSelectionDialog & SelectionOptionCard\n- Tái cấu trúc ResetStatusDialog và ExcelImportDialogs sang GenericSelectionDialog giúp giao diện đồng nhất\n- Nâng cấp màn hình Báo cáo (ReportScreen): bộ lọc chip dạng pill, thẻ thống kê ReportMetricCard cải tiến và hỗ trợ cuộn linh hoạt\n- Cải thiện thẻ lịch sử LogRecordCard và huy hiệu trạng thái StatusBadge\n- Hỗ trợ chọn mẫu tin nhắn trực tiếp từ mục Quản lý trong cấu hình gửi Zalo (ZaloConfigTab)\n- Bổ sung huy hiệu phân loại phiên bản ReleaseTypeBadge (Alpha / Beta / Chính thức) và hỗ trợ cuộn nội dung ghi chú cập nhật trong UpdateDialogs\n- Cập nhật bộ icon launcher thích ứng (Adaptive Icons), icon đơn sắc monochrome và làm mới bảng màu thương hiệu\n- Bổ sung tài liệu kiến trúc, cấu trúc dự án và tài nguyên logo SVG",
+  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.9/app-release.apk",
+  "releaseNotes": "[BẢN BETA]\n- Cải tiến và tối ưu Dịch vụ hỗ trợ tiếp cận (Accessibility Service) và động cơ gửi tin tự động Zalo (ZaloSendingEngine)\n- Thêm hộp thoại nhập file Excel (ExcelImportDialogs) hỗ trợ xem trước, khớp cột dữ liệu và xử lý trùng lặp\n- Nâng cấp tính năng nhập danh sách người nhận Zalo và khách hàng từ file Excel\n- Bổ sung tùy chỉnh khoảng thời gian giãn cách (delay range) trong cài đặt gửi tin Zalo\n- Tối ưu hóa giao diện và hiển thị văn bản trong các tab cấu hình, tiến trình và cài đặt Zalo\n- Thêm unit test kiểm thử cho bộ đọc file Excel (ExcelParserTest)",
   "forceUpdate": false
 }
