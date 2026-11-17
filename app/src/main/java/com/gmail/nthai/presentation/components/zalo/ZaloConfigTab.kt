@@ -68,7 +68,7 @@ fun ZaloConfigTab(
     onSelectTemplate: (SmsTemplate) -> Unit = {},
     messageContent: String = "{Xin chào|Chào} {ten_khach}, bên em đang có chương trình ưu đãi tri ân khách hàng. Vui lòng nhắn tin lại để nhận mã giảm giá nhé!",
     onMessageContentChange: (String) -> Unit = {},
-    delayRange: ClosedFloatingPointRange<Float> = 10f..25f,
+    delayRange: ClosedFloatingPointRange<Float> = 20f..30f,
     onDelayRangeChange: (ClosedFloatingPointRange<Float>) -> Unit = {},
     autoAddFriend: Boolean = true,
     onAutoAddFriendChange: (Boolean) -> Unit = {},
@@ -363,6 +363,7 @@ fun ZaloConfigTab(
                     Switch(
                         checked = autoAddFriend,
                         onCheckedChange = onAutoAddFriendChange,
+                        enabled = false,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color(0xFFFFFFFF),
                             checkedTrackColor = Color(0xFF171717),
@@ -395,6 +396,7 @@ fun ZaloConfigTab(
                     Switch(
                         checked = sendOnlyIfUnsent,
                         onCheckedChange = onSendOnlyIfUnsentChange,
+                        enabled = false,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color(0xFFFFFFFF),
                             checkedTrackColor = Color(0xFF171717),
@@ -427,6 +429,7 @@ fun ZaloConfigTab(
                     Switch(
                         checked = isLowSpecDevice,
                         onCheckedChange = onIsLowSpecDeviceChange,
+                        enabled = false,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color(0xFFFFFFFF),
                             checkedTrackColor = Color(0xFF171717),

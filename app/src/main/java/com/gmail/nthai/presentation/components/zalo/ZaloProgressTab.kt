@@ -72,7 +72,10 @@ fun ZaloProgressTab(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
                         text = "TRUNG TÂM GỬI ZALO",
                         style = MaterialTheme.typography.labelSmall.copy(
@@ -89,9 +92,13 @@ fun ZaloProgressTab(
                         },
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF171717)
+                        color = Color(0xFF171717),
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
@@ -185,7 +192,11 @@ fun ZaloProgressTab(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(if (isPaused) "Tiếp tục" else "Tạm dừng", fontSize = 13.sp)
+                        Text(
+                            if (isPaused) "Tiếp tục" else "Tạm dừng",
+                            fontSize = 13.sp,
+                            maxLines = 1
+                        )
                     }
 
                     Button(
@@ -205,7 +216,11 @@ fun ZaloProgressTab(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Dừng chiến dịch", fontSize = 13.sp)
+                        Text(
+                            "Dừng",
+                            fontSize = 13.sp,
+                            maxLines = 1
+                        )
                     }
                 }
             }

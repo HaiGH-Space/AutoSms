@@ -143,7 +143,7 @@ fun ZaloSettingsTab(
             Spacer(modifier = Modifier.height(12.dp))
 
             SafetyTipItem(
-                title = "Giãn cách thời gian (15s - 30s/tin)",
+                title = "Giãn cách thời gian (20s - 30s/tin)",
                 description = "Đặt thời gian nghỉ hợp lý giữa các lần gửi để tránh hệ thống Zalo phát hiện bất thường."
             )
 

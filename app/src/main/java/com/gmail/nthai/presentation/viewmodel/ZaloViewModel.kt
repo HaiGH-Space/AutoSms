@@ -69,7 +69,7 @@ class ZaloViewModel @Inject constructor(
     val messageContent = MutableStateFlow(
         "{Xin chào|Chào} {ten_khach}, bên em đang có chương trình ưu đãi tri ân khách hàng. Vui lòng nhắn tin lại để nhận mã giảm giá nhé!"
     )
-    val delayRange = MutableStateFlow(10f..25f)
+    val delayRange = MutableStateFlow(20f..30f)
     val autoAddFriend = MutableStateFlow(true)
     val sendOnlyIfUnsent = MutableStateFlow(true)
     val isLowSpecDevice = MutableStateFlow(false)
