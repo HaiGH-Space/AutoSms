@@ -6,9 +6,9 @@
 
 | Severity | Concern | Evidence | Impact | Suggested action |
 |----------|---------|----------|--------|------------------|
-| High | Missing Room database migration from v10 to v11 with destructive fallback | `app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt#L87-L99`, `app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt#L29` | Upgrading an existing app installation from database v10 (version 0.1.5) to v11/v12 (version 0.1.6+) triggers `fallbackToDestructiveMigration`, wiping all user customers, templates, SIM configs, and logs. While `MIGRATION_11_12` exists (adding min/maxDelaySec), `MIGRATION_10_11` remains missing | Implement `MIGRATION_10_11` in `DatabaseModule.kt` to create `zalo_recipients` and `zalo_sending_logs` tables without dropping the database |
+| High | Missing Room database migration from v10 to v11 with active destructive fallback | `app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt#L87-L100`, `app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt#L29` | Upgrading an existing app installation from database v10 (version 0.1.5) to v11/v12 (version 0.1.6+) triggers `fallbackToDestructiveMigration`, wiping all user customers, templates, SIM configs, and logs. While `MIGRATION_11_12` exists (adding min/maxDelaySec), `MIGRATION_10_11` remains missing | Implement `MIGRATION_10_11` in `DatabaseModule.kt` to create `zalo_recipients` and `zalo_sending_logs` tables without dropping the database |
 | High | Missing older Room migrations (v2->v3, v3->v4) | `app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt#L24-L73` | Any existing user jumping across older versions will have their database wiped | Define explicit migration steps or archive backward compatibility expectations |
-| Medium | Brittle UI automation for Zalo via Accessibility Service | `app/src/main/java/com/gmail/nthai/service/ZaloAccessibilityService.kt`, `app/src/main/java/com/gmail/nthai/service/ZaloSendingEngine.kt` | Any layout, text change, or view tree update in the official Zalo app can cause automation failure; recent additions (WebView error detection, text not-found matching, clipboard paste fallback, and low-spec device retries) have mitigated common hang cases | Continue hardening node search with fallback heuristics and provide in-app diagnostic logging |
+| Medium | Brittle UI automation for Zalo via Accessibility Service | `app/src/main/java/com/gmail/nthai/service/ZaloAccessibilityService.kt`, `app/src/main/java/com/gmail/nthai/service/ZaloSendingEngine.kt` | Any layout, text change, or view tree update in the official Zalo app (`com.zing.zalo`) can cause automation failure. Recent additions (WebView error detection, clipboard paste fallback, retry mechanisms, and low-spec device pacing) have mitigated common hang cases, but it remains dependent on third-party UI stability | Continue hardening node search with fallback heuristics and provide in-app diagnostic logging |
 | Medium | Apache POI memory consumption on Android | `app/build.gradle.kts#L88`, `app/src/main/java/com/gmail/nthai/AutoSmsApplication.kt#L15-L17` | Processing large `.xlsx` files with many rows/columns can cause large memory spikes or `OutOfMemoryError` on low-RAM mobile devices | Consider streaming parsers or limiting the maximum rows parsed at one time |
 | Medium | Foreground Service runtime restrictions on Android 14+ | `app/src/main/AndroidManifest.xml#L13-L14`, `app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt` | Modern Android strictly regulates `dataSync` foreground service types and enforces execution time limits | Review compliance with Google Play Store dataSync foreground service policies |
 
@@ -21,7 +21,7 @@ List the most important debt items only.
 | Hardcoded Log4j workaround for POI | Apache POI expects full Java SE desktop logging; Android lacks standard Log4j2 | `app/src/main/java/com/gmail/nthai/AutoSmsApplication.kt#L15-L17` | If POI is invoked before Application initialization or in isolated processes, app crashes with `ClassNotFoundException` | Ensure POI initialization wrapper is centralized and resilient |
 | TODO in production resource config | Backup rules template left uncustomized | `app/src/main/res/xml/data_extraction_rules.xml#L8` | App backups may unintentionally include or exclude sensitive local customer databases | Configure `<include>` and `<exclude>` rules explicitly for Room database files |
 | No automated CI/CD pipeline | Project relies on manual local builds | Repository root (no `.github/workflows/`) | Build regressions, lint failures, or broken tests may be pushed unnoticed | Add GitHub Actions workflow running `./gradlew test` and `./gradlew assembleDebug` on pull requests |
-| Zero automated testing for Zalo module | Rapid feature implementation in recent commits | `app/src/test/java/com/gmail/nthai/` | Regressions in Zalo parsing, deep link generation, or repository logic go undetected | Introduce unit tests for `ZaloSendingEngine` and repository mappers |
+| Zero automated testing for Zalo automation module | Rapid feature implementation in recent commits | `app/src/test/java/com/gmail/nthai/` | Regressions in Zalo parsing, deep link generation, or repository logic go undetected | Introduce unit tests for `ZaloSendingEngine` and repository mappers |
 
 ### 3) Security Concerns
 
@@ -42,25 +42,31 @@ List the most important debt items only.
 
 | Area | Why fragile | Churn signal | Safe change strategy |
 |------|-------------|-------------|----------------------|
-| `CustomerListScreen.kt` | 13 commits in 90 days; mixes customer filtering, Excel mode selection, reset dialogs, and pagination | 13 commits in git log | Decompose screen into smaller dedicated subcomponents; write Compose UI unit tests |
-| `SmsForegroundService.kt` | 12 commits in 90 days; coordinates multi-SIM state machines, notification updates, and coroutine jobs | 12 commits in git log | Separate state machine logic from Android Service lifecycle into a standalone testable controller |
-| `app/build.gradle.kts` | 12 commits in 90 days; frequent dependency bumps, Proguard rule adjustments, and packaging tweaks | 12 commits in git log | Rely on version catalog (`libs.versions.toml`) and maintain changelogs for packaging changes |
-| `HomeScreen.kt` | 11 commits in 90 days; primary launcher surface connecting Excel import, navigation, and overview cards | 11 commits in git log | Keep composables stateless and delegate actions to ViewModel events |
-| `DatabaseModule.kt` & `AppDatabase.kt` | 9 and 8 commits in 90 days; active schema modifications (version 1 through 11) | 9 commits in git log | Add automated `MigrationTestHelper` test suite before bumping Room versions |
+| `CustomerListScreen.kt` | 19 commits in 90 days; mixes customer filtering, Excel mode selection, reset dialogs, and pagination | 19 commits in git log | Decompose screen into smaller dedicated subcomponents; write Compose UI unit tests |
+| `HomeScreen.kt` | 17 commits in 90 days; primary launcher surface connecting Excel import, navigation, and overview cards | 17 commits in git log | Keep composables stateless and delegate actions to ViewModel events |
+| `app/build.gradle.kts` | 16 commits in 90 days; frequent dependency bumps, Proguard rule adjustments, and packaging tweaks | 16 commits in git log | Rely on version catalog (`libs.versions.toml`) and maintain changelogs for packaging changes |
+| `update.json` | 16 commits in 90 days; frequently modified to trigger in-app updates across releases | 16 commits in git log | Automate release manifest generation via CI/CD release pipeline |
+| `SmsForegroundService.kt` | 13 commits in 90 days; coordinates multi-SIM state machines, notification updates, and coroutine jobs | 13 commits in git log | Separate state machine logic from Android Service lifecycle into a standalone testable controller |
+| `CustomerViewModel.kt` | 12 commits in 90 days; customer state management, search, and Excel import bindings | 12 commits in git log | Maintain isolated unit tests for ViewModel state reductions |
+| `ReportScreen.kt` & `SendingProgressScreen.kt` | 12 commits in 90 days each; complex UI rendering for logs and progress counters | 12 commits in git log | Separate reporting chart/card components into reusable stateless widgets |
+| `DatabaseModule.kt` & `AppDatabase.kt` | 11 and 9 commits in 90 days; active schema modifications (version 1 through 12) | 11 commits in git log | Add automated `MigrationTestHelper` test suite before bumping Room versions |
+| `ZaloConfigTab.kt` & `ZaloScreen.kt` | 10 commits in 90 days each; active development of Zalo campaign orchestration | 10 commits in git log | Decouple tab UI into stateless composables and inject testable engine states |
+| `ZaloAccessibilityService.kt` | 8 commits in 90 days; rapid hardening of accessibility nodes, return loops, and retry handlers | 8 commits in git log | Unit-test state transitions and navigation helpers where feasible; document Zalo UI node selectors |
 
 ### 6) `[ASK USER]` Questions
 
-1. [ASK USER] Should `MIGRATION_10_11` be created immediately in `DatabaseModule.kt` to prevent destructive data loss when users upgrade to v0.1.6?
-2. [ASK USER] The repository has recently added Zalo automation via `ZaloAccessibilityService`, but `README.md` only documents SMS automation from Excel. Should `README.md` and documentation be updated to include the Zalo automation feature, or is it intended to remain experimental/hidden for now?
-3. [ASK USER] Are older database migrations prior to v4 (such as migrations from schema v2 to v4) still required to be supported, or is a destructive reset acceptable for legacy installs prior to v0.1.0?
-4. [ASK USER] Should a CI/CD pipeline (such as GitHub Actions) and a code quality tool (like Detekt or Ktlint) be configured to validate builds and tests automatically on pull requests?
+1. [ASK USER] Should `MIGRATION_10_11` be created in `DatabaseModule.kt` immediately to prevent destructive database wipes for users upgrading from v0.1.5 (database v10) to v0.1.9+ (database v12)?
+2. [ASK USER] Are legacy database migrations prior to v4 (specifically migrations from schema v2 to v4) still required to be supported, or can the app explicitly drop backward compatibility for versions prior to v0.1.0?
+3. [ASK USER] Should a CI/CD pipeline (such as GitHub Actions) and a static analysis tool (such as Detekt or Ktlint) be introduced to automate build and test verification on pull requests?
+4. [ASK USER] Would you like to introduce unit/instrumentation tests for `ZaloSendingEngine` using mocked repositories and simulated result flows to cover the Zalo campaign lifecycle?
 
 ### 7) Evidence
 
 - `docs/codebase/.codebase-scan.txt`
-- `app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt#L24-L86`
+- `app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt#L24-L100`
 - `app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt#L29`
 - `app/src/main/java/com/gmail/nthai/service/ZaloAccessibilityService.kt`
+- `app/src/main/java/com/gmail/nthai/service/ZaloSendingEngine.kt`
 - `app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt`
 - `app/src/main/java/com/gmail/nthai/data/excel/ExcelParser.kt`
-
+- `update.json`

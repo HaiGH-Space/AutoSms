@@ -28,6 +28,8 @@
 .agents\skills\documentation-and-adrs\SKILL.md
 .agents\skills\doubt-driven-development
 .agents\skills\doubt-driven-development\SKILL.md
+.agents\skills\find-skills
+.agents\skills\find-skills\SKILL.md
 .agents\skills\frontend-ui-engineering
 .agents\skills\frontend-ui-engineering\SKILL.md
 .agents\skills\git-workflow-and-versioning
@@ -85,124 +87,122 @@
 .agents\skills\using-agent-skills
 .agents\skills\using-agent-skills\SKILL.md
 .gitignore
-app
-app\.gitignore
-app\build.gradle.kts
-app\proguard-rules.pro
-app\release
-app\src
-app\src\androidTest
-app\src\androidTest\java
-app\src\main
-app\src\main\AndroidManifest.xml
-app\src\main\java
-app\src\main\keepRules
-app\src\main\res
-app\src\test
-app\src\test\java
-build.gradle.kts
-docs
-docs\codebase
-docs\codebase\.codebase-scan.txt
-gradle
-gradle\gradle-daemon-jvm.properties
-gradle\libs.versions.toml
-gradle\wrapper
-gradle\wrapper\gradle-wrapper.jar
-gradle\wrapper\gradle-wrapper.properties
-gradle.properties
-gradlew
-gradlew.bat
-local.properties
-README.md
-settings.gradle.kts
-skills-lock.json
-update.json
+.gradle
+.gradle\9.6.0
+.gradle\9.6.0\checksums
+.gradle\9.6.0\checksums\checksums.lock
+.gradle\9.6.0\checksums\md5-checksums.bin
+.gradle\9.6.0\checksums\sha1-checksums.bin
+.gradle\9.6.0\executionHistory
+.gradle\9.6.0\executionHistory\executionHistory.bin
+.gradle\9.6.0\executionHistory\executionHistory.lock
+.gradle\9.6.0\expanded
+.gradle\9.6.0\fileChanges
+.gradle\9.6.0\fileChanges\last-build.bin
+.gradle\9.6.0\fileHashes
+.gradle\9.6.0\fileHashes\fileHashes.bin
+.gradle\9.6.0\fileHashes\fileHashes.lock
+.gradle\9.6.0\fileHashes\resourceHashesCache.bin
+.gradle\9.6.0\gc.properties
+.gradle\9.6.0\kotlin-dsl-plugin-entries
+.gradle\9.6.0\kotlin-dsl-plugin-entries\jar-entries.bin
+.gradle\9.6.0\kotlin-dsl-plugin-entries\kotlin-dsl-plugin-entries.lock
+.gradle\9.6.0\vcsMetadata
+.gradle\buildOutputCleanup
+.gradle\buildOutputCleanup\buildOutputCleanup.lock
+.gradle\buildOutputCleanup\cache.properties
+.gradle\buildOutputCleanup\outputFiles.bin
+.gradle\configuration-cache
+.gradle\configuration-cache\03153d04-d287-4d94-ad64-aa4b94984521
+.gradle\configuration-cache\184127e2-5458-40c1-944b-6f5078d28310
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad\.globals.work.bin
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad\.strings.work.bin
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad\_app.work.bin
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad\buildfingerprint.bin
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad\classloaderscopes.bin
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad\entry.bin
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad\projectfingerprint.bin
+.gradle\configuration-cache\18c18d61-c2e5-48f5-91a7-190b75efa6ad\work.bin
+.gradle\configuration-cache\199b7066-2ea1-4ef5-bec0-5e45d1de9902
+.gradle\configuration-cache\1a4d0272-99a7-478d-842c-d2070393b9fd
+.gradle\configuration-cache\1a7e4b14-a0db-4662-928b-2f635b039bc3
+.gradle\configuration-cache\1a82aa2c-d4a8-478d-bcf0-0b7c5147702c
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\.globals.work.bin
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\.strings.work.bin
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\_app.work.bin
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\buildfingerprint.bin
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\classloaderscopes.bin
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\entry.bin
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\projectfingerprint.bin
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\work.bin
+.gradle\configuration-cache\202502ed-e810-40af-9b07-30bb2463902f
+.gradle\configuration-cache\213236d8-85d6-49a3-ac14-1b0eac4b533a
+.gradle\configuration-cache\2b5e723f-bd45-4fc9-b3c9-e082423b31e8
+.gradle\configuration-cache\30055f45-c25a-4dae-93a1-0646c14537ad
+.gradle\configuration-cache\3036e189-2ea9-4a55-9e56-bba63a812bda
+.gradle\configuration-cache\305af199-cc7a-49f5-8bd6-750ef5e397b3
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\.globals.work.bin
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\.strings.work.bin
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\_app.work.bin
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\buildfingerprint.bin
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\classloaderscopes.bin
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\entry.bin
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\projectfingerprint.bin
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\work.bin
+.gradle\configuration-cache\43yvqiq4jueush4kdjzuwlxwu
+.gradle\configuration-cache\43yvqiq4jueush4kdjzuwlxwu\candidates.bin
+.gradle\configuration-cache\465b8c3a-970b-42c0-a713-5dfd1c6d4d7e
+.gradle\configuration-cache\4a83fc2e-8974-49b5-9f54-78730566854a
+.gradle\configuration-cache\4f6414f3-da5b-4d8a-bcc0-733bd2659f76
+.gradle\configuration-cache\4sjl4k4gjl50nbuqfmozvrw9f
+.gradle\configuration-cache\4sjl4k4gjl50nbuqfmozvrw9f\candidates.bin
+.gradle\configuration-cache\5433gx2xg28fn4hlx8tsw63jh
+.gradle\configuration-cache\5433gx2xg28fn4hlx8tsw63jh\candidates.bin
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff\.globals.work.bin
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff\.strings.work.bin
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff\_app.work.bin
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff\buildfingerprint.bin
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff\classloaderscopes.bin
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff\entry.bin
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff\projectfingerprint.bin
+.gradle\configuration-cache\56f3fa9e-bd01-4ffe-a71c-f72fe1875dff\work.bin
+.gradle\configuration-cache\586ee48a-0092-444b-b578-2c3aa2f8510d
+.gradle\configuration-cache\586ee48a-0092-444b-b578-2c3aa2f8510d\.globals.work.bin
+.gradle\configuration-cache\586ee48a-0092-444b-b578-2c3aa2f8510d\.strings.work.bin
+.gradle\configuration-cache\586ee48a-0092-444b-b578-2c3aa2f8510d\_app.work.bin
+.gradle\configuration-cache\586ee48a-0092-444b-b578-2c3aa2f8510d\classloaderscopes9327647715519153949.tmp
+.gradle\configuration-cache\586ee48a-0092-444b-b578-2c3aa2f8510d\work.bin
+.gradle\configuration-cache\5bh3htywq5je7q8adkbd10vw8
+.gradle\configuration-cache\5bh3htywq5je7q8adkbd10vw8\candidates.bin
+.gradle\configuration-cache\5c5fb6a30z4ycq73zva23pzet
+.gradle\configuration-cache\5c5fb6a30z4ycq73zva23pzet\candidates.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\.globals.work.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\.strings.work.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\_app.work.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\build.work.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\buildfingerprint.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\classloaderscopes.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\entry.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\projectfingerprint.bin
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\work.bin
+.gradle\configuration-cache\61t0410b7bmpeykwi6a8j9zd1
+.gradle\configuration-cache\61t0410b7bmpeykwi6a8j9zd1\candidates.bin
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336\.globals.work.bin
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336\.strings.work.bin
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336\_app.work.bin
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336\buildfingerprint.bin
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336\classloaderscopes.bin
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336\entry.bin
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336\projectfingerprint.bin
 
 === STACK DETECTION (manifest files) ===
 
---- app/build.gradle.kts ---
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
-}
-
-android {
-    namespace = "com.gmail.nthai"
-    compileSdk = 35
-
-    defaultConfig {
-        applicationId = "com.gmail.nthai"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 7
-        versionName = "0.1.6"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    buildFeatures {
-        compose = true
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-            excludes += "META-INF/DEPENDENCIES"
-            excludes += "META-INF/LICENSE"
-            excludes += "META-INF/LICENSE.txt"
-            excludes += "META-INF/license.txt"
-            excludes += "META-INF/NOTICE"
-            excludes += "META-INF/NOTICE.txt"
-            excludes += "META-INF/notice.txt"
-            excludes += "META-INF/ASL2.0"
-        }
-    }
-}
-
-dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.core.splashscreen)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-
-    // Compose
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.navigation.compose)
-    debugImplementation(libs.androidx.compose.ui.tooling)
-
-    // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.androidx.hilt.work)
-
-    // Room
-    implementation(libs.androidx.room.runtime)
-[TRUNCATED] Showing first 80 of 102 lines.
 --- build.gradle.kts ---
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
@@ -222,6 +222,7 @@ plugins {
 # Specifies the JVM arguments used for the daemon process.
 # The setting is particularly useful for tweaking memory settings.
 org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+org.gradle.java.home=D\:\\Android\\Studio\\jbr
 # When configured, Gradle will run in incubating parallel mode.
 # This option should only be used with decoupled projects. For more details, visit
 # https://developer.android.com/r/tools/gradle-multi-project-decoupled-projects
@@ -264,98 +265,95 @@ include(":app")
 
 
 === ENTRY POINTS ===
-Found: app/src/main/AndroidManifest.xml
+No common entry points found. Check 'main' or 'scripts.start' in manifest files above.
 
 === LINTING AND FORMATTING CONFIG ===
 No linting or formatting config files found in project root.
 
 === ENVIRONMENT VARIABLE TEMPLATES ===
-No .env.example or .env.template found.
+No .env.example or .env.template found. Identify required environment variables by searching the code and config for environment variable reads.
 
 === TODO / FIXME / HACK (production code only, test dirs excluded) ===
 app\src\main\res\xml\data_extraction_rules.xml:8: <!-- TODO: Use <include> and <exclude> to control what is backed up.
 
 === GIT RECENT COMMITS (last 20) ===
-f3cf961 feat: implement Zalo automation feature with accessibility service and database support
-ae518e3 feat(zalo): implement Zalo UI screens and component tabs
-cb5cdbf feat: refactor bottom navigation, add AutoSmsScreen and ZaloScreen placeholder
-e76f476 chore: add appInsightsSettings.xml to .gitignore
-6797ffe docs: update README.md with project features and setup guide
-0e1329b Merge pull request #8 from HaiGH-Space/0.1.6
-4408c75 feat: update release notes with new Excel import modes and enhanced SMS handling features
-84555bd feat: Hỗ trợ các chế độ nhập Excel, đặt lại trạng thái gửi và tối ưu hóa xử lý SMS retry
-ba82572 chore: update version to 0.1.6 and modify release notes
-73b8185 Merge pull request #7 from HaiGH-Space/0.1.6
-7bfdfa1 feat(excel): enhance Excel import functionality and improve filtering logic
-3f53c8b chore: rename SKILL.md and related files for consistency
-4f5dd61 feat(widget): add skills
-819eb72 Support single-brace template variables
-c8f6d0c Replace imported customers atomically
-9f7385e Merge pull request #6
-9584533 fix(excel): filter out duplicate phone numbers during customer import
-6be2bfc Merge pull request #5 from HaiGH-Space/hotfix/sms-error-handling
-8b9713b chore: bump version to 0.1.5 (versionCode 6) and update release notes
-4c2ef1f fix(sms): prevent duplicate count and handle multipart SMS failures correctly
+39e36eb Merge pull request #11 from HaiGH-Space/v0.1.9
+47c7538 feat: update version to 0.1.9 and enhance Excel import functionality
+844f301 feat: implement Excel import dialogs and enhance import functionality
+8914f9e feat: update delay range and improve UI text handling for better user experience
+64194d7 feat: implement Zalo accessibility service and sending engine for automated messaging
+5885e4c Merge pull request #10 from HaiGH-Space/v0.1.8
+8930062 feat: add app build configuration and update metadata
+7e85c7a docs: add codebase architecture, concerns, structure, testing documentation and logo assets
+ebced0b feat: add adaptive app launcher icons and color resources
+2f4b537 feat: update UI components for consistent styling and improved user experience
+bdf9ea1 feat: enhance DateRangePickerDialog and LogRecordCard for improved UI consistency and user experience
+387c5cf feat: refactor UI components to use SelectionOption and AutoSmsCardContainer for improved consistency
+2481a07 Merge branch 'master' into v0.1.8
+dbfc676 feat: replace TopAppBar with AutoSmsTopAppBar across multiple screens for consistent UI
+d717434 Add releaseType field to update.json
+e9dd6f9 feat: update version code and name to 0.1.6 in build.gradle.kts and update.json; add release type to update information
+d3e837d Update forceUpdate to false in update.json
+5014dfe Merge pull request #9 from HaiGH-Space/0.1.7
+ada4317 feat: update version code and name to 0.1.7 in build.gradle.kts and update.json
+2750f84 feat: update SIM configuration with min and max delay settings in ZaloAccessibilityService
 
 === HIGH-CHURN FILES (last 90 days, top 20) ===
-  13 app/src/main/java/com/gmail/nthai/presentation/screens/CustomerListScreen.kt
-  12 app/build.gradle.kts
-  12 app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt
-  11 app/src/main/java/com/gmail/nthai/presentation/screens/HomeScreen.kt
-  10 update.json
-  10 app/src/main/java/com/gmail/nthai/presentation/viewmodel/CustomerViewModel.kt
-   9 app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt
-   9 app/src/main/java/com/gmail/nthai/presentation/screens/SimAndRuleConfigScreen.kt
-   8 app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt
-   8 app/src/main/java/com/gmail/nthai/presentation/screens/ReportScreen.kt
-   8 app/src/main/java/com/gmail/nthai/presentation/screens/SendingProgressScreen.kt
-   7 app/src/main/java/com/gmail/nthai/presentation/navigation/Screen.kt
-   7 README.md
-   6 app/src/main/AndroidManifest.xml
-   6 app/src/main/java/com/gmail/nthai/data/local/mapper/Mappers.kt
-   6 app/src/main/java/com/gmail/nthai/presentation/navigation/AppNavHost.kt
-   6 app/src/main/java/com/gmail/nthai/data/local/dao/CustomerDao.kt
-   6 app/src/main/java/com/gmail/nthai/data/repository/CustomerRepositoryImpl.kt
-   6 app/src/main/java/com/gmail/nthai/domain/repository/CustomerRepository.kt
-   6 app/src/main/java/com/gmail/nthai/service/SmsStatusReceiver.kt
+  19 app/src/main/java/com/gmail/nthai/presentation/screens/CustomerListScreen.kt
+  17 app/src/main/java/com/gmail/nthai/presentation/screens/HomeScreen.kt
+  16 app/build.gradle.kts
+  16 update.json
+  13 app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt
+  12 app/src/main/java/com/gmail/nthai/presentation/viewmodel/CustomerViewModel.kt
+  12 app/src/main/java/com/gmail/nthai/presentation/screens/ReportScreen.kt
+  12 app/src/main/java/com/gmail/nthai/presentation/screens/SendingProgressScreen.kt
+  11 app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt
+  10 app/src/main/java/com/gmail/nthai/presentation/components/zalo/ZaloConfigTab.kt
+  10 app/src/main/java/com/gmail/nthai/presentation/screens/ZaloScreen.kt
+  10 README.md
+  10 app/src/main/java/com/gmail/nthai/presentation/screens/SimAndRuleConfigScreen.kt
+   9 app/src/main/java/com/gmail/nthai/presentation/screens/TemplateEditorScreen.kt
+   9 app/src/main/java/com/gmail/nthai/presentation/screens/ManagementScreen.kt
+   9 app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt
+   9 app/src/main/java/com/gmail/nthai/presentation/navigation/AppNavHost.kt
+   9 app/src/main/java/com/gmail/nthai/presentation/navigation/Screen.kt
+   8 app/src/main/java/com/gmail/nthai/presentation/components/zalo/ZaloProgressTab.kt
+   8 app/src/main/java/com/gmail/nthai/service/ZaloAccessibilityService.kt
 
 === MONOREPO SIGNALS ===
-Gradle multi-project build file detected (settings.gradle[.kts])
+No monorepo signals detected.
 
 === CODE METRICS ===
-Total files scanned: 425
-Total lines of code: 23230
+Total files scanned: 629
+Total lines of code: 28849
 
 Files by language:
-  Other: 195
-  Kotlin: 161
-  XML: 61
+  Other: 460
+  Kotlin: 166
   Python: 3
-  Kotlin Script: 3
-  JSON: 2
 
 Top 10 largest files:
-gradle\wrapper\gradle-wrapper.jar: 44.4KB
-.agents\skills\security\android-permissions-security\references\android\training\permissions\requesting.md: 37.9KB
-.agents\skills\security\android-permissions-security\SKILL.md: 29.2KB
-.agents\skills\jetpack-compose\jetpack-compose-performance\references\state-and-stability.md: 27.5KB
-.agents\skills\jetpack-compose\jetpack-compose-performance\references\android\develop\ui\compose\custom-modifiers.md: 26.7KB
-.agents\skills\navigation\navigation-3\references\android\guide\navigation\navigation-3\migration-guide.md: 26.5KB
-.agents\skills\system\glance-appwidget-updates-and-memory\references\android\about\versions\17\behavior-changes-17.md: 24.1KB
-.agents\skills\system\glance-canonical-layouts\SKILL.md: 23.9KB
-.agents\skills\security\android-intent-security\SKILL.md: 23.8KB
-.agents\skills\system\glance-appwidget-updates-and-memory\references\android\develop\ui\compose\glance\create-app-widget.md: 22.3KB
+.gradle\9.6.0\executionHistory\executionHistory.bin: 14958.1KB
+.gradle\9.6.0\fileHashes\fileHashes.bin: 823.0KB
+.gradle\9.6.0\fileHashes\resourceHashesCache.bin: 431.5KB
+.gradle\configuration-cache\6214f52c-9de7-42d8-a30b-87e95b6d4336\_app.work.bin: 368.1KB
+.gradle\configuration-cache\5d1ac111-3acf-4966-b9d8-3deeb3e5d704\_app.work.bin: 283.1KB
+.gradle\9.6.0\checksums\sha1-checksums.bin: 241.5KB
+.gradle\configuration-cache\1fb02451-c1bb-47a2-8ec9-4803aa106dcc\_app.work.bin: 216.2KB
+.gradle\configuration-cache\8aa09034-bddb-4efe-a195-c1a9706f333d\_app.work.bin: 216.2KB
+.gradle\configuration-cache\fab38b83-e28b-4046-8fae-2434e228eff0\_app.work.bin: 215.8KB
+.gradle\configuration-cache\3f39a687-a3ba-4e58-ac38-4e7ac795051a\_app.work.bin: 190.2KB
 
 === CI/CD PIPELINES ===
-None found.
+No CI/CD pipelines detected.
 
 === CONTAINERS & ORCHESTRATION ===
-None found.
+No containerization configs detected.
 
 === SECURITY & COMPLIANCE ===
-None found.
+No security configs detected.
 
 === PERFORMANCE & TESTING ===
-None found.
+No performance testing configs detected.
 
 === SCAN COMPLETE ===
