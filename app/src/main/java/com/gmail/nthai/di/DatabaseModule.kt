@@ -72,6 +72,45 @@ object DatabaseModule {
         }
     }
 
+    private val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `zalo_recipients` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `name` TEXT NOT NULL,
+                    `phone` TEXT NOT NULL,
+                    `isZaloFriend` INTEGER NOT NULL DEFAULT 0,
+                    `status` TEXT NOT NULL DEFAULT 'PENDING',
+                    `note` TEXT NOT NULL DEFAULT '',
+                    `lastSentTime` INTEGER NOT NULL DEFAULT 0,
+                    `customFieldsJson` TEXT NOT NULL DEFAULT '{}'
+                )
+                """.trimIndent()
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_zalo_recipients_status` ON `zalo_recipients` (`status`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_zalo_recipients_phone` ON `zalo_recipients` (`phone`)")
+
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `zalo_sending_logs` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `recipientId` INTEGER NOT NULL,
+                    `recipientName` TEXT NOT NULL,
+                    `phone` TEXT NOT NULL,
+                    `messageContent` TEXT NOT NULL,
+                    `timestamp` INTEGER NOT NULL,
+                    `status` TEXT NOT NULL,
+                    `errorMessage` TEXT
+                )
+                """.trimIndent()
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_zalo_sending_logs_recipientId` ON `zalo_sending_logs` (`recipientId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_zalo_sending_logs_timestamp` ON `zalo_sending_logs` (`timestamp`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_zalo_sending_logs_status` ON `zalo_sending_logs` (`status`)")
+        }
+    }
+
     private val MIGRATION_11_12 = object : Migration(11, 12) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE sim_configs ADD COLUMN minDelaySec INTEGER NOT NULL DEFAULT 40")
@@ -95,6 +134,7 @@ object DatabaseModule {
                 MIGRATION_7_8,
                 MIGRATION_8_9,
                 MIGRATION_9_10,
+                MIGRATION_10_11,
                 MIGRATION_11_12
             )
             .fallbackToDestructiveMigration(dropAllTables = true)
