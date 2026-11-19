@@ -38,8 +38,12 @@ class UpdateRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveUpdateUrl(url: String) {
+        val trimmed = url.trim()
+        require(trimmed.startsWith("https://", ignoreCase = true)) {
+            "Update URL must use HTTPS"
+        }
         withContext(Dispatchers.IO) {
-            prefs.edit { putString(KEY_UPDATE_URL, url.trim()) }
+            prefs.edit { putString(KEY_UPDATE_URL, trimmed) }
         }
     }
 
@@ -103,6 +107,11 @@ class UpdateRepositoryImpl @Inject constructor(
             }
             try {
                 val targetUrl = urlOverride?.ifBlank { null } ?: getUpdateUrl()
+                if (!targetUrl.startsWith("https://", ignoreCase = true)) {
+                    return@withContext Result.failure(
+                        IllegalArgumentException("Update URL must use HTTPS protocol: $targetUrl")
+                    )
+                }
                 val connection = openConnectionWithRedirects(targetUrl)
                 connection.connectTimeout = 10000
                 connection.readTimeout = 15000
@@ -131,6 +140,12 @@ class UpdateRepositoryImpl @Inject constructor(
                     return@withContext Result.failure(Exception("File JSON thiếu đường dẫn downloadUrl!"))
                 }
 
+                if (!downloadUrl.startsWith("https://", ignoreCase = true)) {
+                    return@withContext Result.failure(
+                        IllegalArgumentException("Download URL must use HTTPS protocol: $downloadUrl")
+                    )
+                }
+
                 val info = UpdateInfo(
                     versionCode = versionCode,
                     versionName = versionName,
@@ -153,6 +168,12 @@ class UpdateRepositoryImpl @Inject constructor(
     ): Result<File> {
         return withContext(Dispatchers.IO) {
             try {
+                if (!downloadUrl.startsWith("https://", ignoreCase = true)) {
+                    return@withContext Result.failure(
+                        IllegalArgumentException("Download URL must use HTTPS protocol: $downloadUrl")
+                    )
+                }
+
                 clearOldApks()
 
                 outputFile.parentFile?.mkdirs()
@@ -216,6 +237,9 @@ class UpdateRepositoryImpl @Inject constructor(
         var currentUrl = urlString
         var redirects = 0
         while (redirects < 5) {
+            if (!currentUrl.startsWith("https://", ignoreCase = true)) {
+                throw SecurityException("Insecure HTTP redirect rejected: $currentUrl")
+            }
             val url = URL(currentUrl)
             val connection = url.openConnection() as HttpURLConnection
             connection.instanceFollowRedirects = false

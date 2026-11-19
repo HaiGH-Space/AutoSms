@@ -4,5 +4,6 @@
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews"
     android:canRetrieveWindowContent="true"
+    android:packageNames="com.zing.zalo"
     android:description="@string/zalo_accessibility_description"
     android:notificationTimeout="100" />

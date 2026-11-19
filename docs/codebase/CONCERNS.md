@@ -25,11 +25,11 @@ List the most important debt items only.
 
 ### 3) Security Concerns
 
-| Risk                                              | OWASP category (if applicable) | Evidence                                                                        | Current mitigation                                                  | Gap                                                                                                                                                                   |
-| ------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unencrypted customer PII in local SQLite database | M9: Insecure Data Storage      | `app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt`                   | Sandboxed Android app internal storage                              | Rooted devices or physical forensic access can extract full customer names, phone numbers, and message history; consider SQLCipher if enterprise security is required |
-| Accessibility Service exploitation risk           | M1: Improper Platform Usage    | `app/src/main/AndroidManifest.xml#L55-L65`                                      | Requires explicit user enablement in Android Accessibility Settings | Accessibility services hold broad permissions to inspect screen content and dispatch gestures; must remain strictly guarded against unintended interactions           |
-| Public cleartext HTTP fallback for in-app updates | M3: Insecure Communication     | `app/src/main/java/com/gmail/nthai/data/repository/UpdateRepositoryImpl.kt#L29` | Default URL uses HTTPS (`https://raw.githubusercontent.com/...`)    | Custom update URL input allows arbitrary URLs without certificate pinning or checksum verification                                                                    |
+| Risk | OWASP category (if applicable) | Evidence | Current mitigation | Gap | Resolution |
+| --- | --- | --- | --- | --- | --- |
+| Unencrypted customer PII in local SQLite database | M9: Insecure Data Storage | `app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt` | Sandboxed Android app internal storage, excluded from backups/transfers (`data_extraction_rules.xml`, `backup_rules.xml`) | Physical forensic access or root access can extract data; SQLCipher overhead not justified for non-enterprise | **Resolved (Accepted/Mitigated per Decision #7)**: Protected by OS-level sandbox isolation and explicit cloud/device backup exclusions. |
+| Accessibility Service exploitation risk | M1: Improper Platform Usage | `app/src/main/AndroidManifest.xml#L56-L68`, `app/src/main/res/xml/zalo_accessibility_config.xml` | Restricted target packages in XML (`android:packageNames="com.zing.zalo"`) and code validation; user enablement required in Settings | Accessibility services hold broad permissions; must remain strictly guarded | **Resolved (Hardened per Decision #8)**: Service is scoped at the OS level to `com.zing.zalo` in `zalo_accessibility_config.xml` and validates package in event handling before inspecting nodes. |
+| Public cleartext HTTP fallback for in-app updates | M3: Insecure Communication | `app/src/main/java/com/gmail/nthai/data/repository/UpdateRepositoryImpl.kt`, `app/src/main/res/xml/network_security_config.xml` | App-wide Network Security Config disallows cleartext HTTP; `UpdateRepositoryImpl` enforces HTTPS protocol | Previously allowed arbitrary HTTP URLs or redirects | **Resolved per Decision #9**: Created `network_security_config.xml` disabling cleartext traffic app-wide, declared in Manifest, and enforced HTTPS-only on all update URLs, download URLs, and redirect targets in `UpdateRepositoryImpl`. |
 
 ### 4) Performance and Scaling Concerns
 
@@ -73,6 +73,15 @@ List the most important debt items only.
      - `startForeground()` specifies `ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC` with defensive try/catch against `ForegroundServiceStartNotAllowedException` / `SecurityException`.
      - Graceful lifecycle teardown uses `stopForeground(STOP_FOREGROUND_REMOVE)` and `stopSelf()`.
      - Execution is initiated by direct user action from UI screens (`ProgressViewModel`).
+
+7. **[RESOLVED] Unencrypted customer PII in local SQLite database?**
+   - **Decision:** **Accepted / Mitigated for Non-Enterprise**. SQLite database is isolated inside Android's internal app sandbox (`/data/data/com.gmail.nthai/databases`), preventing access by third-party applications. Database and journal/WAL files are explicitly excluded from cloud backup and device transfer in `data_extraction_rules.xml` and `backup_rules.xml`. Full encryption (SQLCipher) is avoided to prevent massive binary overhead and query performance degradation.
+
+8. **[RESOLVED] Accessibility Service exploitation risk?**
+   - **Decision:** **Hardened / Resolved**. `zalo_accessibility_config.xml` explicitly configures `android:packageNames="com.zing.zalo"`, restricting event delivery to Zalo at the OS level. The service implementation in `ZaloAccessibilityService.kt` performs runtime checks to ignore non-Zalo events and only manipulates nodes during active sending tasks.
+
+9. **[RESOLVED] Insecure HTTP Communication for In-App Updates?**
+   - **Decision:** **Resolved / Enforced HTTPS**. Added `network_security_config.xml` disabling cleartext HTTP app-wide (`cleartextTrafficPermitted="false"`), registered in `AndroidManifest.xml`. `UpdateRepositoryImpl` strictly validates and enforces `https://` protocol on custom update URLs, manifest download URLs, and intermediate HTTP redirect hops.
 
 ### 7) Evidence
 
