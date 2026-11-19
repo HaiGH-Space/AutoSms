@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 sealed class SendingServiceState {
@@ -84,9 +85,14 @@ class SmsForegroundService : Service() {
     private val pausedSlots = ConcurrentHashMap.newKeySet<Int>()
     private val stoppedSlots = ConcurrentHashMap.newKeySet<Int>()
 
-    private val sentCounts = mutableMapOf(1 to 0, 2 to 0)
-    private val totalCounts = mutableMapOf(1 to 0, 2 to 0)
-    private val progressLock = Any()
+    private val sentCounts = ConcurrentHashMap<Int, AtomicInteger>().apply {
+        put(1, AtomicInteger(0))
+        put(2, AtomicInteger(0))
+    }
+    private val totalCounts = ConcurrentHashMap<Int, AtomicInteger>().apply {
+        put(1, AtomicInteger(0))
+        put(2, AtomicInteger(0))
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -136,12 +142,11 @@ class SmsForegroundService : Service() {
     private fun pauseSlot(slot: Int) {
         if (sendingJobs[slot]?.isActive == true) {
             pausedSlots.add(slot)
-            val counts = synchronized(progressLock) {
-                (sentCounts[slot] ?: 0) to (totalCounts[slot] ?: 0)
-            }
+            val sent = sentCounts[slot]?.get() ?: 0
+            val total = totalCounts[slot]?.get() ?: 0
             updateSimState(
                 slot,
-                SendingServiceState.Paused(counts.first, counts.second, currentFailedCount(slot))
+                SendingServiceState.Paused(sent, total, currentFailedCount(slot))
             )
             updateAggregateNotification("Đang tạm dừng SIM $slot")
         }
@@ -149,14 +154,13 @@ class SmsForegroundService : Service() {
 
     private fun resumeSlot(slot: Int) {
         if (sendingJobs[slot]?.isActive == true && pausedSlots.remove(slot)) {
-            val counts = synchronized(progressLock) {
-                (sentCounts[slot] ?: 0) to (totalCounts[slot] ?: 0)
-            }
+            val sent = sentCounts[slot]?.get() ?: 0
+            val total = totalCounts[slot]?.get() ?: 0
             updateSimState(
                 slot,
                 SendingServiceState.Running(
-                    counts.first,
-                    counts.second,
+                    sent,
+                    total,
                     "",
                     failedCount = currentFailedCount(slot)
                 )
@@ -177,13 +181,9 @@ class SmsForegroundService : Service() {
         if (sendingJobs[simSlot]?.isActive == true) return
         stoppedSlots.remove(simSlot)
         pausedSlots.remove(simSlot)
-        synchronized(progressLock) {
-            sentCounts[simSlot] = 0
-            totalCounts[simSlot] = 0
-        }
-        synchronized(failureCountLock) {
-            failedLogIdsBySlot[simSlot] = mutableSetOf()
-        }
+        sentCounts[simSlot]?.set(0)
+        totalCounts[simSlot]?.set(0)
+        failedLogIdsBySlot[simSlot]?.clear()
         updateSimState(simSlot, SendingServiceState.Running(0, 0, "Đang chuẩn bị"))
         val sessionStartTime = System.currentTimeMillis()
         val job = serviceScope.launch(start = CoroutineStart.LAZY) {
@@ -206,10 +206,8 @@ class SmsForegroundService : Service() {
                     existingLogsByCustomer,
                     sessionStartTime
                 )
-                synchronized(progressLock) {
-                    totalCounts[simSlot] = currentTotal
-                    sentCounts[simSlot] = 0
-                }
+                totalCounts[simSlot]?.set(currentTotal)
+                sentCounts[simSlot]?.set(0)
 
                 val template = templateRepository.getSelectedTemplate().first()
                     ?: templateRepository.getAllTemplates().first().firstOrNull()
@@ -227,10 +225,8 @@ class SmsForegroundService : Service() {
                     isStopped = { slot -> stoppedSlots.contains(slot) },
                     sessionStartTime = sessionStartTime,
                     onProgressUpdate = { sent, total, displayName, secondsUntilNext ->
-                        synchronized(progressLock) {
-                            sentCounts[simSlot] = sent
-                            totalCounts[simSlot] = total
-                        }
+                        sentCounts[simSlot]?.set(sent)
+                        totalCounts[simSlot]?.set(total)
                         updateSimState(
                             simSlot,
                             SendingServiceState.Running(
@@ -249,19 +245,18 @@ class SmsForegroundService : Service() {
                 )
 
                 if (!stoppedSlots.contains(simSlot)) {
-                    val counts = synchronized(progressLock) {
-                        (sentCounts[simSlot] ?: 0) to (totalCounts[simSlot] ?: 0)
-                    }
+                    val sent = sentCounts[simSlot]?.get() ?: 0
+                    val total = totalCounts[simSlot]?.get() ?: 0
                     val state = error?.let {
                         SendingServiceState.Error(
                             it,
-                            counts.first,
-                            counts.second,
+                            sent,
+                            total,
                             currentFailedCount(simSlot)
                         )
                     } ?: SendingServiceState.Finished(
-                        counts.first,
-                        counts.second,
+                        sent,
+                        total,
                         currentFailedCount(simSlot)
                     )
                     updateSimState(simSlot, state)
@@ -289,15 +284,14 @@ class SmsForegroundService : Service() {
                     } catch (_: Exception) {
                     }
 
-                    val counts = synchronized(progressLock) {
-                        (sentCounts[simSlot] ?: 0) to (totalCounts[simSlot] ?: 0)
-                    }
+                    val sent = sentCounts[simSlot]?.get() ?: 0
+                    val total = totalCounts[simSlot]?.get() ?: 0
                     updateSimState(
                         simSlot,
                         SendingServiceState.Error(
                             errorMsg,
-                            counts.first,
-                            counts.second,
+                            sent,
+                            total,
                             currentFailedCount(simSlot)
                         )
                     )
@@ -322,14 +316,12 @@ class SmsForegroundService : Service() {
         _serviceStates.update { it + (simSlot to newState) }
     }
 
-    private fun currentFailedCount(simSlot: Int): Int = synchronized(failureCountLock) {
+    private fun currentFailedCount(simSlot: Int): Int =
         failedLogIdsBySlot[simSlot]?.size ?: 0
-    }
 
     private fun updateAggregateNotification(title: String) {
-        val (sent, total) = synchronized(progressLock) {
-            sentCounts.values.sum() to totalCounts.values.sum()
-        }
+        val sent = sentCounts.values.sumOf { it.get() }
+        val total = totalCounts.values.sumOf { it.get() }
         updateNotification(title, sent, total)
     }
 
@@ -448,11 +440,9 @@ class SmsForegroundService : Service() {
         const val EXTRA_SIM_SLOT = "com.gmail.nthai.EXTRA_SIM_SLOT"
 
         fun reportSmsFailure(simSlot: Int, logId: Long) {
-            val failedCount = synchronized(failureCountLock) {
-                val failedLogIds = failedLogIdsBySlot.getOrPut(simSlot) { mutableSetOf() }
-                failedLogIds.add(logId)
-                failedLogIds.size
-            }
+            val failedLogIds = failedLogIdsBySlot.computeIfAbsent(simSlot) { ConcurrentHashMap.newKeySet() }
+            failedLogIds.add(logId)
+            val failedCount = failedLogIds.size
             _serviceStates.update { states ->
                 val updatedState = when (val state = states[simSlot]) {
                     is SendingServiceState.Running -> state.copy(failedCount = failedCount)
@@ -465,9 +455,10 @@ class SmsForegroundService : Service() {
             }
         }
 
-        private val failureCountLock = Any()
-        private val failedLogIdsBySlot =
-            mutableMapOf(1 to mutableSetOf<Long>(), 2 to mutableSetOf<Long>())
+        private val failedLogIdsBySlot = ConcurrentHashMap<Int, MutableSet<Long>>().apply {
+            put(1, ConcurrentHashMap.newKeySet())
+            put(2, ConcurrentHashMap.newKeySet())
+        }
 
         private val _serviceStates = MutableStateFlow<Map<Int, SendingServiceState>>(
             mapOf(1 to SendingServiceState.Idle, 2 to SendingServiceState.Idle)
