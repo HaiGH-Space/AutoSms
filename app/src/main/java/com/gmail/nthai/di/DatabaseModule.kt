@@ -21,6 +21,8 @@ import javax.inject.Singleton
 @Suppress("unused")
 object DatabaseModule {
 
+    // Note: Migrations prior to v4 (v2->v3, v3->v4) are deliberately omitted as versions < v0.1.0
+    // were unreleased internal prototypes with breaking schema shifts; fallbackToDestructiveMigration handles them.
     private val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE customers ADD COLUMN customFieldsJson TEXT NOT NULL DEFAULT '{}'")

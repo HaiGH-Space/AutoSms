@@ -1,6 +1,6 @@
 # Project specific ProGuard / R8 rules
 
-# Keep Attributes for Reflection & Annotations required by Apache POI, Log4j & Room
+# Keep Attributes for Reflection & Annotations required by Apache POI & Room
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,Exceptions
 
 # Apache POI & dependencies optional class ignores
@@ -23,26 +23,14 @@
 -dontwarn org.w3.x2000.x09.xmldsig.**
 
 # Keep Apache POI models, XmlBeans, OpenXMLFormats & dependencies reflection
+# (-keep class with {*} already keeps all class members and methods)
 -keep class org.apache.poi.** { *; }
--keepclassmembers class org.apache.poi.** { *; }
-
 -keep class org.apache.xmlbeans.** { *; }
--keepclassmembers class org.apache.xmlbeans.** { *; }
-
 -keep class org.openxmlformats.** { *; }
--keepclassmembers class org.openxmlformats.** { *; }
-
 -keep class org.etsi.uri.** { *; }
--keepclassmembers class org.etsi.uri.** { *; }
-
 -keep class com.microsoft.schemas.** { *; }
--keepclassmembers class com.microsoft.schemas.** { *; }
-
 -keep class org.apache.commons.** { *; }
--keepclassmembers class org.apache.commons.** { *; }
-
 -keep class org.apache.logging.log4j.** { *; }
--keepclassmembers class org.apache.logging.log4j.** { *; }
 
 # Room database entities and DAOs
 -keep class * extends androidx.room.RoomDatabase
@@ -50,9 +38,13 @@
 -keep @androidx.room.Dao interface * { *; }
 -dontwarn androidx.room.paging.**
 
-# Keep Domain Data Models
+# Keep Domain Data Models & Entities (JSON serialization & Room)
 -keep class com.gmail.nthai.domain.model.** { *; }
 -keep class com.gmail.nthai.data.local.entity.** { *; }
 
-# Keep Coroutines
--keepclassmembers class kotlinx.coroutines.** { *; }
+# Strip verbose/debug logs in Release build for performance & security
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int d(...);
+}

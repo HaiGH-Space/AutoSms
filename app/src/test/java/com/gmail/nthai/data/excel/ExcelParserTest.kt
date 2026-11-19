@@ -1,5 +1,7 @@
 package com.gmail.nthai.data.excel
 
+import com.gmail.nthai.domain.model.LogRecord
+import com.gmail.nthai.domain.model.LogStatus
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -203,5 +205,48 @@ class ExcelParserTest {
         assertEquals(1, imported.size)
         assertEquals("0999999999", imported[0].phone)
         assertEquals("Nguyễn An", imported[0].customFields["Họ tên"])
+    }
+
+    @Test
+    fun `extracts excel headers using streaming SAX parser`() {
+        val output = ByteArrayOutputStream()
+        XSSFWorkbook().use { workbook ->
+            val sheet = workbook.createSheet("Khách hàng")
+            val header = sheet.createRow(0)
+            listOf("Họ và Tên", "Số điện thoại", "Ghi chú")
+                .forEachIndexed { index, value -> header.createCell(index).setCellValue(value) }
+            workbook.write(output)
+        }
+
+        val headersResult = ExcelParser().getExcelHeaders(ByteArrayInputStream(output.toByteArray()))
+        assertTrue(headersResult.isSuccess)
+        assertEquals(listOf("Họ và Tên", "Số điện thoại", "Ghi chú"), headersResult.getOrThrow())
+    }
+
+    @Test
+    fun `exports logs with streaming SXSSFWorkbook and reads back correctly`() {
+        val output = ByteArrayOutputStream()
+        val logs = listOf(
+            LogRecord(
+                id = 1,
+                customerId = 1L,
+                customerName = "Nguyễn Văn A",
+                phone = "0988776655",
+                simSlot = 1,
+                messageContent = "Tin nhắn thử nghiệm",
+                timestamp = System.currentTimeMillis(),
+                status = LogStatus.SENT_SUCCESS
+            )
+        )
+
+        val exportResult = ExcelExporter().exportLogs(logs, output)
+        assertTrue(exportResult.isSuccess)
+
+        val parserResult = ExcelParser().parseCustomers(ByteArrayInputStream(output.toByteArray()), phoneColumnName = "SĐT")
+        assertTrue(parserResult.isSuccess)
+        val customers = parserResult.getOrThrow()
+        assertEquals(1, customers.size)
+        assertEquals("0988776655", customers[0].phone)
+        assertEquals("Nguyễn Văn A", customers[0].customFields["Tên KH"])
     }
 }

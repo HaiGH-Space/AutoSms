@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.gmail.nthai.util.PoiInitializer
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -12,8 +13,7 @@ class AutoSmsApplication : Application(), Configuration.Provider {
 
     companion object {
         init {
-            // Force Apache POI to use NullLogger on Android to avoid Log4j2 initialization crash
-            System.setProperty("org.apache.poi.util.POILogger", "org.apache.poi.util.NullLogger")
+            PoiInitializer.init()
         }
     }
 
