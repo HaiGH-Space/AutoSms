@@ -100,7 +100,13 @@ class SmsForegroundService : Service() {
         val simSlot = intent?.getIntExtra(EXTRA_SIM_SLOT, 0) ?: 0
         when (action) {
             ACTION_START -> {
-                startForegroundWithNotification("Đang chuẩn bị gửi tin...", 0, 0)
+                try {
+                    startForegroundWithNotification("Đang chuẩn bị gửi tin...", 0, 0)
+                } catch (e: Exception) {
+                    android.util.Log.e("SmsForegroundService", "Failed to start foreground service", e)
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
                 if (simSlot in 1..2) {
                     startSendingProcess(simSlot)
                 } else {
@@ -307,7 +313,7 @@ class SmsForegroundService : Service() {
 
     private fun stopServiceIfIdle() {
         if (sendingJobs.values.none { it.isActive }) {
-            stopForeground(STOP_FOREGROUND_DETACH)
+            stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
     }
@@ -339,10 +345,16 @@ class SmsForegroundService : Service() {
         manager?.createNotificationChannel(channel)
     }
 
-    @SuppressLint("ForegroundServiceType")
+    @SuppressLint("InlinedApi")
     private fun startForegroundWithNotification(title: String, progress: Int, maxProgress: Int) {
         val notification = buildNotification(title, progress, maxProgress, false)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 NOTIFICATION_ID,
                 notification,
