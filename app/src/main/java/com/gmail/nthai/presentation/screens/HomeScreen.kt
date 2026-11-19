@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,20 +22,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -57,7 +52,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.model.UpdateState
 import com.gmail.nthai.presentation.components.DownloadProgressDialog
 import com.gmail.nthai.presentation.components.DownloadedInstallDialog
@@ -66,7 +60,11 @@ import com.gmail.nthai.presentation.components.NoUpdateAvailableDialog
 import com.gmail.nthai.presentation.components.SelectPhoneColumnDialog
 import com.gmail.nthai.presentation.components.UpdateAvailableDialog
 import com.gmail.nthai.presentation.components.UpdateErrorDialog
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import com.gmail.nthai.presentation.components.customer.ResetStatusDialog
+import com.gmail.nthai.presentation.components.home.ModernSimCard
+import com.gmail.nthai.presentation.components.home.OverviewMetricsGrid
+import com.gmail.nthai.presentation.components.home.WorkflowStepCard
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
 import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
 import com.gmail.nthai.presentation.viewmodel.HomeDashboardViewModel
@@ -208,8 +206,8 @@ fun HomeScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(6.dp)
-                                    .background(Color(0xFF10B981), CircleShape)
+                                .size(6.dp)
+                                .background(Color(0xFF10B981), CircleShape)
                             )
                             Text(
                                 "ĐANG GỬI",
@@ -387,292 +385,5 @@ fun HomeScreen(
 
     if (isImporting) {
         LoadingDialog(message = importLoadingMessage)
-    }
-}
-
-@Composable
-private fun OverviewMetricsGrid(
-    totalCustomers: Int,
-    readyCount: Int,
-    sim1Assigned: Int,
-    sim2Assigned: Int
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            MetricTile(
-                eyebrow = "TỔNG LIÊN HỆ",
-                value = totalCustomers.toString(),
-                modifier = Modifier.weight(1f)
-            )
-            MetricTile(
-                eyebrow = "SẴN SÀNG GỬI",
-                value = readyCount.toString(),
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            MetricTile(
-                eyebrow = "PHÂN BỔ SIM 1",
-                value = sim1Assigned.toString(),
-                modifier = Modifier.weight(1f)
-            )
-            MetricTile(
-                eyebrow = "PHÂN BỔ SIM 2",
-                value = sim2Assigned.toString(),
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun MetricTile(
-    eyebrow: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFFFFFFF),
-        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = eyebrow,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium
-                ),
-                color = Color(0xFF888888)
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF171717)
-            )
-        }
-    }
-}
-
-@Composable
-private fun ModernSimCard(
-    simSlot: Int,
-    config: SimConfig?,
-    assignedCount: Int,
-    readyCount: Int,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val detected = config?.subscriptionId != null && config.subscriptionId != -1
-    val carrierName = config?.carrierName?.trim().orEmpty()
-    val dailyLimit = config?.dailyLimit ?: 0
-    val sentToday = config?.sentCountToday ?: 0
-    val quotaProgress =
-        if (dailyLimit > 0) (sentToday.toFloat() / dailyLimit).coerceIn(0f, 1f) else 0f
-
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFFFFFFF),
-        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(9999.dp),
-                    color = Color(0xFFF5F5F5),
-                    border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-                ) {
-                    Text(
-                        text = "SIM $simSlot",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = Color(0xFF171717),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(7.dp)
-                        .background(
-                            if (detected) Color(0xFF10B981) else Color(0xFF888888),
-                            CircleShape
-                        )
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = if (carrierName.isNotBlank()) carrierName else if (detected) "Đã nhận diện" else "Chưa lắp SIM",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF171717),
-                    maxLines = 1
-                )
-                Text(
-                    text = "$assignedCount liên hệ · $readyCount chờ",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 11.sp
-                    ),
-                    color = Color(0xFF888888)
-                )
-            }
-
-            if (detected && dailyLimit > 0) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Hạn mức hôm nay",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF888888)
-                        )
-                        Text(
-                            text = "$sentToday/$dailyLimit",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF171717)
-                        )
-                    }
-                    LinearProgressIndicator(
-                        progress = { quotaProgress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(9999.dp)),
-                        color = if (quotaProgress >= 0.9f) Color(0xFFEE0000) else Color(0xFF171717),
-                        trackColor = Color(0xFFEBEBEB)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun WorkflowStepCard(
-    stepTag: String,
-    title: String,
-    description: String,
-    primaryButtonText: String,
-    onPrimaryClick: () -> Unit,
-    secondaryButtonText: String? = null,
-    onSecondaryClick: (() -> Unit)? = null,
-    extraAction: (@Composable () -> Unit)? = null,
-    highlight: Boolean = false
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFFFFFFF),
-        border = BorderStroke(1.dp, if (highlight) Color(0xFF171717) else Color(0xFFEBEBEB))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                Text(
-                    text = stepTag,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    color = Color(0xFF171717)
-                )
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
-                ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF171717)
-                    )
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF666666)
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onPrimaryClick,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp),
-                    shape = RoundedCornerShape(9999.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF171717),
-                        contentColor = Color(0xFFFFFFFF)
-                    )
-                ) {
-                    Text(primaryButtonText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
-                }
-                if (secondaryButtonText != null && onSecondaryClick != null) {
-                    OutlinedButton(
-                        onClick = onSecondaryClick,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(40.dp),
-                        shape = RoundedCornerShape(9999.dp),
-                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFF171717)
-                        )
-                    ) {
-                        Text(secondaryButtonText, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
-            }
-
-            extraAction?.invoke()
-        }
     }
 }
