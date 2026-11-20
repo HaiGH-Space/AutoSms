@@ -27,5 +27,8 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --continue
 
+      - name: Validate update.json version consistency
+        run: ./gradlew :app:validateUpdateJson
+
       - name: Assemble debug build
         run: ./gradlew assembleDebug
