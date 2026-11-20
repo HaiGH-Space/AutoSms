@@ -38,7 +38,7 @@ data class ZaloSendingProgressState(
 
 @Singleton
 class ZaloSendingEngine @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val zaloRepository: ZaloRepository
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + Job())
