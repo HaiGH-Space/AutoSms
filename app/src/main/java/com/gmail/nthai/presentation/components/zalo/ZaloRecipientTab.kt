@@ -60,12 +60,14 @@ import com.gmail.nthai.presentation.components.common.StatusBadge
 
 @Composable
 fun ZaloRecipientTab(
+    isAccessibilityEnabled: Boolean = false,
     recipients: List<ZaloRecipient> = emptyList(),
     onAddRecipient: (name: String, phone: String) -> Unit = { _, _ -> },
     onDeleteRecipient: (id: Long) -> Unit = {},
     onRetryRecipient: (id: Long) -> Unit = {},
     onImportExcel: () -> Unit = {},
-    onStartSending: () -> Unit = {}
+    onStartSending: () -> Unit = {},
+    onOpenAccessibilitySettings: () -> Unit = {}
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("ALL") } // "ALL", "PENDING", "SUCCESS", "FAILED"
@@ -96,13 +98,19 @@ fun ZaloRecipientTab(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // 1. Accessibility Status Banner Card
+        ZaloAccessibilityStatusCard(
+            isAccessibilityEnabled = isAccessibilityEnabled,
+            onOpenAccessibilitySettings = onOpenAccessibilitySettings
+        )
+
         // Summary Header Card matching modern app style
         Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp),
+                .fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             color = Color(0xFFFFFFFF),
             border = BorderStroke(1.dp, Color(0xFFEBEBEB))

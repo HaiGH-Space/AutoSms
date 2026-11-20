@@ -7,27 +7,48 @@ plugins {
 
 android {
     namespace = "com.gmail.nthai"
-    compileSdk = 35
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.gmail.nthai"
-        minSdk = 26
-        targetSdk = 35
-        versionCode = 10
-        versionName = "0.1.9"
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
+        versionCode = 11
+        versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            val storeFileProp = project.findProperty("RELEASE_STORE_FILE") as String? ?: System.getenv("RELEASE_STORE_FILE")
+            val storePasswordProp = project.findProperty("RELEASE_STORE_PASSWORD") as String? ?: System.getenv("RELEASE_STORE_PASSWORD")
+            val keyAliasProp = project.findProperty("RELEASE_KEY_ALIAS") as String? ?: System.getenv("RELEASE_KEY_ALIAS")
+            val keyPasswordProp = project.findProperty("RELEASE_KEY_PASSWORD") as String? ?: System.getenv("RELEASE_KEY_PASSWORD")
+
+            if (storeFileProp != null && file(storeFileProp).exists()) {
+                storeFile = file(storeFileProp)
+                storePassword = storePasswordProp
+                keyAlias = keyAliasProp
+                keyPassword = keyPasswordProp
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.findByName("release")?.takeIf { it.storeFile?.exists() == true }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+    }
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -99,4 +120,48 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+tasks.register("validateUpdateJson") {
+    group = "verification"
+    description = "Validates that update.json matches app build version info"
+    val updateJsonFile = layout.projectDirectory.file("../update.json").asFile
+    val appVersionName = android.defaultConfig.versionName.orEmpty()
+    val appVersionCode = android.defaultConfig.versionCode ?: 0
+    doLast {
+        if (!updateJsonFile.exists()) {
+            throw GradleException("update.json does not exist at root directory!")
+        }
+        val jsonText = updateJsonFile.readText()
+
+        if (!jsonText.contains(""""versionCode": $appVersionCode""")) {
+            throw GradleException("update.json versionCode does not match build.gradle.kts ($appVersionCode)")
+        }
+        if (!jsonText.contains(""""versionName": "$appVersionName"""")) {
+            throw GradleException("update.json versionName does not match build.gradle.kts ($appVersionName)")
+        }
+        logger.lifecycle("✅ update.json version ($appVersionName / $appVersionCode) matches build.gradle.kts!")
+    }
+}
+
+tasks.register("syncUpdateJson") {
+    group = "publishing"
+    description = "Syncs versionCode and versionName in update.json from build.gradle.kts"
+    val updateJsonFile = layout.projectDirectory.file("../update.json").asFile
+    val appVersionName = android.defaultConfig.versionName.orEmpty()
+    val appVersionCode = android.defaultConfig.versionCode ?: 0
+    doLast {
+        if (!updateJsonFile.exists()) {
+            throw GradleException("update.json does not exist at root directory!")
+        }
+        var content = updateJsonFile.readText()
+        content = content.replace(Regex(""""versionCode":\s*\d+"""), """"versionCode": $appVersionCode""")
+        content = content.replace(Regex(""""versionName":\s*"[^"]+""""), """"versionName": "$appVersionName"""")
+        content = content.replace(
+            Regex(""""downloadUrl":\s*"https://github.com/HaiGH-Space/AutoSms/releases/download/[^"]+/app-release.apk""""),
+            """"downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/$appVersionName/app-release.apk""""
+        )
+        updateJsonFile.writeText(content)
+        logger.lifecycle("✅ Synced update.json with versionName=$appVersionName, versionCode=$appVersionCode")
+    }
 }

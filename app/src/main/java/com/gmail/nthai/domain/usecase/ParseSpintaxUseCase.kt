@@ -1,6 +1,7 @@
 package com.gmail.nthai.domain.usecase
 
 import com.gmail.nthai.domain.model.Customer
+import com.gmail.nthai.util.formatCustomFieldValue
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -15,9 +16,10 @@ class ParseSpintaxUseCase {
     ): String {
         var result = COLUMN_VARIABLE_REGEX.replace(template) { match ->
             val colName = match.groupValues[1].trim()
-            customer.customFields.entries.find { (key, _) ->
+            val rawVal = customer.customFields.entries.find { (key, _) ->
                 key.trim().equals(colName, ignoreCase = true)
-            }?.value ?: match.value
+            }?.value
+            rawVal?.let { formatCustomFieldValue(it) } ?: match.value
         }
 
         val name = customer.customFields.entries.find { (k, _) ->
@@ -31,7 +33,14 @@ class ParseSpintaxUseCase {
         }?.value ?: "0"
 
         val formattedAmount = try {
-            val amountNum = NON_NUMERIC_REGEX.replace(rawAmount, "").toDoubleOrNull() ?: 0.0
+            val trimmed = rawAmount.trim()
+            val directBd = trimmed.toBigDecimalOrNull()
+            val amountNum = if (directBd != null) {
+                directBd.toDouble()
+            } else {
+                val cleaned = NON_NUMERIC_REGEX.replace(trimmed, "")
+                cleaned.toDoubleOrNull() ?: 0.0
+            }
             DECIMAL_FORMAT_THREAD_LOCAL.get()?.format(amountNum) ?: rawAmount
         } catch (_: Exception) {
             rawAmount
@@ -71,8 +80,9 @@ class ParseSpintaxUseCase {
         private val DECIMAL_FORMAT_THREAD_LOCAL = ThreadLocal.withInitial {
             val symbols = DecimalFormatSymbols(Locale("vi", "VN")).apply {
                 groupingSeparator = '.'
+                decimalSeparator = ','
             }
-            DecimalFormat("#,###", symbols)
+            DecimalFormat("#,##0.##", symbols)
         }
     }
 }

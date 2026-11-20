@@ -247,7 +247,10 @@ class ZaloViewModel @Inject constructor(
         }
     }
 
-    fun startCampaign() {
+    fun startCampaign(): Boolean {
+        if (!_isAccessibilityEnabled.value) {
+            return false
+        }
         val minDelay = delayRange.value.start.toInt()
         val maxDelay = delayRange.value.endInclusive.toInt()
         zaloSendingEngine.startCampaign(
@@ -258,6 +261,7 @@ class ZaloViewModel @Inject constructor(
             sendOnlyIfUnsent = sendOnlyIfUnsent.value,
             isLowSpecDevice = isLowSpecDevice.value
         )
+        return true
     }
 
     fun pauseCampaign() {

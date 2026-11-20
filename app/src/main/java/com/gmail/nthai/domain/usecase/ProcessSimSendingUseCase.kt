@@ -101,7 +101,7 @@ class ProcessSimSendingUseCase @Inject constructor(
     }
 
     suspend fun execute(
-        context: Context,
+        context: Context?,
         simSlot: Int,
         customers: List<Customer>,
         existingLogsByCustomer: Map<Long, List<LogRecord>>,
@@ -116,29 +116,11 @@ class ProcessSimSendingUseCase @Inject constructor(
         val currentSubId = simManagerWrapper.getSubscriptionIdForSlot(simSlot)
         if (currentSubId == null || currentSubId == -1) {
             val errorMsg = "Không tìm thấy SIM $simSlot đang hoạt động trên thiết bị."
-            recordFailedLogsForSim(
-                simSlot,
-                customers,
-                existingLogsByCustomer,
-                template,
-                errorMsg,
-                sessionStartTime,
-                onReportSmsFailure
-            )
             return errorMsg
         }
 
         if (template.content.isBlank()) {
             val errorMsg = "Chưa chọn mẫu tin nhắn hoặc mẫu tin nhắn đang để trống."
-            recordFailedLogsForSim(
-                simSlot,
-                customers,
-                existingLogsByCustomer,
-                template,
-                errorMsg,
-                sessionStartTime,
-                onReportSmsFailure
-            )
             return errorMsg
         }
 
@@ -188,6 +170,7 @@ class ProcessSimSendingUseCase @Inject constructor(
             }
         }
 
+        val initialSentToday = config.sentCountToday
         var sent = 0
         val total = calculateTotal(customers, existingLogsByCustomer, sessionStartTime)
 
@@ -214,11 +197,14 @@ class ProcessSimSendingUseCase @Inject constructor(
                 }
 
                 val currentConfig = simConfigRepository.getSimConfigBySlot(simSlot) ?: config
+                val effectiveSentToday = maxOf(currentConfig.sentCountToday, initialSentToday + sent)
+                val configToCheck = currentConfig.copy(sentCountToday = effectiveSentToday)
+
                 val currentTime = Calendar.getInstance()
                 when (val constraint = validateConstraintUseCase(
                     rule,
                     currentTime.get(Calendar.HOUR_OF_DAY),
-                    currentConfig,
+                    configToCheck,
                     currentMinute = currentTime.get(Calendar.MINUTE)
                 )) {
                     is ValidationResult.OutsideTimeFrame -> {
@@ -229,32 +215,12 @@ class ProcessSimSendingUseCase @Inject constructor(
                         } - ${rule.endHour.toString().padStart(2, '0')}:${
                             rule.endMinute.toString().padStart(2, '0')
                         })."
-                        val remainingCustomers = customers.subList(customerIndex, customers.size)
-                        recordFailedLogsForSim(
-                            simSlot,
-                            remainingCustomers,
-                            existingLogsByCustomer,
-                            template,
-                            errorMsg,
-                            sessionStartTime,
-                            onReportSmsFailure
-                        )
                         return errorMsg
                     }
 
                     is ValidationResult.ExceededLimit -> {
                         val errorMsg =
                             "SIM $simSlot đã đạt hạn mức gửi ${constraint.dailyLimit} tin/ngày."
-                        val remainingCustomers = customers.subList(customerIndex, customers.size)
-                        recordFailedLogsForSim(
-                            simSlot,
-                            remainingCustomers,
-                            existingLogsByCustomer,
-                            template,
-                            errorMsg,
-                            sessionStartTime,
-                            onReportSmsFailure
-                        )
                         return errorMsg
                     }
 
@@ -293,17 +259,19 @@ class ProcessSimSendingUseCase @Inject constructor(
                     sendingLogRepository.insertLog(logRecord)
                 }
 
-                val sentPendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    logId.toInt(),
-                    Intent(context, SmsStatusReceiver::class.java).apply {
-                        action = SmsStatusReceiver.ACTION_SMS_SENT
-                        putExtra(SmsStatusReceiver.EXTRA_LOG_ID, logId)
-                        putExtra(SmsStatusReceiver.EXTRA_CUSTOMER_ID, customer.id)
-                        putExtra(SmsStatusReceiver.EXTRA_SIM_SLOT, simSlot)
-                    },
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
+                val sentPendingIntent = context?.let { ctx ->
+                    PendingIntent.getBroadcast(
+                        ctx,
+                        logId.toInt(),
+                        Intent(ctx, SmsStatusReceiver::class.java).apply {
+                            action = SmsStatusReceiver.ACTION_SMS_SENT
+                            putExtra(SmsStatusReceiver.EXTRA_LOG_ID, logId)
+                            putExtra(SmsStatusReceiver.EXTRA_CUSTOMER_ID, customer.id)
+                            putExtra(SmsStatusReceiver.EXTRA_SIM_SLOT, simSlot)
+                        },
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                }
 
                 try {
                     smsSenderEngine.sendSms(

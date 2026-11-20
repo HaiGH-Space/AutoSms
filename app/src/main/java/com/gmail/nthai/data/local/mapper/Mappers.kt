@@ -12,6 +12,7 @@ import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.SendingRule
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.model.SmsTemplate
+import com.gmail.nthai.util.formatCustomFieldValue
 import org.json.JSONObject
 
 // Customer Mappers
@@ -23,7 +24,7 @@ fun CustomerEntity.toDomain(): Customer = Customer(
             val keys = json.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
-                put(key, json.optString(key))
+                put(key, formatCustomFieldValue(json.optString(key)))
             }
         }
     },

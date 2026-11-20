@@ -91,4 +91,20 @@ class ParseSpintaxUseCaseTest {
 
         assertEquals("Xin chào {Cột không tồn tại}", result)
     }
+
+    @Test
+    fun `parses scientific notation in custom fields and formats So_Tien correctly`() {
+        val customer = sampleCustomer.copy(
+            customFields = mapOf(
+                "CUSTOMER_NAME" to "NGUYỄN TUẤN ANH",
+                "TỔNG NỢ CIF" to "1.02099665736E7"
+            )
+        )
+
+        val resultColumn = useCase("Tổng nợ: {TỔNG NỢ CIF}", customer)
+        assertEquals("Tổng nợ: 10209966.5736", resultColumn)
+
+        val resultSoTien = useCase("Kính gửi {Ten_KH}, số tiền nợ là {So_Tien} VNĐ.", customer)
+        assertTrue(resultSoTien.contains("10.209.966,57"))
+    }
 }

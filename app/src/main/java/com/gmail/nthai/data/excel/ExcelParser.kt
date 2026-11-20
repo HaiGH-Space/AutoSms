@@ -2,157 +2,215 @@ package com.gmail.nthai.data.excel
 
 import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
-import org.apache.poi.ss.usermodel.Cell
-import org.apache.poi.ss.usermodel.CellType
+import com.gmail.nthai.util.PoiInitializer
+import org.apache.poi.openxml4j.opc.OPCPackage
 import org.apache.poi.ss.usermodel.DateUtil
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable
+import org.apache.poi.xssf.eventusermodel.XSSFReader
+import org.apache.poi.xssf.model.StylesTable
+import org.xml.sax.Attributes
+import org.xml.sax.InputSource
+import org.xml.sax.SAXException
+import org.xml.sax.helpers.DefaultHandler
 import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
+import javax.xml.parsers.SAXParserFactory
 
 class ExcelParser {
+
+    init {
+        PoiInitializer.init()
+    }
 
     fun parseCustomers(
         inputStream: InputStream,
         phoneColumnName: String = "sdt"
     ): Result<List<Customer>> {
         return runCatching {
-            val workbook = WorkbookFactory.create(inputStream)
-            try {
-                val sheet = workbook.getSheetAt(0)
-                    ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
-
-                val customers = mutableListOf<Customer>()
-                val seenPhones = mutableSetOf<String>()
-                var headerRow: Row? = null
-                var phoneCol = -1
-                var headers = emptyList<String>()
-                val targetPhoneHeader = phoneColumnName.trim().lowercase(Locale.ROOT)
-
-                // Find header row (check first 10 rows)
-                for (r in 0..sheet.lastRowNum.coerceAtMost(10)) {
-                    val row = sheet.getRow(r) ?: continue
-                    val rowHeaders = (0 until row.lastCellNum.toInt().coerceAtLeast(0))
-                        .map { getCellValueAsString(row.getCell(it)).trim() }
-
-                    var candidatePhoneCol = -1
-
-                    // 1. Exact match with targetPhoneHeader
-                    if (targetPhoneHeader.isNotEmpty()) {
-                        for ((c, header) in rowHeaders.withIndex()) {
-                            if (header.lowercase(Locale.ROOT) == targetPhoneHeader) {
-                                candidatePhoneCol = c
-                                break
-                            }
-                        }
-                    }
-
-                    // 2. Contains match with targetPhoneHeader
-                    if (candidatePhoneCol == -1 && targetPhoneHeader.isNotEmpty()) {
-                        for ((c, header) in rowHeaders.withIndex()) {
-                            if (header.lowercase(Locale.ROOT).contains(targetPhoneHeader)) {
-                                candidatePhoneCol = c
-                                break
-                            }
-                        }
-                    }
-
-                    // 3. Fallback to default phone keywords
-                    if (candidatePhoneCol == -1) {
-                        for ((c, header) in rowHeaders.withIndex()) {
-                            val valStr = header.lowercase(Locale.ROOT)
-                            if (valStr == "sdt" || valStr == "sđt" || valStr == "phone") {
-                                candidatePhoneCol = c
-                                break
-                            } else if (candidatePhoneCol == -1 && (
-                                        valStr.contains("sđt") ||
-                                                valStr.contains("sdt") ||
-                                                valStr.contains("thoại") ||
-                                                valStr.contains("phone")
-                                        )
-                            ) {
-                                candidatePhoneCol = c
-                            }
-                        }
-                    }
-
-                    if (candidatePhoneCol != -1) {
-                        headerRow = row
-                        headers = rowHeaders
-                        phoneCol = candidatePhoneCol
-                        break
-                    }
-                }
-
-                val startRowIndex = if (headerRow != null) headerRow.rowNum + 1 else 1
-
-                for (r in startRowIndex..sheet.lastRowNum) {
-                    val row = sheet.getRow(r) ?: continue
-
-                    val rawPhone =
-                        if (phoneCol != -1) getCellValueAsString(row.getCell(phoneCol)) else ""
-                    val normalizedPhones = cleanAndFilterPhoneNumbers(rawPhone)
-
-                    if (normalizedPhones.isEmpty()) continue
-
-                    val rowCustomFields = linkedMapOf<String, String>()
-                    headers.forEachIndexed { index, header ->
-                        if (header.isNotBlank()) {
-                            rowCustomFields[header] = getCellValueAsString(row.getCell(index))
-                        }
-                    }
-
-                    // Create a separate customer entry for each phone number
-                    for (singlePhone in normalizedPhones) {
-                        if (!seenPhones.add(singlePhone)) {
-                            continue
-                        }
-                        val itemCustomFields = rowCustomFields.toMutableMap()
-                        if (phoneCol in 0 until headers.size) {
-                            val phoneHeader = headers[phoneCol]
-                            if (phoneHeader.isNotBlank()) {
-                                itemCustomFields[phoneHeader] = singlePhone
-                            }
-                        }
-
-                        customers.add(
-                            Customer(
-                                phone = singlePhone,
-                                customFields = itemCustomFields,
-                                status = CustomerStatus.PENDING
-                            )
-                        )
-                    }
-                }
-
-                customers
-            } finally {
-                workbook.close()
-            }
+            parseCustomersSax(inputStream, phoneColumnName)
+                ?: throw IllegalArgumentException("Không thể đọc dữ liệu từ file Excel .xlsx")
         }
     }
 
     fun getExcelHeaders(inputStream: InputStream): Result<List<String>> {
         return runCatching {
-            val workbook = WorkbookFactory.create(inputStream)
-            try {
-                val sheet = workbook.getSheetAt(0)
-                    ?: throw IllegalArgumentException("File Excel không có dữ liệu sheet 1")
-                var headers = emptyList<String>()
-                for (r in 0..sheet.lastRowNum.coerceAtMost(10)) {
-                    val row = sheet.getRow(r) ?: continue
-                    val rowHeaders = (0 until row.lastCellNum.toInt().coerceAtLeast(0))
-                        .map { getCellValueAsString(row.getCell(it)).trim() }
-                        .filter { it.isNotBlank() }
-                    if (rowHeaders.isNotEmpty()) {
-                        headers = rowHeaders
+            getExcelHeadersSax(inputStream)
+                ?: throw IllegalArgumentException("Không thể đọc tiêu đề cột từ file Excel .xlsx")
+        }
+    }
+
+    private fun parseCustomersSax(
+        inputStream: InputStream,
+        phoneColumnName: String
+    ): List<Customer>? {
+        val rows = readSheetRowsSax(inputStream, maxRowsToRead = MAX_ROWS_PARSED) ?: return null
+        if (rows.isEmpty()) return emptyList()
+
+        val targetPhoneHeader = phoneColumnName.trim().lowercase(Locale.ROOT)
+        var headerRowIndex = -1
+        var phoneCol = -1
+        var headers = emptyList<String>()
+
+        // Find header row (check first 10 rows)
+        for (r in 0 until rows.size.coerceAtMost(10)) {
+            val rowMap = rows[r]
+            val maxCol = (rowMap.keys.maxOrNull() ?: -1)
+            if (maxCol < 0) continue
+
+            val rowHeaders = (0..maxCol).map { rowMap[it]?.trim().orEmpty() }
+            var candidatePhoneCol = -1
+
+            // 1. Exact match with targetPhoneHeader
+            if (targetPhoneHeader.isNotEmpty()) {
+                for ((c, header) in rowHeaders.withIndex()) {
+                    if (header.lowercase(Locale.ROOT) == targetPhoneHeader) {
+                        candidatePhoneCol = c
                         break
                     }
                 }
-                headers
-            } finally {
-                workbook.close()
+            }
+
+            // 2. Contains match with targetPhoneHeader
+            if (candidatePhoneCol == -1 && targetPhoneHeader.isNotEmpty()) {
+                for ((c, header) in rowHeaders.withIndex()) {
+                    if (header.lowercase(Locale.ROOT).contains(targetPhoneHeader)) {
+                        candidatePhoneCol = c
+                        break
+                    }
+                }
+            }
+
+            // 3. Fallback to default phone keywords
+            if (candidatePhoneCol == -1) {
+                for ((c, header) in rowHeaders.withIndex()) {
+                    val valStr = header.lowercase(Locale.ROOT)
+                    if (valStr == "sdt" || valStr == "sđt" || valStr == "phone") {
+                        candidatePhoneCol = c
+                        break
+                    } else if (candidatePhoneCol == -1 && (
+                                valStr.contains("sđt") ||
+                                        valStr.contains("sdt") ||
+                                        valStr.contains("thoại") ||
+                                        valStr.contains("phone")
+                                )
+                    ) {
+                        candidatePhoneCol = c
+                    }
+                }
+            }
+
+            if (candidatePhoneCol != -1) {
+                headerRowIndex = r
+                headers = rowHeaders
+                phoneCol = candidatePhoneCol
+                break
+            }
+        }
+
+        val customers = mutableListOf<Customer>()
+        val seenPhones = mutableSetOf<String>()
+        val startRowIndex = if (headerRowIndex != -1) headerRowIndex + 1 else 1
+
+        for (r in startRowIndex until rows.size) {
+            val rowMap = rows[r]
+            val rawPhone = if (phoneCol != -1) rowMap[phoneCol]?.trim().orEmpty() else ""
+            val normalizedPhones = cleanAndFilterPhoneNumbers(rawPhone)
+
+            if (normalizedPhones.isEmpty()) continue
+
+            val rowCustomFields = linkedMapOf<String, String>()
+            headers.forEachIndexed { index, header ->
+                if (header.isNotBlank()) {
+                    rowCustomFields[header] = rowMap[index]?.trim().orEmpty()
+                }
+            }
+
+            for (singlePhone in normalizedPhones) {
+                if (!seenPhones.add(singlePhone)) {
+                    continue
+                }
+                val itemCustomFields = rowCustomFields.toMutableMap()
+                if (phoneCol in 0 until headers.size) {
+                    val phoneHeader = headers[phoneCol]
+                    if (phoneHeader.isNotBlank()) {
+                        itemCustomFields[phoneHeader] = singlePhone
+                    }
+                }
+
+                customers.add(
+                    Customer(
+                        phone = singlePhone,
+                        customFields = itemCustomFields,
+                        status = CustomerStatus.PENDING
+                    )
+                )
+            }
+        }
+
+        return customers
+    }
+
+    private fun getExcelHeadersSax(inputStream: InputStream): List<String>? {
+        val rows = readSheetRowsSax(inputStream, maxRowsToRead = 10) ?: return null
+        for (rowMap in rows) {
+            val maxCol = rowMap.keys.maxOrNull() ?: -1
+            if (maxCol < 0) continue
+            val rowHeaders = (0..maxCol)
+                .map { rowMap[it]?.trim().orEmpty() }
+                .filter { it.isNotBlank() }
+            if (rowHeaders.isNotEmpty()) {
+                return rowHeaders
+            }
+        }
+        return emptyList()
+    }
+
+    private fun readSheetRowsSax(
+        inputStream: InputStream,
+        maxRowsToRead: Int
+    ): List<Map<Int, String>>? {
+        val rows = mutableListOf<Map<Int, String>>()
+        var pkg: OPCPackage? = null
+        try {
+            pkg = OPCPackage.open(inputStream)
+            val reader = XSSFReader(pkg)
+            val sst = ReadOnlySharedStringsTable(pkg)
+            val styles = try {
+                reader.stylesTable
+            } catch (_: Exception) {
+                null
+            }
+            val sheetsData = reader.sheetsData
+            if (!sheetsData.hasNext()) return null
+
+            val sheetStream = sheetsData.next()
+            sheetStream.use { stream ->
+                val saxFactory = SAXParserFactory.newInstance()
+                saxFactory.isNamespaceAware = true
+                val xmlReader = saxFactory.newSAXParser().xmlReader
+                val handler = XlsxSaxSheetHandler(sst, styles) { _, rowMap ->
+                    rows.add(rowMap)
+                    if (rows.size >= maxRowsToRead) {
+                        false
+                    } else {
+                        true
+                    }
+                }
+                xmlReader.contentHandler = handler
+                try {
+                    xmlReader.parse(InputSource(stream))
+                } catch (_: XlsxStopParsingException) {
+                    // Stopped early by design
+                }
+            }
+            return rows
+        } catch (_: Exception) {
+            return null
+        } finally {
+            try {
+                pkg?.close()
+            } catch (_: Exception) {
             }
         }
     }
@@ -160,7 +218,6 @@ class ExcelParser {
     fun cleanAndFilterPhoneNumbers(rawPhone: String): List<String> {
         if (rawPhone.isBlank()) return emptyList()
 
-        // Split by common delimiters (comma, semicolon, newline, slash, tab)
         val tokens = rawPhone.split(DELIMITER_REGEX)
         val result = mutableListOf<String>()
         val seen = mutableSetOf<String>()
@@ -188,43 +245,148 @@ class ExcelParser {
         return result
     }
 
-    private fun getCellValueAsString(cell: Cell?): String {
-        if (cell == null) return ""
-        return when (cell.cellType) {
-            CellType.STRING -> cell.stringCellValue.trim()
-            CellType.NUMERIC -> {
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    DATE_FORMATTER_THREAD_LOCAL.get()?.format(cell.dateCellValue).orEmpty()
-                } else {
-                    val num = cell.numericCellValue
-                    if (num % 1.0 == 0.0) {
-                        num.toLong().toString()
-                    } else {
-                        num.toString()
-                    }
-                }
-            }
-
-            CellType.BOOLEAN -> cell.booleanCellValue.toString()
-            CellType.FORMULA -> {
-                try {
-                    cell.numericCellValue.toLong().toString()
-                } catch (_: Exception) {
-                    cell.stringCellValue.trim()
-                }
-            }
-
-            else -> ""
-        }
-    }
-
     companion object {
+        private const val MAX_ROWS_PARSED = 50_000
         private val DELIMITER_REGEX = Regex("[,;\\n\\r\\t/]+")
         private val NON_PHONE_CHARS_REGEX = Regex("[^0-9+]")
         private val NON_DIGITS_REGEX = Regex("[^0-9]")
 
-        private val DATE_FORMATTER_THREAD_LOCAL = ThreadLocal.withInitial {
+        internal val DATE_FORMATTER_THREAD_LOCAL = ThreadLocal.withInitial {
             SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         }
+    }
+}
+
+private class XlsxStopParsingException : SAXException("Stop parsing")
+
+private class XlsxSaxSheetHandler(
+    private val sst: ReadOnlySharedStringsTable,
+    private val styles: StylesTable?,
+    private val rowCallback: (rowIndex: Int, rowMap: Map<Int, String>) -> Boolean
+) : DefaultHandler() {
+
+    private var currentRowIndex = 0
+    private var currentCellCol = -1
+    private var currentCellType: String? = null
+    private var currentCellStyle: String? = null
+    private val currentRowCells = mutableMapOf<Int, String>()
+    private val cellContents = StringBuilder()
+    private var isReadingText = false
+
+    override fun startElement(
+        uri: String,
+        localName: String,
+        qName: String,
+        attributes: Attributes
+    ) {
+        val name = if (localName.isNotEmpty()) localName else qName
+        when (name) {
+            "row" -> {
+                val rAttr = attributes.getValue("r")
+                currentRowIndex = if (rAttr != null) (rAttr.toIntOrNull() ?: (currentRowIndex + 1)) - 1 else currentRowIndex
+                currentRowCells.clear()
+            }
+            "c" -> {
+                val rRef = attributes.getValue("r")
+                currentCellCol = if (rRef != null) convertColumnRefToIndex(rRef) else currentCellCol + 1
+                currentCellType = attributes.getValue("t")
+                currentCellStyle = attributes.getValue("s")
+                cellContents.setLength(0)
+            }
+            "v", "t" -> {
+                isReadingText = true
+                cellContents.setLength(0)
+            }
+        }
+    }
+
+    override fun characters(ch: CharArray, start: Int, length: Int) {
+        if (isReadingText) {
+            cellContents.appendRange(ch, start, start + length)
+        }
+    }
+
+    override fun endElement(uri: String, localName: String, qName: String) {
+        val name = if (localName.isNotEmpty()) localName else qName
+        when (name) {
+            "v" -> {
+                isReadingText = false
+                val rawValue = cellContents.toString()
+                val value = formatCellValue(rawValue, currentCellType, currentCellStyle)
+                if (currentCellCol >= 0) {
+                    currentRowCells[currentCellCol] = value
+                }
+            }
+            "t" -> {
+                isReadingText = false
+                if (currentCellType == "inlineStr" && currentCellCol >= 0) {
+                    currentRowCells[currentCellCol] = cellContents.toString().trim()
+                }
+            }
+            "row" -> {
+                val shouldContinue = rowCallback(currentRowIndex, currentRowCells.toMap())
+                currentRowIndex++
+                if (!shouldContinue) {
+                    throw XlsxStopParsingException()
+                }
+            }
+        }
+    }
+
+    private fun formatCellValue(rawValue: String, type: String?, styleAttr: String?): String {
+        return when (type) {
+            "s" -> {
+                val idx = rawValue.toIntOrNull()
+                if (idx != null) {
+                    try {
+                        sst.getItemAt(idx).string.trim()
+                    } catch (_: Exception) {
+                        rawValue.trim()
+                    }
+                } else rawValue.trim()
+            }
+            "b" -> if (rawValue == "1") "true" else "false"
+            "e" -> ""
+            "str", "inlineStr" -> rawValue.trim()
+            else -> {
+                val bd = rawValue.trim().toBigDecimalOrNull()
+                if (bd != null) {
+                    val num = bd.toDouble()
+                    if (styleAttr != null && styles != null) {
+                        val styleIdx = styleAttr.toIntOrNull()
+                        if (styleIdx != null && styleIdx in 0 until styles.numCellStyles) {
+                            val style = styles.getStyleAt(styleIdx)
+                            if (style != null) {
+                                val dataFormat = style.dataFormat.toInt()
+                                val formatString = style.dataFormatString
+                                if (DateUtil.isADateFormat(dataFormat, formatString)) {
+                                    val date = DateUtil.getJavaDate(num)
+                                    val formattedDate = ExcelParser.DATE_FORMATTER_THREAD_LOCAL.get()?.format(date)
+                                    if (!formattedDate.isNullOrEmpty()) {
+                                        return formattedDate
+                                    }
+                                }
+                                if (!formatString.isNullOrBlank() && !formatString.equals("General", ignoreCase = true)) {
+                                    return com.gmail.nthai.util.formatExcelNumber(bd, formatString)
+                                }
+                            }
+                        }
+                    }
+                    bd.stripTrailingZeros().toPlainString()
+                } else {
+                    rawValue.trim()
+                }
+            }
+        }
+    }
+
+    private fun convertColumnRefToIndex(cellRef: String): Int {
+        val colStr = cellRef.takeWhile { it.isLetter() }.uppercase(Locale.ROOT)
+        if (colStr.isEmpty()) return -1
+        var col = 0
+        for (ch in colStr) {
+            col = col * 26 + (ch - 'A' + 1)
+        }
+        return col - 1
     }
 }

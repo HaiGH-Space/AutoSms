@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gmail.nthai.domain.engine.SmsSendingEngine
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.SimConfig
@@ -25,13 +26,14 @@ import javax.inject.Inject
 class ProgressViewModel @Inject constructor(
     customerRepository: CustomerRepository,
     private val sendingLogRepository: SendingLogRepository,
-    simConfigRepository: SimConfigRepository
+    simConfigRepository: SimConfigRepository,
+    smsSendingEngine: SmsSendingEngine
 ) : ViewModel() {
 
     val simConfigs: StateFlow<List<SimConfig>> = simConfigRepository.getSimConfigs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val serviceStates: StateFlow<Map<Int, SendingServiceState>> = SmsForegroundService.serviceStates
+    val serviceStates: StateFlow<Map<Int, SendingServiceState>> = smsSendingEngine.serviceStates
 
     val logs: StateFlow<List<LogRecord>> = sendingLogRepository.getAllLogs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

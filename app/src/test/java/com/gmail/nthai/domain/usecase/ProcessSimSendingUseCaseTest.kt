@@ -198,6 +198,72 @@ class ProcessSimSendingUseCaseTest {
         assertEquals("Current session PENDING log should not be counted again", 0, calculatedTotal)
     }
 
+    @Test
+    fun `execute stops sending when daily limit is reached and does not mark remaining customers as failed`() = runTest {
+        val simSlot = 1
+        val customer1 = Customer(id = 1L, phone = "0901111111", status = CustomerStatus.PENDING, isSelected = true, sendSimSlot = simSlot)
+        val customer2 = Customer(id = 2L, phone = "0902222222", status = CustomerStatus.PENDING, isSelected = true, sendSimSlot = simSlot)
+        val customer3 = Customer(id = 3L, phone = "0903333333", status = CustomerStatus.PENDING, isSelected = true, sendSimSlot = simSlot)
+        fakeCustomerRepository.insertCustomers(listOf(customer1, customer2, customer3))
+
+        val customSimConfigRepository = TestSimConfigRepository(
+            config = SimConfig(subscriptionId = 1, simSlot = simSlot, dailyLimit = 2, sentCountToday = 0)
+        )
+
+        val customSimManagerWrapper = object : SimManagerWrapper(null) {
+            override fun getSubscriptionIdForSlot(simSlot: Int): Int = 1
+            override fun getActiveSims(): List<SimConfig> = listOf(SimConfig(subscriptionId = 1, simSlot = simSlot, carrierName = "Viettel", dailyLimit = 2))
+        }
+
+        val testUseCase = ProcessSimSendingUseCase(
+            customerRepository = fakeCustomerRepository,
+            simConfigRepository = customSimConfigRepository,
+            sendingLogRepository = fakeSendingLogRepository,
+            parseSpintaxUseCase = parseSpintaxUseCase,
+            validateConstraintUseCase = validateConstraintUseCase,
+            calculateNextDelayUseCase = calculateNextDelayUseCase,
+            simManagerWrapper = customSimManagerWrapper,
+            smsSenderEngine = dummySmsSenderEngine
+        )
+
+        var lastSentProgress = 0
+        val result = testUseCase.execute(
+            context = null,
+            simSlot = simSlot,
+            customers = listOf(customer1, customer2, customer3),
+            existingLogsByCustomer = emptyMap(),
+            template = SmsTemplate(content = "Test SMS"),
+            rule = SendingRule(startHour = 0, startMinute = 0, endHour = 24, endMinute = 0),
+            isPaused = { false },
+            isStopped = { false },
+            sessionStartTime = System.currentTimeMillis(),
+            onProgressUpdate = { sent, _, _, _ -> lastSentProgress = sent },
+            onReportSmsFailure = { _, _ -> }
+        )
+
+        assertEquals("SIM 1 đã đạt hạn mức gửi 2 tin/ngày.", result)
+        assertEquals("Should have sent 2 messages before stopping at limit", 2, lastSentProgress)
+
+        val customer3Logs = fakeSendingLogRepository.getLogsForCustomer(customer3.id)
+        assertTrue("Customer 3 should not have any log entries created", customer3Logs.isEmpty())
+        assertEquals("Customer 3 should remain PENDING", CustomerStatus.PENDING, fakeCustomerRepository.getCustomerById(3L)?.status)
+    }
+
+    private class TestSimConfigRepository(
+        private var config: SimConfig
+    ) : SimConfigRepository {
+        override fun getSimConfigs(): Flow<List<SimConfig>> = flowOf(listOf(config))
+        override suspend fun getSimConfigBySlot(simSlot: Int): SimConfig = config
+        override suspend fun saveSimConfig(simConfig: SimConfig) { config = simConfig }
+        override suspend fun incrementSentCount(simSlot: Int) {
+            config = config.copy(sentCountToday = config.sentCountToday + 1)
+        }
+        override suspend fun decrementSentCount(simSlot: Int) {}
+        override fun getSendingRule(): Flow<SendingRule> = flowOf(SendingRule())
+        override suspend fun saveSendingRule(rule: SendingRule) {}
+        override suspend fun resetDailyCountsIfNewDay(todayDate: String) {}
+    }
+
     private class FakeCustomerRepository : CustomerRepository {
         private val customers = mutableMapOf<Long, Customer>()
 
