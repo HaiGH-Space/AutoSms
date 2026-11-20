@@ -12,6 +12,8 @@ jobs:
   release:
     name: Build & Release Artifacts
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
