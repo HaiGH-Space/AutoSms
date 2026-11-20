@@ -36,60 +36,55 @@ List the most important debt items only.
 | Concern                                | Evidence                                                                | Current symptom                                              | Scaling risk                                                       | Suggested improvement                                                                                       |
 | -------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | [Resolved] Streaming POI parsing & export | `app/src/main/java/com/gmail/nthai/data/excel/ExcelParser.kt`        | None (previously memory spikes / freeze with large files)    | Out of memory crash when importing spreadsheets with >5,000 rows   | Resolved by SAX event parser in `ExcelParser` and `SXSSFWorkbook` streaming writer in `ExcelExporter`.     |
-| [Resolved] Concurrent SIM sending lock contention | `app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt#L88` | None (previously synchronized blocks on `progressLock` and `failureCountLock`) | Lock contention during simultaneous Dual SIM high-frequency events | Resolved by refactoring to lock-free atomic primitives (`AtomicInteger`) and thread-safe sets (`ConcurrentHashMap.newKeySet()`). |
+| [Resolved] Concurrent SIM sending lock contention | `app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt#L88`, `app/src/main/java/com/gmail/nthai/domain/engine/SmsSendingEngine.kt` | None (previously synchronized blocks on locks) | Lock contention during simultaneous Dual SIM high-frequency events | Resolved by refactoring sending logic into `SmsSendingEngine` using lock-free atomic primitives (`AtomicInteger`) and thread-safe sets (`ConcurrentHashMap.newKeySet()`). |
 
 ### 5) Fragile/High-Churn Areas
 
 | Area                                           | Why fragile                                                                                             | Churn signal          | Safe change strategy                                                                               |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------- |
-| [Resolved] `CustomerListScreen.kt`             | 19 commits in 90 days; previously mixed filtering, SIM switching, empty state, selection, and sending bar | 19 commits in git log | **Resolved**: Decomposed monolithic screen into dedicated stateless subcomponents (`CustomerFilterSection`, `CustomerSelectionBar`, `CustomerEmptyState`, `CustomerBottomSendingBar`, `SimSlotTabs`). Reduced from 541 lines to 273 lines. |
-| [Resolved] `HomeScreen.kt`                     | 17 commits in 90 days; previously mixed metrics grid, SIM cards, and 4-step workflow cards in one screen | 17 commits in git log | **Resolved**: Modularized into reusable stateless subcomponents (`OverviewMetricsGrid`, `ModernSimCard`, `WorkflowStepCard` in `presentation/components/home`). Reduced from 678 lines to 389 lines. |
-| [Resolved] `app/build.gradle.kts`             | 16 commits in 90 days; frequent dependency bumps, Proguard rule adjustments, and packaging tweaks       | 16 commits in git log | **Resolved**: Centralized SDK versions (`compileSdk`, `minSdk`, `targetSdk`) in Version Catalog (`libs.versions.toml`) and created Gradle tasks `validateUpdateJson` & `syncUpdateJson`. |
-| [Resolved] `update.json`                      | 16 commits in 90 days; frequently modified to trigger in-app updates across releases                    | 16 commits in git log | **Resolved**: Created Gradle sync/validation tasks and automated GitHub Actions release workflow (`.github/workflows/release.yml`). |
-| `SmsForegroundService.kt`                      | 13 commits in 90 days; coordinates multi-SIM state machines, notification updates, and coroutine jobs   | 13 commits in git log | Separate state machine logic from Android Service lifecycle into a standalone testable controller  |
-| `CustomerViewModel.kt`                         | 12 commits in 90 days; customer state management, search, and Excel import bindings                     | 12 commits in git log | Maintain isolated unit tests for ViewModel state reductions                                        |
-| `ReportScreen.kt` & `SendingProgressScreen.kt` | 12 commits in 90 days each; complex UI rendering for logs and progress counters                         | 12 commits in git log | Separate reporting chart/card components into reusable stateless widgets                           |
-| `DatabaseModule.kt` & `AppDatabase.kt`         | 11 and 9 commits in 90 days; active schema modifications (version 1 through 12)                         | 11 commits in git log | Add automated `MigrationTestHelper` test suite before bumping Room versions                        |
-| `ZaloConfigTab.kt` & `ZaloScreen.kt`           | 10 commits in 90 days each; active development of Zalo campaign orchestration                           | 10 commits in git log | Decouple tab UI into stateless composables and inject testable engine states                       |
-| `ZaloAccessibilityService.kt`                  | 8 commits in 90 days; rapid hardening of accessibility nodes, return loops, and retry handlers          | 8 commits in git log  | Unit-test state transitions and navigation helpers where feasible; document Zalo UI node selectors |
+| [Resolved] `CustomerListScreen.kt`             | Previously mixed filtering, SIM switching, empty state, selection, and sending bar                      | Monolithic (541 lines)| **Resolved**: Decomposed monolithic screen into dedicated stateless subcomponents (`CustomerFilterSection`, `CustomerSelectionBar`, `CustomerEmptyState`, `CustomerBottomSendingBar`, `SimSlotTabs`). Reduced to 273 lines. |
+| [Resolved] `HomeScreen.kt`                     | Previously mixed metrics grid, SIM cards, and 4-step workflow cards in one screen                       | Monolithic (678 lines)| **Resolved**: Modularized into reusable stateless subcomponents (`OverviewMetricsGrid`, `ModernSimCard`, `WorkflowStepCard` in `presentation/components/home`). Reduced to 389 lines. |
+| [Resolved] `app/build.gradle.kts`             | Frequent dependency bumps, Proguard rule adjustments, and packaging tweaks                              | Dependency churn      | **Resolved**: Centralized SDK versions (`compileSdk`, `minSdk`, `targetSdk`) in Version Catalog (`libs.versions.toml`) and created Gradle tasks `validateUpdateJson` & `syncUpdateJson`. |
+| [Resolved] `update.json`                      | Frequently modified to trigger in-app updates across releases                                           | Config churn          | **Resolved**: Created Gradle sync/validation tasks and automated GitHub Actions release workflow (`.github/workflows/release.yml`) with base64 keystore signing. |
+| [Resolved] `SmsForegroundService.kt` & `SmsSendingEngine.kt` | Coordinates multi-SIM state machines, notification updates, and coroutine background jobs               | Service complexity    | **Resolved**: Extracted SMS batch orchestration and multi-SIM state logic into testable `SmsSendingEngine.kt`, hardened `SmsForegroundService` for Android 14+ `dataSync` compliance and robust exception handling. |
+| `CustomerViewModel.kt`                         | Customer state management, search, and Excel import bindings                                            | 12 commits in git log | Maintain isolated unit tests for ViewModel state reductions                                        |
+| `ReportScreen.kt` & `SendingProgressScreen.kt` | Complex UI rendering for logs and progress counters                                                     | 12 commits in git log each | Separate reporting chart/card components into reusable stateless widgets                           |
+| `DatabaseModule.kt` & `AppDatabase.kt`         | Active schema modifications (version 1 through 12 with `MIGRATION_10_11`)                                 | 11 commits in git log | Add automated `MigrationTestHelper` test suite before bumping Room versions                        |
+| `ZaloConfigTab.kt` & `ZaloScreen.kt`           | Active development of Zalo campaign orchestration                                                       | 10 commits in git log | Decouple tab UI into stateless composables and inject testable engine states                       |
+| `ZaloAccessibilityService.kt`                  | Hardening of accessibility nodes, return loops, and retry handlers                                      | 8 commits in git log  | Unit-test state transitions and navigation helpers where feasible; document Zalo UI node selectors |
 
 ### 6) `[ASK USER]` Decisions & Responses
 
 1. **[RESOLVED] Should `MIGRATION_10_11` be created in `DatabaseModule.kt` immediately?**
-   - **Decision:** **YES**. Implement `MIGRATION_10_11` immediately to prevent destructive database wipes for existing users upgrading to v12+.
+   - **Decision:** **YES**. Implemented `MIGRATION_10_11` successfully to prevent destructive database wipes for existing users.
 2. **[RESOLVED] Support legacy migrations prior to v4 (v2 to v4)?**
    - **Decision:** **NO (Drop)**. App explicitly drops backward compatibility for legacy versions prior to v0.1.0 (< DB v4).
 3. **[RESOLVED] Setup CI/CD pipeline & static analysis?**
-   - **Decision:** **YES**. Set up GitHub Actions CI workflow (test & build verification) and static analysis tool (Ktlint / Detekt).
-4. **[RESOLVED] Introduce unit tests for `ZaloSendingEngine`?**
-   - **Decision:** **YES**. Introduce unit tests for `ZaloSendingEngine` using mocked repositories and simulated result flows.
+   - **Decision:** **YES**. Created GitHub Actions CI workflow (`.github/workflows/ci.yml`) and release automation workflow (`.github/workflows/release.yml`).
+4. **[RESOLVED] Introduce unit tests for `ZaloSendingEngine` & `SmsSendingEngine`?**
+   - **Decision:** **YES**. Introduced comprehensive unit test suites covering Zalo parsing, Spintax, and `SmsSendingEngine` behaviors.
 5. **[RESOLVED] Brittle UI automation for Zalo via Accessibility Service policy?**
-   - **Decision:** **Accepted / Mitigated**. Because an official Zalo personal messaging API does not exist (Zalo OA only supports business templates), automation via Android Accessibility Service is an accepted technical constraint. The app has completed multi-tier hardening (multi-layer node detection, clipboard fallback, WebView error trap, retry cycles, and low-spec device pacing). No further architectural rewrites needed; operational issues will be monitored as third-party Zalo changes occur.
-
+   - **Decision:** **Accepted / Mitigated**. Multi-tier hardening completed (multi-layer node detection, clipboard fallback, WebView error trap, retry cycles, and low-spec device pacing).
 6. **[RESOLVED] Foreground Service runtime restrictions on Android 14+ (UPSIDE_DOWN_CAKE)?**
-   - **Decision:** **Resolved / Compliant**. 
-     - Manifest has configured `<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />` and `<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />`.
-     - `<service android:name=".service.SmsForegroundService" android:foregroundServiceType="dataSync" android:exported="false" />` is declared.
-     - `startForeground()` specifies `ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC` with defensive try/catch against `ForegroundServiceStartNotAllowedException` / `SecurityException`.
-     - Graceful lifecycle teardown uses `stopForeground(STOP_FOREGROUND_REMOVE)` and `stopSelf()`.
-     - Execution is initiated by direct user action from UI screens (`ProgressViewModel`).
-
+   - **Decision:** **Resolved / Compliant**. Configured `FOREGROUND_SERVICE_DATA_SYNC` permission and `foregroundServiceType="dataSync"`, with defensive exception handling and graceful teardown.
 7. **[RESOLVED] Unencrypted customer PII in local SQLite database?**
-   - **Decision:** **Accepted / Mitigated for Non-Enterprise**. SQLite database is isolated inside Android's internal app sandbox (`/data/data/com.gmail.nthai/databases`), preventing access by third-party applications. Database and journal/WAL files are explicitly excluded from cloud backup and device transfer in `data_extraction_rules.xml` and `backup_rules.xml`. Full encryption (SQLCipher) is avoided to prevent massive binary overhead and query performance degradation.
-
+   - **Decision:** **Accepted / Mitigated for Non-Enterprise**. OS-level sandbox isolation with explicit backup exclusions in `data_extraction_rules.xml` and `backup_rules.xml`.
 8. **[RESOLVED] Accessibility Service exploitation risk?**
-   - **Decision:** **Hardened / Resolved**. `zalo_accessibility_config.xml` explicitly configures `android:packageNames="com.zing.zalo"`, restricting event delivery to Zalo at the OS level. The service implementation in `ZaloAccessibilityService.kt` performs runtime checks to ignore non-Zalo events and only manipulates nodes during active sending tasks.
-
+   - **Decision:** **Hardened / Resolved**. `zalo_accessibility_config.xml` explicitly scoped to `com.zing.zalo` at the OS level with runtime event validation.
 9. **[RESOLVED] Insecure HTTP Communication for In-App Updates?**
-   - **Decision:** **Resolved / Enforced HTTPS**. Added `network_security_config.xml` disabling cleartext HTTP app-wide (`cleartextTrafficPermitted="false"`), registered in `AndroidManifest.xml`. `UpdateRepositoryImpl` strictly validates and enforces `https://` protocol on custom update URLs, manifest download URLs, and intermediate HTTP redirect hops.
+   - **Decision:** **Resolved / Enforced HTTPS**. Network Security Config disallows cleartext HTTP; `UpdateRepositoryImpl` enforces HTTPS protocol across all URLs and redirects.
 
 ### 7) Evidence
 
 - `docs/codebase/.codebase-scan.txt`
-- `app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt#L24-L100`
-- `app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt#L29`
+- `app/src/main/java/com/gmail/nthai/di/DatabaseModule.kt`
+- `app/src/main/java/com/gmail/nthai/data/local/AppDatabase.kt`
 - `app/src/main/java/com/gmail/nthai/service/ZaloAccessibilityService.kt`
 - `app/src/main/java/com/gmail/nthai/service/ZaloSendingEngine.kt`
+- `app/src/main/java/com/gmail/nthai/domain/engine/SmsSendingEngine.kt`
 - `app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt`
 - `app/src/main/java/com/gmail/nthai/data/excel/ExcelParser.kt`
+- `app/src/main/java/com/gmail/nthai/data/excel/ExcelExporter.kt`
 - `update.json`
+- `.github/workflows/ci.yml`
+- `.github/workflows/release.yml`
