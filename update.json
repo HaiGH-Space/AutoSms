@@ -1,8 +1,8 @@
 {
-  "versionCode": 10,
-  "versionName": "0.1.9",
-  "releaseType": "beta",
-  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.1.9/app-release.apk",
-  "releaseNotes": "[BẢN BETA]\n- Cải tiến và tối ưu Dịch vụ hỗ trợ tiếp cận (Accessibility Service) và động cơ gửi tin tự động Zalo (ZaloSendingEngine)\n- Thêm hộp thoại nhập file Excel (ExcelImportDialogs) hỗ trợ xem trước, khớp cột dữ liệu và xử lý trùng lặp\n- Nâng cấp tính năng nhập danh sách người nhận Zalo và khách hàng từ file Excel\n- Bổ sung tùy chỉnh khoảng thời gian giãn cách (delay range) trong cài đặt gửi tin Zalo\n- Tối ưu hóa giao diện và hiển thị văn bản trong các tab cấu hình, tiến trình và cài đặt Zalo\n- Thêm unit test kiểm thử cho bộ đọc file Excel (ExcelParserTest)",
+  "versionCode": 11,
+  "versionName": "0.2.0",
+  "releaseType": "stable",
+  "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.2.0/app-release.apk",
+  "releaseNotes": "[BẢN 0.2.0]\n- Tách biệt và tối ưu hóa SmsSendingEngine cùng SmsForegroundService tương thích Android 14+\n- Bổ sung cơ chế tự động dừng sau 3 lần gửi tin thất bại liên tiếp và kiểm tra quyền Accessibility trước khi chạy Zalo campaign\n- Cải tiến bộ đọc file Excel với streaming, sửa lỗi định dạng số và spintax cho số lớn\n- Tái cấu trúc toàn diện các màn hình Home và Customer thành các component hiện đại, modular\n- Bổ sung migration Room database và hoàn thiện CI/CD release workflow",
   "forceUpdate": false
 }

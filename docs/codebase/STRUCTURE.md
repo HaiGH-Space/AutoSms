@@ -13,7 +13,7 @@
 | `build.gradle.kts` | Root project Gradle build configuration declaring top-level plugins | `build.gradle.kts` |
 | `settings.gradle.kts` | Defines project name (`AutoSms`) and included modules (`:app`) | `settings.gradle.kts` |
 | `gradle.properties` | JVM configuration, daemon settings, and Android Gradle Plugin flags | `gradle.properties` |
-| `update.json` | Remote metadata endpoint for checking in-app application version updates (v0.1.9) | `update.json` |
+| `update.json` | Remote metadata endpoint for checking in-app application version updates (v0.2.0) | `update.json` |
 | `docs/assets/logo.svg` | Vector brand mark and app icon in SVG format used across documentation and GitHub display | `docs/assets/logo.svg` |
 | `README.md` | Stated project purpose, feature set, requirements, and build instructions | `README.md` |
 

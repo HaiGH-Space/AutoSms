@@ -8,7 +8,7 @@
 |------|-------|----------|
 | Primary language | Kotlin 2.0.21 | `gradle/libs.versions.toml#L3`, `app/build.gradle.kts#L3` |
 | Runtime + version | Android SDK (compileSdk 35, minSdk 26, targetSdk 35), Java 11 | `app/build.gradle.kts#L10-L19`, `app/build.gradle.kts#L33-L35` |
-| Application version | Version Name: 0.1.9, Version Code: 10 (Release Type: beta) | `app/build.gradle.kts#L16-L17`, `update.json#L2-L4` |
+| Application version | Version Name: 0.2.0, Version Code: 11 (Release Type: stable) | `app/build.gradle.kts#L16-L17`, `update.json#L2-L4` |
 | Package manager | Gradle 8.x / AGP 9.4.1 (via Gradle Wrapper) | `gradle/libs.versions.toml#L2`, `gradle/wrapper/gradle-wrapper.properties` |
 | Module/build system | Gradle Kotlin DSL (`build.gradle.kts`) with KSP 2.0.21-1.0.28 | `build.gradle.kts`, `app/build.gradle.kts`, `gradle/libs.versions.toml#L4` |
 
