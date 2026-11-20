@@ -349,26 +349,30 @@ private class XlsxSaxSheetHandler(
             "e" -> ""
             "str", "inlineStr" -> rawValue.trim()
             else -> {
-                val num = rawValue.toDoubleOrNull()
-                if (num != null) {
+                val bd = rawValue.trim().toBigDecimalOrNull()
+                if (bd != null) {
+                    val num = bd.toDouble()
                     if (styleAttr != null && styles != null) {
                         val styleIdx = styleAttr.toIntOrNull()
                         if (styleIdx != null && styleIdx in 0 until styles.numCellStyles) {
                             val style = styles.getStyleAt(styleIdx)
-                            if (style != null && DateUtil.isADateFormat(style.dataFormat.toInt(), style.dataFormatString)) {
-                                val date = DateUtil.getJavaDate(num)
-                                val formattedDate = ExcelParser.DATE_FORMATTER_THREAD_LOCAL.get()?.format(date)
-                                if (!formattedDate.isNullOrEmpty()) {
-                                    return formattedDate
+                            if (style != null) {
+                                val dataFormat = style.dataFormat.toInt()
+                                val formatString = style.dataFormatString
+                                if (DateUtil.isADateFormat(dataFormat, formatString)) {
+                                    val date = DateUtil.getJavaDate(num)
+                                    val formattedDate = ExcelParser.DATE_FORMATTER_THREAD_LOCAL.get()?.format(date)
+                                    if (!formattedDate.isNullOrEmpty()) {
+                                        return formattedDate
+                                    }
+                                }
+                                if (!formatString.isNullOrBlank() && !formatString.equals("General", ignoreCase = true)) {
+                                    return com.gmail.nthai.util.formatExcelNumber(bd, formatString)
                                 }
                             }
                         }
                     }
-                    if (num % 1.0 == 0.0) {
-                        num.toLong().toString()
-                    } else {
-                        num.toString()
-                    }
+                    bd.stripTrailingZeros().toPlainString()
                 } else {
                     rawValue.trim()
                 }

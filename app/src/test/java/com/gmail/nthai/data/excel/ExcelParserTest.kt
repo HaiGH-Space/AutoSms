@@ -249,4 +249,45 @@ class ExcelParserTest {
         assertEquals("0988776655", customers[0].phone)
         assertEquals("Nguyễn Văn A", customers[0].customFields["Tên KH"])
     }
+
+    @Test
+    fun `imports large numeric values without scientific notation`() {
+        val output = ByteArrayOutputStream()
+        XSSFWorkbook().use { workbook ->
+            val sheet = workbook.createSheet("Khách hàng")
+            val header = sheet.createRow(0)
+            listOf("CUSTOMER_NAME", "MAIN_MOBILE", "TỔNG NỢ CIF")
+                .forEachIndexed { index, value -> header.createCell(index).setCellValue(value) }
+            val customer = sheet.createRow(1)
+            customer.createCell(0).setCellValue("NGUYỄN TUẤN ANH")
+            customer.createCell(1).setCellValue("0937014222")
+            customer.createCell(2).setCellValue(10209966.5736)
+
+            workbook.write(output)
+        }
+
+        val imported = ExcelParser()
+            .parseCustomers(ByteArrayInputStream(output.toByteArray()), phoneColumnName = "MAIN_MOBILE")
+            .getOrThrow()
+            .single()
+
+        assertEquals("10209966.5736", imported.customFields["TỔNG NỢ CIF"])
+    }
+
+    @Test
+    fun `formatExcelNumber formats numeric cell patterns correctly without java awt`() {
+        val bd = java.math.BigDecimal("10209966.5736")
+
+        // Integer format pattern from Excel
+        val formattedInt = com.gmail.nthai.util.formatExcelNumber(bd, "_(* #,##0_);_(* \\(#,##0\\);_(* \"-\"??_);_(@_)")
+        assertEquals("10,209,967", formattedInt)
+
+        // Decimal format pattern
+        val formattedDec = com.gmail.nthai.util.formatExcelNumber(bd, "#,##0.00")
+        assertEquals("10,209,966.57", formattedDec)
+
+        // General format
+        val formattedGen = com.gmail.nthai.util.formatExcelNumber(bd, "General")
+        assertEquals("10209966.5736", formattedGen)
+    }
 }

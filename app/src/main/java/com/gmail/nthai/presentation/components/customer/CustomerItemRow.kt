@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.gmail.nthai.util.formatCustomFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gmail.nthai.domain.model.Customer
@@ -216,7 +217,7 @@ fun CustomerDetailDialog(
                         color = Color(0xFF171717)
                     )
                     customer.customFields.forEach { (label, value) ->
-                        CustomerDetailRow(label, value.ifBlank { "—" })
+                        CustomerDetailRow(label, formatCustomFieldValue(value).ifBlank { "—" })
                     }
                 }
             }
