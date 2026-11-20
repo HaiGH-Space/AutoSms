@@ -101,7 +101,7 @@ class ProcessSimSendingUseCase @Inject constructor(
     }
 
     suspend fun execute(
-        context: Context,
+        context: Context?,
         simSlot: Int,
         customers: List<Customer>,
         existingLogsByCustomer: Map<Long, List<LogRecord>>,
@@ -293,17 +293,19 @@ class ProcessSimSendingUseCase @Inject constructor(
                     sendingLogRepository.insertLog(logRecord)
                 }
 
-                val sentPendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    logId.toInt(),
-                    Intent(context, SmsStatusReceiver::class.java).apply {
-                        action = SmsStatusReceiver.ACTION_SMS_SENT
-                        putExtra(SmsStatusReceiver.EXTRA_LOG_ID, logId)
-                        putExtra(SmsStatusReceiver.EXTRA_CUSTOMER_ID, customer.id)
-                        putExtra(SmsStatusReceiver.EXTRA_SIM_SLOT, simSlot)
-                    },
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
+                val sentPendingIntent = context?.let { ctx ->
+                    PendingIntent.getBroadcast(
+                        ctx,
+                        logId.toInt(),
+                        Intent(ctx, SmsStatusReceiver::class.java).apply {
+                            action = SmsStatusReceiver.ACTION_SMS_SENT
+                            putExtra(SmsStatusReceiver.EXTRA_LOG_ID, logId)
+                            putExtra(SmsStatusReceiver.EXTRA_CUSTOMER_ID, customer.id)
+                            putExtra(SmsStatusReceiver.EXTRA_SIM_SLOT, simSlot)
+                        },
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                }
 
                 try {
                     smsSenderEngine.sendSms(

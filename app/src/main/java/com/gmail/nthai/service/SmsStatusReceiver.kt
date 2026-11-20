@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.telephony.SmsManager
+import com.gmail.nthai.domain.engine.SmsSendingEngine
 import com.gmail.nthai.domain.model.CustomerStatus
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.repository.CustomerRepository
@@ -27,6 +28,9 @@ class SmsStatusReceiver : BroadcastReceiver() {
 
     @Inject
     lateinit var simConfigRepository: SimConfigRepository
+
+    @Inject
+    lateinit var smsSendingEngine: SmsSendingEngine
 
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent == null) return
@@ -68,7 +72,7 @@ class SmsStatusReceiver : BroadcastReceiver() {
                             if (previousStatus == LogStatus.SENT_SUCCESS) {
                                 simConfigRepository.decrementSentCount(simSlot)
                             }
-                            SmsForegroundService.reportSmsFailure(simSlot, logId)
+                            smsSendingEngine.reportSmsFailure(simSlot, logId)
                         }
                     }
 

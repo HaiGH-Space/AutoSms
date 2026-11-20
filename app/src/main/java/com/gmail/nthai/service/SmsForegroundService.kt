@@ -11,28 +11,15 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.gmail.nthai.R
-import com.gmail.nthai.domain.model.SmsTemplate
-import com.gmail.nthai.domain.repository.CustomerRepository
-import com.gmail.nthai.domain.repository.SendingLogRepository
-import com.gmail.nthai.domain.repository.SimConfigRepository
-import com.gmail.nthai.domain.repository.TemplateRepository
-import com.gmail.nthai.domain.usecase.ProcessSimSendingUseCase
+import com.gmail.nthai.domain.engine.SmsSendingEngine
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 
 sealed class SendingServiceState {
@@ -69,36 +56,44 @@ sealed class SendingServiceState {
 class SmsForegroundService : Service() {
 
     @Inject
-    lateinit var customerRepository: CustomerRepository
-    @Inject
-    lateinit var templateRepository: TemplateRepository
-    @Inject
-    lateinit var simConfigRepository: SimConfigRepository
-    @Inject
-    lateinit var sendingLogRepository: SendingLogRepository
-    @Inject
-    lateinit var processSimSendingUseCase: ProcessSimSendingUseCase
+    lateinit var smsSendingEngine: SmsSendingEngine
 
     private val serviceJob = Job()
-    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
-    private val sendingJobs = ConcurrentHashMap<Int, Job>()
-    private val pausedSlots = ConcurrentHashMap.newKeySet<Int>()
-    private val stoppedSlots = ConcurrentHashMap.newKeySet<Int>()
-
-    private val sentCounts = ConcurrentHashMap<Int, AtomicInteger>().apply {
-        put(1, AtomicInteger(0))
-        put(2, AtomicInteger(0))
-    }
-    private val totalCounts = ConcurrentHashMap<Int, AtomicInteger>().apply {
-        put(1, AtomicInteger(0))
-        put(2, AtomicInteger(0))
-    }
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
+        instanceEngine = smsSendingEngine
         createNotificationChannel()
+        observeEngineState()
+    }
+
+    private fun observeEngineState() {
+        serviceScope.launch {
+            smsSendingEngine.serviceStates.collect { states ->
+                val (sent, total) = smsSendingEngine.getAggregateProgress()
+                val activeSlot = states.entries.find { it.value is SendingServiceState.Running }?.key
+                val pausedSlot = states.entries.find { it.value is SendingServiceState.Paused }?.key
+
+                val title = when {
+                    activeSlot != null -> {
+                        val runningState = states[activeSlot] as? SendingServiceState.Running
+                        val name = runningState?.currentCustomerName.orEmpty()
+                        if (name.isNotBlank()) "Đang gửi SIM $activeSlot: $name" else "Đang gửi SIM $activeSlot"
+                    }
+                    pausedSlot != null -> "Đang tạm dừng SIM $pausedSlot"
+                    else -> "Đang xử lý tiến trình gửi SMS"
+                }
+
+                if (smsSendingEngine.isAnyJobActive()) {
+                    updateNotification(title, sent, total, isPaused = (pausedSlot != null && activeSlot == null))
+                } else if (states.values.all { it is SendingServiceState.Idle || it is SendingServiceState.Finished || it is SendingServiceState.Error }) {
+                    stopServiceIfIdle()
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -107,222 +102,36 @@ class SmsForegroundService : Service() {
         when (action) {
             ACTION_START -> {
                 try {
-                    startForegroundWithNotification("Đang chuẩn bị gửi tin...", 0, 0)
+                    val (sent, total) = smsSendingEngine.getAggregateProgress()
+                    startForegroundWithNotification("Đang chuẩn bị gửi tin...", sent, total)
                 } catch (e: Exception) {
                     android.util.Log.e("SmsForegroundService", "Failed to start foreground service", e)
                     stopSelf()
                     return START_NOT_STICKY
                 }
-                if (simSlot in 1..2) {
-                    startSendingProcess(simSlot)
-                } else {
-                    (1..2).forEach { startSendingProcess(it) }
-                }
+                smsSendingEngine.startSending(simSlot)
             }
 
             ACTION_PAUSE -> {
-                controlSlots(simSlot) { slot -> pauseSlot(slot) }
+                smsSendingEngine.pauseSlot(simSlot)
             }
 
             ACTION_RESUME -> {
-                controlSlots(simSlot) { slot -> resumeSlot(slot) }
+                smsSendingEngine.resumeSlot(simSlot)
             }
 
             ACTION_STOP -> {
-                controlSlots(simSlot) { slot -> stopSlot(slot) }
+                smsSendingEngine.stopSlot(simSlot)
             }
         }
         return START_STICKY
     }
 
-    private fun controlSlots(requestedSlot: Int, action: (Int) -> Unit) {
-        if (requestedSlot in 1..2) action(requestedSlot) else (1..2).forEach(action)
-    }
-
-    private fun pauseSlot(slot: Int) {
-        if (sendingJobs[slot]?.isActive == true) {
-            pausedSlots.add(slot)
-            val sent = sentCounts[slot]?.get() ?: 0
-            val total = totalCounts[slot]?.get() ?: 0
-            updateSimState(
-                slot,
-                SendingServiceState.Paused(sent, total, currentFailedCount(slot))
-            )
-            updateAggregateNotification("Đang tạm dừng SIM $slot")
-        }
-    }
-
-    private fun resumeSlot(slot: Int) {
-        if (sendingJobs[slot]?.isActive == true && pausedSlots.remove(slot)) {
-            val sent = sentCounts[slot]?.get() ?: 0
-            val total = totalCounts[slot]?.get() ?: 0
-            updateSimState(
-                slot,
-                SendingServiceState.Running(
-                    sent,
-                    total,
-                    "",
-                    failedCount = currentFailedCount(slot)
-                )
-            )
-            updateAggregateNotification("Đang tiếp tục SIM $slot")
-        }
-    }
-
-    private fun stopSlot(slot: Int) {
-        stoppedSlots.add(slot)
-        pausedSlots.remove(slot)
-        sendingJobs[slot]?.cancel()
-        updateSimState(slot, SendingServiceState.Idle)
-        stopServiceIfIdle()
-    }
-
-    private fun startSendingProcess(simSlot: Int) {
-        if (sendingJobs[simSlot]?.isActive == true) return
-        stoppedSlots.remove(simSlot)
-        pausedSlots.remove(simSlot)
-        sentCounts[simSlot]?.set(0)
-        totalCounts[simSlot]?.set(0)
-        failedLogIdsBySlot[simSlot]?.clear()
-        updateSimState(simSlot, SendingServiceState.Running(0, 0, "Đang chuẩn bị"))
-        val sessionStartTime = System.currentTimeMillis()
-        val job = serviceScope.launch(start = CoroutineStart.LAZY) {
-            try {
-                val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                simConfigRepository.resetDailyCountsIfNewDay(todayDate)
-
-                val pendingCustomers = customerRepository.getSelectedCustomersForSending().first()
-                    .filter { it.sendSimSlot == simSlot }
-                if (pendingCustomers.isEmpty()) {
-                    updateSimState(simSlot, SendingServiceState.Finished(0, 0))
-                    return@launch
-                }
-
-                val existingLogsByCustomer = pendingCustomers.associate { customer ->
-                    customer.id to sendingLogRepository.getLogsForCustomer(customer.id)
-                }
-                val currentTotal = processSimSendingUseCase.calculateTotal(
-                    pendingCustomers,
-                    existingLogsByCustomer,
-                    sessionStartTime
-                )
-                totalCounts[simSlot]?.set(currentTotal)
-                sentCounts[simSlot]?.set(0)
-
-                val template = templateRepository.getSelectedTemplate().first()
-                    ?: templateRepository.getAllTemplates().first().firstOrNull()
-                    ?: SmsTemplate()
-                val rule = simConfigRepository.getSendingRule().first()
-
-                val error = processSimSendingUseCase.execute(
-                    context = this@SmsForegroundService,
-                    simSlot = simSlot,
-                    customers = pendingCustomers,
-                    existingLogsByCustomer = existingLogsByCustomer,
-                    template = template,
-                    rule = rule,
-                    isPaused = { slot -> pausedSlots.contains(slot) },
-                    isStopped = { slot -> stoppedSlots.contains(slot) },
-                    sessionStartTime = sessionStartTime,
-                    onProgressUpdate = { sent, total, displayName, secondsUntilNext ->
-                        sentCounts[simSlot]?.set(sent)
-                        totalCounts[simSlot]?.set(total)
-                        updateSimState(
-                            simSlot,
-                            SendingServiceState.Running(
-                                sent,
-                                total,
-                                displayName,
-                                secondsUntilNext,
-                                currentFailedCount(simSlot)
-                            )
-                        )
-                        updateAggregateNotification("Đang gửi SIM $simSlot: $displayName")
-                    },
-                    onReportSmsFailure = { slot, logId ->
-                        reportSmsFailure(slot, logId)
-                    }
-                )
-
-                if (!stoppedSlots.contains(simSlot)) {
-                    val sent = sentCounts[simSlot]?.get() ?: 0
-                    val total = totalCounts[simSlot]?.get() ?: 0
-                    val state = error?.let {
-                        SendingServiceState.Error(
-                            it,
-                            sent,
-                            total,
-                            currentFailedCount(simSlot)
-                        )
-                    } ?: SendingServiceState.Finished(
-                        sent,
-                        total,
-                        currentFailedCount(simSlot)
-                    )
-                    updateSimState(simSlot, state)
-                }
-            } catch (e: Exception) {
-                if (!stoppedSlots.contains(simSlot)) {
-                    val errorMsg = e.message ?: "Lỗi hệ thống khi gửi SMS bằng SIM $simSlot."
-                    try {
-                        val pendingCustomers =
-                            customerRepository.getSelectedCustomersForSending().first()
-                                .filter { it.sendSimSlot == simSlot }
-                        if (pendingCustomers.isNotEmpty()) {
-                            val existingLogsByCustomer = pendingCustomers.associate { customer ->
-                                customer.id to sendingLogRepository.getLogsForCustomer(customer.id)
-                            }
-                            processSimSendingUseCase.recordFailedLogsForSim(
-                                simSlot = simSlot,
-                                customers = pendingCustomers,
-                                existingLogsByCustomer = existingLogsByCustomer,
-                                template = null,
-                                errorMessage = errorMsg,
-                                sessionStartTime = sessionStartTime
-                            ) { slot, logId -> reportSmsFailure(slot, logId) }
-                        }
-                    } catch (_: Exception) {
-                    }
-
-                    val sent = sentCounts[simSlot]?.get() ?: 0
-                    val total = totalCounts[simSlot]?.get() ?: 0
-                    updateSimState(
-                        simSlot,
-                        SendingServiceState.Error(
-                            errorMsg,
-                            sent,
-                            total,
-                            currentFailedCount(simSlot)
-                        )
-                    )
-                }
-            } finally {
-                sendingJobs.remove(simSlot)
-                stopServiceIfIdle()
-            }
-        }
-        sendingJobs[simSlot] = job
-        job.start()
-    }
-
     private fun stopServiceIfIdle() {
-        if (sendingJobs.values.none { it.isActive }) {
+        if (!smsSendingEngine.isAnyJobActive()) {
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
-    }
-
-    private fun updateSimState(simSlot: Int, newState: SendingServiceState) {
-        _serviceStates.update { it + (simSlot to newState) }
-    }
-
-    private fun currentFailedCount(simSlot: Int): Int =
-        failedLogIdsBySlot[simSlot]?.size ?: 0
-
-    private fun updateAggregateNotification(title: String) {
-        val sent = sentCounts.values.sumOf { it.get() }
-        val total = totalCounts.values.sumOf { it.get() }
-        updateNotification(title, sent, total)
     }
 
     private fun createNotificationChannel() {
@@ -426,6 +235,9 @@ class SmsForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (instanceEngine == smsSendingEngine) {
+            instanceEngine = null
+        }
         serviceJob.cancel()
     }
 
@@ -439,30 +251,18 @@ class SmsForegroundService : Service() {
         const val ACTION_STOP = "com.gmail.nthai.ACTION_STOP"
         const val EXTRA_SIM_SLOT = "com.gmail.nthai.EXTRA_SIM_SLOT"
 
+        @Volatile
+        private var instanceEngine: SmsSendingEngine? = null
+
         fun reportSmsFailure(simSlot: Int, logId: Long) {
-            val failedLogIds = failedLogIdsBySlot.computeIfAbsent(simSlot) { ConcurrentHashMap.newKeySet() }
-            failedLogIds.add(logId)
-            val failedCount = failedLogIds.size
-            _serviceStates.update { states ->
-                val updatedState = when (val state = states[simSlot]) {
-                    is SendingServiceState.Running -> state.copy(failedCount = failedCount)
-                    is SendingServiceState.Paused -> state.copy(failedCount = failedCount)
-                    is SendingServiceState.Finished -> state.copy(failedCount = failedCount)
-                    is SendingServiceState.Error -> state.copy(failedCount = failedCount)
-                    SendingServiceState.Idle, null -> return@update states
-                }
-                states + (simSlot to updatedState)
-            }
+            instanceEngine?.reportSmsFailure(simSlot, logId)
         }
 
-        private val failedLogIdsBySlot = ConcurrentHashMap<Int, MutableSet<Long>>().apply {
-            put(1, ConcurrentHashMap.newKeySet())
-            put(2, ConcurrentHashMap.newKeySet())
-        }
-
-        private val _serviceStates = MutableStateFlow<Map<Int, SendingServiceState>>(
+        private val fallbackStates = MutableStateFlow<Map<Int, SendingServiceState>>(
             mapOf(1 to SendingServiceState.Idle, 2 to SendingServiceState.Idle)
         )
-        val serviceStates: StateFlow<Map<Int, SendingServiceState>> = _serviceStates.asStateFlow()
+
+        val serviceStates: StateFlow<Map<Int, SendingServiceState>>
+            get() = instanceEngine?.serviceStates ?: fallbackStates.asStateFlow()
     }
 }
