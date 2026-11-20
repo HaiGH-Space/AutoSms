@@ -258,6 +258,10 @@ class SmsForegroundService : Service() {
             instanceEngine?.reportSmsFailure(simSlot, logId)
         }
 
+        fun reportSmsSuccess(simSlot: Int) {
+            instanceEngine?.reportSmsSuccess(simSlot)
+        }
+
         private val fallbackStates = MutableStateFlow<Map<Int, SendingServiceState>>(
             mapOf(1 to SendingServiceState.Idle, 2 to SendingServiceState.Idle)
         )

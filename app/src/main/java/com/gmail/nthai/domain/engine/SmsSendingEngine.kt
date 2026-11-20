@@ -71,6 +71,11 @@ class SmsSendingEngine(
         put(2, AtomicInteger(0))
     }
 
+    private val consecutiveFailures = ConcurrentHashMap<Int, AtomicInteger>().apply {
+        put(1, AtomicInteger(0))
+        put(2, AtomicInteger(0))
+    }
+
     private val failedLogIdsBySlot = ConcurrentHashMap<Int, MutableSet<Long>>().apply {
         put(1, ConcurrentHashMap.newKeySet())
         put(2, ConcurrentHashMap.newKeySet())
@@ -130,19 +135,43 @@ class SmsSendingEngine(
         }
     }
 
+    fun reportSmsSuccess(simSlot: Int) {
+        consecutiveFailures[simSlot]?.set(0)
+    }
+
     fun reportSmsFailure(simSlot: Int, logId: Long) {
         val failedLogIds = failedLogIdsBySlot.computeIfAbsent(simSlot) { ConcurrentHashMap.newKeySet() }
         failedLogIds.add(logId)
         val failedCount = failedLogIds.size
-        _serviceStates.update { states ->
-            val updatedState = when (val state = states[simSlot]) {
-                is SendingServiceState.Running -> state.copy(failedCount = failedCount)
-                is SendingServiceState.Paused -> state.copy(failedCount = failedCount)
-                is SendingServiceState.Finished -> state.copy(failedCount = failedCount)
-                is SendingServiceState.Error -> state.copy(failedCount = failedCount)
-                SendingServiceState.Idle, null -> return@update states
+        val consecutiveCount = consecutiveFailures[simSlot]?.incrementAndGet() ?: 1
+
+        if (consecutiveCount >= MAX_CONSECUTIVE_FAILURES) {
+            stoppedSlots.add(simSlot)
+            pausedSlots.remove(simSlot)
+            sendingJobs[simSlot]?.cancel()
+            val sent = sentCounts[simSlot]?.get() ?: 0
+            val total = totalCounts[simSlot]?.get() ?: 0
+            val errorMsg = "Tự động dừng: Gửi thất bại 3 lần liên tiếp. Vui lòng kiểm tra lại SIM hoặc tài khoản."
+            updateSimState(
+                simSlot,
+                SendingServiceState.Error(
+                    errorMsg,
+                    sent,
+                    total,
+                    failedCount
+                )
+            )
+        } else {
+            _serviceStates.update { states ->
+                val updatedState = when (val state = states[simSlot]) {
+                    is SendingServiceState.Running -> state.copy(failedCount = failedCount)
+                    is SendingServiceState.Paused -> state.copy(failedCount = failedCount)
+                    is SendingServiceState.Finished -> state.copy(failedCount = failedCount)
+                    is SendingServiceState.Error -> state.copy(failedCount = failedCount)
+                    SendingServiceState.Idle, null -> return@update states
+                }
+                states + (simSlot to updatedState)
             }
-            states + (simSlot to updatedState)
         }
     }
 
@@ -175,6 +204,7 @@ class SmsSendingEngine(
         pausedSlots.remove(simSlot)
         sentCounts[simSlot]?.set(0)
         totalCounts[simSlot]?.set(0)
+        consecutiveFailures[simSlot]?.set(0)
         failedLogIdsBySlot[simSlot]?.clear()
         updateSimState(simSlot, SendingServiceState.Running(0, 0, "Đang chuẩn bị"))
         val sessionStartTime = System.currentTimeMillis()
@@ -255,26 +285,6 @@ class SmsSendingEngine(
             } catch (e: Exception) {
                 if (!stoppedSlots.contains(simSlot)) {
                     val errorMsg = e.message ?: "Lỗi hệ thống khi gửi SMS bằng SIM $simSlot."
-                    try {
-                        val pendingCustomers =
-                            customerRepository.getSelectedCustomersForSending().first()
-                                .filter { it.sendSimSlot == simSlot }
-                        if (pendingCustomers.isNotEmpty()) {
-                            val existingLogsByCustomer = pendingCustomers.associate { customer ->
-                                customer.id to sendingLogRepository.getLogsForCustomer(customer.id)
-                            }
-                            processSimSendingUseCase.recordFailedLogsForSim(
-                                simSlot = simSlot,
-                                customers = pendingCustomers,
-                                existingLogsByCustomer = existingLogsByCustomer,
-                                template = null,
-                                errorMessage = errorMsg,
-                                sessionStartTime = sessionStartTime
-                            ) { slot, logId -> reportSmsFailure(slot, logId) }
-                        }
-                    } catch (_: Exception) {
-                    }
-
                     val sent = sentCounts[simSlot]?.get() ?: 0
                     val total = totalCounts[simSlot]?.get() ?: 0
                     updateSimState(
@@ -301,4 +311,8 @@ class SmsSendingEngine(
 
     private fun currentFailedCount(simSlot: Int): Int =
         failedLogIdsBySlot[simSlot]?.size ?: 0
+
+    companion object {
+        const val MAX_CONSECUTIVE_FAILURES = 3
+    }
 }

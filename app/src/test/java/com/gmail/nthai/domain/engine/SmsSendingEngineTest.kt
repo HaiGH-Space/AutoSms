@@ -225,6 +225,42 @@ class SmsSendingEngineTest {
         testScheduler.advanceUntilIdle()
     }
 
+    @Test
+    fun `reportSmsFailure stops engine and sets Error state after 3 consecutive failures`() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        val engine = SmsSendingEngine(
+            context = null,
+            customerRepository = fakeCustomerRepository,
+            templateRepository = fakeTemplateRepository,
+            simConfigRepository = fakeSimConfigRepository,
+            sendingLogRepository = fakeSendingLogRepository,
+            processSimSendingUseCase = processSimSendingUseCase,
+            externalScope = CoroutineScope(testDispatcher)
+        )
+
+        val customer1 = Customer(
+            id = 1L,
+            phone = "0901234567",
+            status = CustomerStatus.PENDING,
+            isSelected = true,
+            sendSimSlot = 1
+        )
+        fakeCustomerRepository.insertCustomers(listOf(customer1))
+
+        engine.startSending(1)
+        testScheduler.runCurrent()
+
+        engine.reportSmsFailure(1, 101L)
+        engine.reportSmsFailure(1, 102L)
+        engine.reportSmsFailure(1, 103L)
+
+        val state = engine.serviceStates.value[1]
+        assertTrue("State should be Error after 3 consecutive failures", state is SendingServiceState.Error)
+        val errorState = state as SendingServiceState.Error
+        assertTrue(errorState.message.contains("3 lần liên tiếp"))
+        assertFalse("Job should no longer be active", engine.isAnyJobActive())
+    }
+
     private class FakeSimManagerWrapper : SimManagerWrapper(null) {
         override fun getSubscriptionIdForSlot(simSlot: Int): Int = 101
         override fun getActiveSims(): List<SimConfig> = listOf(

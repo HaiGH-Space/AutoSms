@@ -51,6 +51,7 @@ class SmsStatusReceiver : BroadcastReceiver() {
                         val updatedRows = sendingLogRepository.markLogSuccessIfPending(logId)
                         if (updatedRows > 0) {
                             simConfigRepository.incrementSentCount(simSlot)
+                            smsSendingEngine.reportSmsSuccess(simSlot)
                         }
                     } else {
                         val errorMsg = when (resultCode) {
