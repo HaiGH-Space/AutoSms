@@ -209,13 +209,22 @@ fun ZaloScreen(
                     isLowSpecDevice = isLowSpecDevice,
                     onIsLowSpecDeviceChange = { viewModel.isLowSpecDevice.value = it },
                     onStartSending = {
-                        viewModel.startCampaign()
-                        Toast.makeText(
-                            context,
-                            "Đã khởi chạy chiến dịch gửi Zalo tự động!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        selectedTab = 2 // Switch to progress tab
+                        if (!isAccessibilityEnabled) {
+                            Toast.makeText(
+                                context,
+                                "Vui lòng cấp quyền Trợ năng Zalo trước khi bắt đầu gửi tin!",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            openAccessibilitySettings()
+                        } else {
+                            viewModel.startCampaign()
+                            Toast.makeText(
+                                context,
+                                "Đã khởi chạy chiến dịch gửi Zalo tự động!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            selectedTab = 2 // Switch to progress tab
+                        }
                     },
                     onNextToRecipients = {
                         selectedTab = 1 // Switch to recipient list tab
@@ -227,6 +236,7 @@ fun ZaloScreen(
                 )
 
                 1 -> ZaloRecipientTab(
+                    isAccessibilityEnabled = isAccessibilityEnabled,
                     recipients = recipients,
                     onAddRecipient = { name, phone -> viewModel.addRecipient(name, phone) },
                     onDeleteRecipient = { id -> viewModel.deleteRecipient(id) },
@@ -235,14 +245,24 @@ fun ZaloScreen(
                         filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                     },
                     onStartSending = {
-                        viewModel.startCampaign()
-                        Toast.makeText(
-                            context,
-                            "Đã khởi chạy chiến dịch gửi Zalo tự động!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        selectedTab = 2 // Switch to progress tab
-                    }
+                        if (!isAccessibilityEnabled) {
+                            Toast.makeText(
+                                context,
+                                "Vui lòng cấp quyền Trợ năng Zalo trước khi bắt đầu gửi tin!",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            openAccessibilitySettings()
+                        } else {
+                            viewModel.startCampaign()
+                            Toast.makeText(
+                                context,
+                                "Đã khởi chạy chiến dịch gửi Zalo tự động!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            selectedTab = 2 // Switch to progress tab
+                        }
+                    },
+                    onOpenAccessibilitySettings = openAccessibilitySettings
                 )
 
                 2 -> ZaloProgressTab(
