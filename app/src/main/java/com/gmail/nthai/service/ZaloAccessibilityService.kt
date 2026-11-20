@@ -21,6 +21,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * Android Accessibility Service for automating Zalo message delivery.
+ *
+ * Zalo UI Node Selectors & Strategy Architecture:
+ * 1. Package Scoping: Scoped strictly to `com.zing.zalo` in `zalo_accessibility_config.xml`.
+ * 2. Web & Profile Error Detection: Inspects `android.webkit.WebView` and invalid number text node prompts.
+ * 3. Chat & Friend Buttons: Locates "Nhắn tin", "Chat", and "Kết bạn" via direct text / parent container searches.
+ * 4. Input Node Resolution: Multi-pass lookup ordering:
+ *    a) `android.widget.EditText` by class name
+ *    b) Node with `isEditable == true`
+ *    c) Hint text search ("Nhập tin nhắn", "Tin nhắn", "Message", "Type a message")
+ * 5. Input Dispatch: Combination of `ACTION_SET_TEXT` and primary `ClipboardManager` paste fallback.
+ * 6. Send Button Resolution:
+ *    a) Known View Resource IDs (`btn_send`, `chat_input_send_btn`, `img_send`, `send_btn`)
+ *    b) Rightmost clickable ImageView/Button sibling in message container
+ *    c) Fallback to rightmost bottom clickable ImageView
+ * 7. Low-Spec Device Optimization: Extended retry loops (up to 6 retries @ 500ms pacing) for low-end devices.
+ */
 @SuppressLint("AccessibilityPolicy")
 class ZaloAccessibilityService : AccessibilityService() {
 

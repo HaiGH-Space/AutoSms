@@ -23,20 +23,20 @@ object DatabaseModule {
 
     // Note: Migrations prior to v4 (v2->v3, v3->v4) are deliberately omitted as versions < v0.1.0
     // were unreleased internal prototypes with breaking schema shifts; fallbackToDestructiveMigration handles them.
-    private val MIGRATION_1_2 = object : Migration(1, 2) {
+    internal val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE customers ADD COLUMN customFieldsJson TEXT NOT NULL DEFAULT '{}'")
         }
     }
 
-    private val MIGRATION_4_5 = object : Migration(4, 5) {
+    internal val MIGRATION_4_5 = object : Migration(4, 5) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE customers ADD COLUMN sendSimSlot INTEGER DEFAULT 1")
             db.execSQL("UPDATE customers SET sendSimSlot = NULL WHERE isSelected = 0")
         }
     }
 
-    private val MIGRATION_5_6 = object : Migration(5, 6) {
+    internal val MIGRATION_5_6 = object : Migration(5, 6) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_customers_status` ON `customers` (`status`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_customers_isSelected` ON `customers` (`isSelected`)")
@@ -45,7 +45,7 @@ object DatabaseModule {
         }
     }
 
-    private val MIGRATION_6_7 = object : Migration(6, 7) {
+    internal val MIGRATION_6_7 = object : Migration(6, 7) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE templates ADD COLUMN isSelected INTEGER NOT NULL DEFAULT 0")
             db.execSQL("ALTER TABLE templates ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
@@ -53,20 +53,20 @@ object DatabaseModule {
         }
     }
 
-    private val MIGRATION_7_8 = object : Migration(7, 8) {
+    internal val MIGRATION_7_8 = object : Migration(7, 8) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE sim_configs ADD COLUMN carrierName TEXT NOT NULL DEFAULT ''")
         }
     }
 
-    private val MIGRATION_8_9 = object : Migration(8, 9) {
+    internal val MIGRATION_8_9 = object : Migration(8, 9) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE sending_rules ADD COLUMN startMinute INTEGER NOT NULL DEFAULT 0")
             db.execSQL("ALTER TABLE sending_rules ADD COLUMN endMinute INTEGER NOT NULL DEFAULT 0")
         }
     }
 
-    private val MIGRATION_9_10 = object : Migration(9, 10) {
+    internal val MIGRATION_9_10 = object : Migration(9, 10) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_sending_logs_customerId` ON `sending_logs` (`customerId`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_sending_logs_timestamp` ON `sending_logs` (`timestamp`)")
@@ -74,7 +74,7 @@ object DatabaseModule {
         }
     }
 
-    private val MIGRATION_10_11 = object : Migration(10, 11) {
+    internal val MIGRATION_10_11 = object : Migration(10, 11) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
                 """
@@ -113,12 +113,24 @@ object DatabaseModule {
         }
     }
 
-    private val MIGRATION_11_12 = object : Migration(11, 12) {
+    internal val MIGRATION_11_12 = object : Migration(11, 12) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE sim_configs ADD COLUMN minDelaySec INTEGER NOT NULL DEFAULT 40")
             db.execSQL("ALTER TABLE sim_configs ADD COLUMN maxDelaySec INTEGER NOT NULL DEFAULT 50")
         }
     }
+
+    val ALL_MIGRATIONS = arrayOf(
+        MIGRATION_1_2,
+        MIGRATION_4_5,
+        MIGRATION_5_6,
+        MIGRATION_6_7,
+        MIGRATION_7_8,
+        MIGRATION_8_9,
+        MIGRATION_9_10,
+        MIGRATION_10_11,
+        MIGRATION_11_12
+    )
 
     @Provides
     @Singleton
@@ -128,17 +140,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "auto_sms_database"
         )
-            .addMigrations(
-                MIGRATION_1_2,
-                MIGRATION_4_5,
-                MIGRATION_5_6,
-                MIGRATION_6_7,
-                MIGRATION_7_8,
-                MIGRATION_8_9,
-                MIGRATION_9_10,
-                MIGRATION_10_11,
-                MIGRATION_11_12
-            )
+            .addMigrations(*ALL_MIGRATIONS)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }

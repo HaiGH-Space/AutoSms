@@ -5,7 +5,6 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,10 +21,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -41,7 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import com.gmail.nthai.presentation.components.common.LogRecordCard
+import com.gmail.nthai.presentation.components.progress.ProgressSummaryCard
 import com.gmail.nthai.presentation.components.progress.SimSendingProgressCard
 import com.gmail.nthai.presentation.viewmodel.ProgressViewModel
 import com.gmail.nthai.presentation.viewmodel.ReportViewModel
@@ -140,52 +139,10 @@ fun SendingProgressScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Summary Card
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFFFFFFF),
-                border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            "ĐIỀU PHỐI SMS",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = Color(0xFF888888)
-                        )
-                        Text(
-                            text = if (activeSimCount > 0) "$activeSimCount SIM đang gửi tin..."
-                            else "Hệ thống an toàn với độ trễ ngẫu nhiên",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF666666)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            plannedCount.toString(),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717)
-                        )
-                        Text(
-                            "TIN CẦN GỬI",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp
-                            ),
-                            color = Color(0xFF888888)
-                        )
-                    }
-                }
-            }
+            ProgressSummaryCard(
+                activeSimCount = activeSimCount,
+                plannedCount = plannedCount
+            )
 
             // SIM Progress Cards
             (1..2).forEach { simSlot ->
