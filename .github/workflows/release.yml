@@ -53,10 +53,13 @@ jobs:
       - name: Package Release Assets
         run: |
           mkdir -p release_assets
-          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
-            cp app/build/outputs/apk/release/app-release.apk release_assets/app-release.apk
+          APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -n "$APK_FILE" ]; then
+            cp "$APK_FILE" release_assets/app-release.apk
+            echo "✅ Found and copied $APK_FILE to release_assets/app-release.apk"
           else
-            cp app/build/outputs/apk/debug/app-debug.apk release_assets/app-release.apk
+            echo "❌ Error: No APK found in build outputs!"
+            exit 1
           fi
           cp update.json release_assets/update.json
 
