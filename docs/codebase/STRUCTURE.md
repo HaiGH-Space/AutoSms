@@ -10,6 +10,7 @@
 | `gradle/` | Gradle wrapper binaries, properties, and centralized dependency catalog (`libs.versions.toml`) | `gradle/libs.versions.toml`, `gradle/wrapper/` |
 | `docs/` | Project documentation directory, including deep architecture and codebase knowledge maps | `docs/codebase/` |
 | `.agents/` | AI agent operational rules, reference guides, and specialized development skills | `.agents/skills/` |
+| `.github/` | GitHub Actions automated workflows (CI pipeline) | `.github/workflows/ci.yml` |
 | `build.gradle.kts` | Root project Gradle build configuration declaring top-level plugins | `build.gradle.kts` |
 | `settings.gradle.kts` | Defines project name (`AutoSms`) and included modules (`:app`) | `settings.gradle.kts` |
 | `gradle.properties` | JVM configuration, daemon settings, and Android Gradle Plugin flags | `gradle.properties` |
@@ -32,24 +33,27 @@
 
 | Boundary | What belongs here | What must not be here |
 |----------|-------------------|------------------------|
-| `data/` | Database implementations (Room DAOs, Entities, SQLite migrations), Apache POI Excel parsing/exporting (`ExcelParser`, `ExcelExporter`), concrete Repository implementations (`CustomerRepositoryImpl`, `ZaloRepositoryImpl`, `UpdateRepositoryImpl`), low-level SMS managers (`SmsSender`) | UI widgets, Compose composables, ViewModels, or direct user interaction logic |
-| `domain/` | Pure business entities/models (`Customer`, `PendingImportState`, `ImportMode`, `ZaloRecipient`), repository interfaces (`CustomerRepository`, `ZaloRepository`), and use cases (`ParseSpintaxUseCase`, `DetectVietnameseCarrierUseCase`, `ValidateSendingConstraintUseCase`) | Android framework UI imports, direct database access, network connections, or Activity/Service lifecycle code |
-| `presentation/` | Jetpack Compose screens (`HomeScreen`, `CustomerListScreen`, `ZaloScreen`, etc.), reusable UI components (`ExcelImportDialogs.kt`, `common/`, `zalo/`), navigation definitions (`AppNavHost`, `Screen`), themes, and ViewModels (`CustomerViewModel`, `ZaloViewModel`) | Raw database queries, low-level telephony calls, direct file system I/O, or POI spreadsheet parsing |
-| `service/` | Android lifecycle services (`SmsForegroundService`, `ZaloAccessibilityService`), background controllers (`SimSlotSendingController`, `ZaloSendingEngine`), notification helpers, broadcast receivers | Direct UI rendering or business rule computations that belong in Domain use cases |
-| `di/` | Hilt Dagger dependency injection modules (`DatabaseModule`, `RepositoryModule`, `UseCaseModule`) providing singletons and repository bindings | Application business logic, database queries, or UI state management |
-| `util/` | Pure utility functions (Permission verification, date formatting, APK package installer helpers) | Domain business logic, repository calls, or stateful service orchestration |
+| `data/` | Database implementations (Room DAOs, Entities, SQLite migrations), Apache POI Excel parsing/exporting (`ExcelParser`, `ExcelExporter`), concrete Repository implementations (`CustomerRepositoryImpl`, `ZaloRepositoryImpl`, `UpdateRepositoryImpl`), low-level SMS managers (`SmsSenderEngine`, `SimManagerWrapper`) | UI widgets, Compose composables, ViewModels, or direct user interaction logic |
+| `domain/` | Pure business entities/models (`Customer`, `PendingImportState`, `ImportMode`, `ZaloRecipient`), repository interfaces (`CustomerRepository`, `ZaloRepository`), domain engines (`SmsSendingEngine`), and use cases (`ParseSpintaxUseCase`, `DetectVietnameseCarrierUseCase`, `ValidateSendingConstraintUseCase`) | Android framework UI imports, direct database access, network connections, or Activity/Service lifecycle code |
+| `presentation/` | Jetpack Compose screens (`HomeScreen`, `CustomerListScreen`, `ZaloScreen`, etc.), reusable UI components (`ExcelImportDialogs.kt`, `common/`, `customer/`, `home/`, `progress/`, `report/`, `zalo/`), navigation definitions (`AppNavHost`, `Screen`), themes, and ViewModels (`CustomerViewModel`, `ZaloViewModel`) | Raw database queries, low-level telephony calls, direct file system I/O, or POI spreadsheet parsing |
+| `service/` | Android lifecycle services (`SmsForegroundService`, `ZaloAccessibilityService`), background controllers (`SimSlotSendingController`, `ZaloSendingEngine`), notification helpers (`SmsNotificationHelper`), broadcast receivers (`SmsStatusReceiver`) | Direct UI rendering or business rule computations that belong in Domain use cases |
+| `di/` | Hilt Dagger dependency injection modules (`DatabaseModule`, `RepositoryModule`, `SmsModule`, `UseCaseModule`, `UpdateModule`, `ZaloModule`) providing singletons and repository bindings | Application business logic, database queries, or UI state management |
+| `util/` | Pure utility functions (Permission verification, date formatting, format utils, APK package installer helpers, POI initializer) | Domain business logic, repository calls, or stateful service orchestration |
 
 ### 4) Naming and Organization Rules
 
 - File naming pattern: PascalCase for Kotlin files and classes (`CustomerRepositoryImpl.kt`, `HomeScreen.kt`, `SmsForegroundService.kt`), snake_case for XML resources (`activity_main.xml`, `zalo_accessibility_config.xml`).
 - Directory organization pattern: Layered Clean Architecture (`data`, `domain`, `presentation`, `service`, `di`, `util`) inside base package `com.gmail.nthai`.
 - Presentation sub-organization: Grouped by functional component type:
-  - `screens/`: Top-level screen composables (`HomeScreen`, `CustomerListScreen`, `ZaloScreen`, `SendingProgressScreen`, `ReportScreen`, etc.).
-  - `components/`: Contains top-level shared dialogs like `ExcelImportDialogs.kt`, and sub-packages:
+  - `screens/`: Top-level screen composables (`HomeScreen`, `CustomerListScreen`, `ZaloScreen`, `SendingProgressScreen`, `ReportScreen`, `SimAndRuleConfigScreen`, `TemplateEditorScreen`, `ManagementScreen`).
+  - `components/`: Contains top-level shared dialogs like `ExcelImportDialogs.kt`, and modular sub-packages:
     - `common/`: Reusable primitives (`AutoSmsCardContainer`, `AutoSmsSearchBar`, `AutoSmsTopAppBar`, `StatusBadge`, `SelectionOptionCard`, `GenericSelectionDialog`).
-    - `config/`, `customer/`, `progress/`, `report/`: Feature-specific UI cards and filters.
-    - `zalo/`: `ZaloConfigTab.kt`, `ZaloProgressTab.kt`, `ZaloSettingsTab.kt`.
-  - `viewmodel/`: MVI/MVVM ViewModels (`CustomerViewModel`, `ZaloViewModel`, `TemplateViewModel`, etc.).
+    - `customer/`: `CustomerFilterSection.kt`, `CustomerSelectionBar.kt`, `CustomerEmptyState.kt`, `CustomerBottomSendingBar.kt`, `SimSlotTabs.kt`.
+    - `home/`: `OverviewMetricsGrid.kt`, `ModernSimCard.kt`, `WorkflowStepCard.kt`.
+    - `progress/`: `ProgressSummaryCard.kt`, `SimSendingStatusCard.kt`.
+    - `report/`: `ReportExportCard.kt`, `ReportFilterSection.kt`, `ReportMetricHeader.kt`.
+    - `zalo/`: `ZaloConfigTab.kt`, `ZaloProgressTab.kt`, `ZaloRecipientTab.kt`, `ZaloSettingsTab.kt`, `ZaloAccessibilityStatusCard.kt`, `ZaloMessageTemplateCard.kt`, `ZaloSendingIntervalCard.kt`.
+  - `viewmodel/`: MVI/MVVM ViewModels (`CustomerViewModel`, `ZaloViewModel`, `TemplateViewModel`, `ProgressViewModel`, `ReportViewModel`, `ConfigViewModel`, `HomeDashboardViewModel`, `UpdateViewModel`).
   - `navigation/`: `AppNavHost.kt`, `Screen.kt`.
 - Import aliasing or path conventions: Explicit package imports matching Maven artifact namespaces or local domain paths; no wildcard imports.
 
@@ -58,8 +62,9 @@
 - `app/src/main/AndroidManifest.xml`
 - `app/src/main/java/com/gmail/nthai/AutoSmsApplication.kt`
 - `app/src/main/java/com/gmail/nthai/MainActivity.kt`
-- `app/src/main/java/com/gmail/nthai/presentation/components/ExcelImportDialogs.kt`
-- `app/src/main/java/com/gmail/nthai/domain/model/PendingImportState.kt`
+- `app/src/main/java/com/gmail/nthai/presentation/components/customer/CustomerSelectionBar.kt`
+- `app/src/main/java/com/gmail/nthai/presentation/components/home/WorkflowStepCard.kt`
+- `app/src/main/java/com/gmail/nthai/domain/engine/SmsSendingEngine.kt`
 - `app/src/main/java/com/gmail/nthai/presentation/navigation/AppNavHost.kt`
 - `app/src/main/java/com/gmail/nthai/presentation/navigation/Screen.kt`
 - `app/src/main/java/com/gmail/nthai/service/SmsForegroundService.kt`
