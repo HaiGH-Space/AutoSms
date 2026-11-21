@@ -195,3 +195,22 @@ fun LogRecord.toZaloEntity(): com.gmail.nthai.data.local.entity.ZaloSendingLogEn
         status = status.name,
         errorMessage = errorMessage
     )
+
+// Blacklist Mappers
+fun com.gmail.nthai.data.local.entity.BlacklistEntity.toDomain(): com.gmail.nthai.domain.model.BlacklistItem =
+    com.gmail.nthai.domain.model.BlacklistItem(
+        id = id,
+        phone = phone,
+        rawPhone = rawPhone,
+        reason = reason,
+        createdAt = createdAt
+    )
+
+fun com.gmail.nthai.domain.model.BlacklistItem.toEntity(): com.gmail.nthai.data.local.entity.BlacklistEntity =
+    com.gmail.nthai.data.local.entity.BlacklistEntity(
+        id = id,
+        phone = phone,
+        rawPhone = rawPhone,
+        reason = reason,
+        createdAt = createdAt
+    )

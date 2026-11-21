@@ -120,6 +120,23 @@ object DatabaseModule {
         }
     }
 
+    internal val MIGRATION_12_13 = object : Migration(12, 13) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `blacklist` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `phone` TEXT NOT NULL,
+                    `rawPhone` TEXT NOT NULL,
+                    `reason` TEXT NOT NULL DEFAULT '',
+                    `createdAt` INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_blacklist_phone` ON `blacklist` (`phone`)")
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
         MIGRATION_4_5,
@@ -129,7 +146,8 @@ object DatabaseModule {
         MIGRATION_8_9,
         MIGRATION_9_10,
         MIGRATION_10_11,
-        MIGRATION_11_12
+        MIGRATION_11_12,
+        MIGRATION_12_13
     )
 
     @Provides
@@ -164,4 +182,8 @@ object DatabaseModule {
     @Provides
     fun provideZaloSendingLogDao(db: AppDatabase): com.gmail.nthai.data.local.dao.ZaloSendingLogDao =
         db.zaloSendingLogDao()
+
+    @Provides
+    fun provideBlacklistDao(db: AppDatabase): com.gmail.nthai.data.local.dao.BlacklistDao =
+        db.blacklistDao()
 }

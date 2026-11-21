@@ -13,6 +13,7 @@ import com.gmail.nthai.domain.model.SendingRule
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.model.SmsTemplate
 import com.gmail.nthai.domain.repository.CustomerRepository
+import com.gmail.nthai.domain.repository.FakeBlacklistRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,7 @@ class ProcessSimSendingUseCaseTest {
     private val fakeCustomerRepository = FakeCustomerRepository()
     private val fakeSimConfigRepository = FakeSimConfigRepository()
     private val fakeSendingLogRepository = FakeSendingLogRepository()
+    private val fakeBlacklistRepository = FakeBlacklistRepository()
     private val parseSpintaxUseCase = ParseSpintaxUseCase()
     private val validateConstraintUseCase = ValidateSendingConstraintUseCase()
     private val calculateNextDelayUseCase = CalculateNextDelayUseCase()
@@ -38,6 +40,7 @@ class ProcessSimSendingUseCaseTest {
         customerRepository = fakeCustomerRepository,
         simConfigRepository = fakeSimConfigRepository,
         sendingLogRepository = fakeSendingLogRepository,
+        blacklistRepository = fakeBlacklistRepository,
         parseSpintaxUseCase = parseSpintaxUseCase,
         validateConstraintUseCase = validateConstraintUseCase,
         calculateNextDelayUseCase = calculateNextDelayUseCase,
@@ -219,6 +222,7 @@ class ProcessSimSendingUseCaseTest {
             customerRepository = fakeCustomerRepository,
             simConfigRepository = customSimConfigRepository,
             sendingLogRepository = fakeSendingLogRepository,
+            blacklistRepository = fakeBlacklistRepository,
             parseSpintaxUseCase = parseSpintaxUseCase,
             validateConstraintUseCase = validateConstraintUseCase,
             calculateNextDelayUseCase = calculateNextDelayUseCase,

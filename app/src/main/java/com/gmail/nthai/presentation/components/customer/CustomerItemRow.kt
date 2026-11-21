@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,12 +46,16 @@ import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.CustomerStatus
 import com.gmail.nthai.domain.usecase.DetectVietnameseCarrierUseCase
 
+import androidx.compose.material.icons.filled.Block
+
 @Composable
 fun CustomerItemCard(
     customer: Customer,
     onToggleSelection: () -> Unit,
     onDelete: () -> Unit,
     onClick: () -> Unit,
+    isBlacklisted: Boolean = false,
+    onAddToBlacklist: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val borderColor = if (customer.isSelected) Color(0xFF171717) else Color(0xFFEBEBEB)
@@ -110,7 +115,34 @@ fun CustomerItemCard(
                             color = Color(0xFF888888)
                         )
                     }
-                    StatusBadge(customer.status)
+                    if (isBlacklisted) {
+                        Surface(
+                            color = Color(0xFFFEE2E2),
+                            shape = RoundedCornerShape(9999.dp),
+                            border = BorderStroke(1.dp, Color(0xFFFCA5A5))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Block,
+                                    contentDescription = null,
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(10.dp)
+                                )
+                                Text(
+                                    text = "Blacklist",
+                                    color = Color(0xFFDC2626),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    } else {
+                        StatusBadge(customer.status)
+                    }
                 }
 
                 Row(
@@ -158,6 +190,8 @@ fun CustomerItemCard(
 @Composable
 fun CustomerDetailDialog(
     customer: Customer,
+    isBlacklisted: Boolean = false,
+    onAddToBlacklist: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -205,7 +239,23 @@ fun CustomerDetailDialog(
                         style = MaterialTheme.typography.labelMedium,
                         color = Color(0xFF888888)
                     )
-                    StatusBadge(customer.status)
+                    if (isBlacklisted) {
+                        Surface(
+                            color = Color(0xFFFEE2E2),
+                            shape = RoundedCornerShape(9999.dp),
+                            border = BorderStroke(1.dp, Color(0xFFFCA5A5))
+                        ) {
+                            Text(
+                                text = "Đã bị chặn (Blacklist)",
+                                color = Color(0xFFDC2626),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        StatusBadge(customer.status)
+                    }
                 }
 
                 if (customer.customFields.isNotEmpty()) {
@@ -223,8 +273,30 @@ fun CustomerDetailDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Đóng", color = Color(0xFF171717), fontWeight = FontWeight.SemiBold)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (!isBlacklisted && onAddToBlacklist != null) {
+                    TextButton(
+                        onClick = {
+                            onAddToBlacklist()
+                            onDismiss()
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Block,
+                            contentDescription = null,
+                            tint = Color(0xFFDC2626),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Thêm vào Blacklist", color = Color(0xFFDC2626), fontWeight = FontWeight.SemiBold)
+                    }
+                }
+                TextButton(onClick = onDismiss) {
+                    Text("Đóng", color = Color(0xFF171717), fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     )

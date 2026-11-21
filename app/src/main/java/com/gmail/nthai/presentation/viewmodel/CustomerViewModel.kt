@@ -7,6 +7,7 @@ import com.gmail.nthai.domain.model.CustomerStatus
 import com.gmail.nthai.domain.model.ImportMode
 import com.gmail.nthai.domain.model.ResetStatusScope
 import com.gmail.nthai.domain.model.SimConfig
+import com.gmail.nthai.domain.repository.BlacklistRepository
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
@@ -54,8 +55,18 @@ class CustomerViewModel @Inject constructor(
     private val customerRepository: CustomerRepository,
     private val simConfigRepository: SimConfigRepository,
     private val sendingLogRepository: SendingLogRepository,
+    private val blacklistRepository: BlacklistRepository,
     private val importCustomerExcelUseCase: ImportCustomerExcelUseCase
 ) : ViewModel() {
+
+    val blacklistedPhones: StateFlow<Set<String>> = blacklistRepository.getBlacklistedPhonesFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
+    fun addToBlacklist(phone: String, reason: String = "") {
+        viewModelScope.launch {
+            blacklistRepository.addToBlacklist(phone, reason)
+        }
+    }
 
     private val searchQuery = MutableStateFlow("")
     val query: StateFlow<String> = searchQuery

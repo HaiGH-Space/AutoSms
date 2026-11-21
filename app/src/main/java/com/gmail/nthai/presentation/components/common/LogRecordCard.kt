@@ -34,11 +34,14 @@ import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.util.DateTimeUtils
 
+import androidx.compose.material.icons.filled.Block
+
 @Composable
 fun LogRecordCard(
     log: LogRecord,
     modifier: Modifier = Modifier,
-    compact: Boolean = false
+    compact: Boolean = false,
+    onAddToBlacklist: (() -> Unit)? = null
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -133,13 +136,41 @@ fun LogRecordCard(
                         tint = Color(0xFF666666)
                     )
                     Text(
-                        text = "SIM ${log.simSlot}",
+                        text = if (log.simSlot > 0) "SIM ${log.simSlot}" else "Zalo",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
                         ),
                         color = Color(0xFF4D4D4D)
                     )
+                }
+
+                if (onAddToBlacklist != null) {
+                    Surface(
+                        onClick = onAddToBlacklist,
+                        color = Color(0xFFFAFAFA),
+                        shape = RoundedCornerShape(100.dp),
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Block,
+                                contentDescription = null,
+                                tint = Color(0xFFDC2626),
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "Thêm Blacklist",
+                                color = Color(0xFFDC2626),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                 }
             }
 

@@ -48,6 +48,7 @@ import com.gmail.nthai.presentation.components.customer.CustomerSelectionBar
 import com.gmail.nthai.presentation.components.customer.ResetStatusDialog
 import com.gmail.nthai.presentation.components.customer.SimSlotTabs
 import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
+import com.gmail.nthai.util.PhoneNumberUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +61,7 @@ fun CustomerListScreen(
 ) {
     val context = LocalContext.current
     val customers by viewModel.customersState.collectAsStateWithLifecycle()
+    val blacklistedPhones by viewModel.blacklistedPhones.collectAsStateWithLifecycle()
     val searchQuery by viewModel.query.collectAsStateWithLifecycle()
     val selectedFilter by viewModel.filter.collectAsStateWithLifecycle()
     val selectedCarrierFilter by viewModel.carrierFilter.collectAsStateWithLifecycle()
@@ -207,11 +209,15 @@ fun CustomerListScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(customers, key = { it.id }) { customer ->
+                        val normalized = PhoneNumberUtils.normalizePhoneNumber(customer.phone)
+                        val isBlacklisted = blacklistedPhones.contains(normalized)
                         CustomerItemCard(
                             customer = customer,
                             onToggleSelection = { viewModel.toggleCustomerSelection(customer) },
                             onDelete = { viewModel.deleteCustomer(customer) },
-                            onClick = { selectedCustomer = customer }
+                            onClick = { selectedCustomer = customer },
+                            isBlacklisted = isBlacklisted,
+                            onAddToBlacklist = { viewModel.addToBlacklist(customer.phone, "Thêm từ danh sách khách hàng") }
                         )
                     }
                     item {
@@ -223,8 +229,12 @@ fun CustomerListScreen(
     }
 
     selectedCustomer?.let { customer ->
+        val normalized = PhoneNumberUtils.normalizePhoneNumber(customer.phone)
+        val isBlacklisted = blacklistedPhones.contains(normalized)
         CustomerDetailDialog(
             customer = customer,
+            isBlacklisted = isBlacklisted,
+            onAddToBlacklist = { viewModel.addToBlacklist(customer.phone, "Thêm từ danh sách khách hàng") },
             onDismiss = { selectedCustomer = null }
         )
     }

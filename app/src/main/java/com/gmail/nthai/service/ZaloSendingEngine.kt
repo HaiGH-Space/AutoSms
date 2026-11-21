@@ -8,6 +8,7 @@ import com.gmail.nthai.domain.model.Customer
 import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.ZaloRecipient
+import com.gmail.nthai.domain.repository.BlacklistRepository
 import com.gmail.nthai.domain.repository.ZaloRepository
 import com.gmail.nthai.domain.usecase.ParseSpintaxUseCase
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -39,7 +40,8 @@ data class ZaloSendingProgressState(
 @Singleton
 class ZaloSendingEngine @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val zaloRepository: ZaloRepository
+    private val zaloRepository: ZaloRepository,
+    private val blacklistRepository: BlacklistRepository
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + Job())
     private val parseSpintaxUseCase = ParseSpintaxUseCase()
@@ -91,6 +93,38 @@ class ZaloSendingEngine @Inject constructor(
                     if (!_progressState.value.isSending) break
                 }
                 if (!_progressState.value.isSending) break
+
+                if (blacklistRepository.isPhoneBlacklisted(recipient.phone)) {
+                    val noteStr = "Số điện thoại nằm trong Danh sách đen (Blacklist)"
+                    val dummyCustomer = Customer(
+                        id = recipient.id,
+                        phone = recipient.phone,
+                        status = com.gmail.nthai.domain.model.CustomerStatus.PENDING,
+                        customFields = mapOf("tên" to recipient.name)
+                    )
+                    val messageText = parseSpintaxUseCase(messageTemplate, dummyCustomer)
+
+                    zaloRepository.updateRecipientStatus(recipient.id, "FAILED", noteStr)
+                    zaloRepository.addLog(
+                        LogRecord(
+                            customerId = recipient.id,
+                            customerName = recipient.name,
+                            phone = recipient.phone,
+                            messageContent = messageText,
+                            simSlot = 0,
+                            status = LogStatus.FAILED,
+                            errorMessage = noteStr
+                        )
+                    )
+                    val updatedSentCount = index + 1
+                    _progressState.update {
+                        it.copy(
+                            sentCount = updatedSentCount,
+                            statusMessage = "Bỏ qua SĐT blacklist: ${recipient.name} (${recipient.phone})"
+                        )
+                    }
+                    continue
+                }
 
                 _progressState.update {
                     it.copy(
