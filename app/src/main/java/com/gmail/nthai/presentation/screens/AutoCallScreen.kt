@@ -2,42 +2,38 @@ package com.gmail.nthai.presentation.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -45,24 +41,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.gmail.nthai.domain.model.AutoCallStatus
-import com.gmail.nthai.presentation.components.autocall.AutoCallConfigCard
-import com.gmail.nthai.presentation.components.autocall.AutoCallLogSection
-import com.gmail.nthai.presentation.components.autocall.AutoCallProgressCard
+import com.gmail.nthai.presentation.components.ExcelImportDialogs
+import com.gmail.nthai.presentation.components.autocall.CallProgressConfigTab
+import com.gmail.nthai.presentation.components.autocall.CallRecipientTab
+import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AutoCallScreen(
     viewModel: AutoCallViewModel = hiltViewModel(),
+    initialTab: Int = 0,
     onBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    var selectedTab by remember { mutableIntStateOf(initialTab) }
+
     val progressState by viewModel.progressState.collectAsState()
     val callLogs by viewModel.callLogs.collectAsState()
-    val customers by viewModel.customers.collectAsState()
+    val recipients by viewModel.recipients.collectAsState()
+    val stats by viewModel.stats.collectAsState()
+    val blacklistedPhones by viewModel.blacklistedPhones.collectAsState()
     val delaySeconds by viewModel.delaySeconds.collectAsState()
     val simConfigs by viewModel.simConfigs.collectAsState()
     val selectedSimSlot by viewModel.selectedSimSlot.collectAsState()
+
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
+
+    val pendingImportState by viewModel.pendingImportState.collectAsState()
+    val isImporting by viewModel.isImporting.collectAsState()
+    val importLoadingMessage by viewModel.importLoadingMessage.collectAsState()
 
     var hasCallPermission by remember {
         mutableStateOf(
@@ -87,7 +95,7 @@ fun AutoCallScreen(
         if (hasCallPermission) {
             viewModel.startCampaign()
         } else {
-            android.widget.Toast.makeText(context, "Vui lòng cấp quyền gọi điện trong Cài đặt ứng dụng", android.widget.Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Vui lòng cấp quyền gọi điện trong Cài đặt ứng dụng", Toast.LENGTH_LONG).show()
             try {
                 val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = android.net.Uri.fromParts("package", context.packageName, null)
@@ -99,153 +107,173 @@ fun AutoCallScreen(
         }
     }
 
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.prepareExcelImportWithUri(context, uri) { err ->
+                Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Tự động gọi điện",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+            Column {
+                AutoSmsTopAppBar(
+                    title = "Tự động gọi điện",
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color(0xFF171717)
+                            )
+                        }
+                    },
+                    actions = {
+                        if (selectedTab == 0 && recipients.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.resetStatus() }) {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = "Đặt lại trạng thái",
+                                    tint = Color(0xFF888888)
+                                )
+                            }
+                            IconButton(onClick = { viewModel.deleteAllRecipients() }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Xóa tất cả",
+                                    tint = Color(0xFFEE0000)
+                                )
+                            }
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        }
+                )
+
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color(0xFFFFFFFF),
+                    contentColor = Color(0xFF171717),
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                            color = Color(0xFF171717)
+                        )
+                    },
+                    modifier = Modifier.border(1.dp, Color(0xFFEBEBEB))
+                ) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        text = {
+                            Text(
+                                "Danh sách gọi",
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selectedTab == 0) Color(0xFF171717) else Color(0xFF888888)
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                Icons.Default.People,
+                                contentDescription = "Danh sách gọi",
+                                tint = if (selectedTab == 0) Color(0xFF171717) else Color(0xFF888888)
+                            )
+                        }
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        text = {
+                            Text(
+                                "Cấu hình & Tiến độ",
+                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selectedTab == 1) Color(0xFF171717) else Color(0xFF888888)
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                Icons.Default.Call,
+                                contentDescription = "Tiến độ gọi",
+                                tint = if (selectedTab == 1) Color(0xFF171717) else Color(0xFF888888)
+                            )
+                        }
+                    )
+                }
+            }
+        },
+        containerColor = Color(0xFFFAFAFA)
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .background(Color(0xFFFAFAFA))
         ) {
-            if (!hasCallPermission) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFFFF3E0),
-                    border = BorderStroke(1.dp, Color(0xFFFFB74D))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            modifier = Modifier.weight(1f),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = Color(0xFFE65100)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Chưa cấp quyền gọi điện",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFE65100)
-                                )
-                                Text(
-                                    text = "Cần quyền CALL_PHONE và READ_PHONE_STATE để tự động gọi.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFFBF360C)
-                                )
-                            }
+            when (selectedTab) {
+                0 -> {
+                    CallRecipientTab(
+                        recipients = recipients,
+                        stats = stats,
+                        blacklistedPhones = blacklistedPhones,
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = viewModel::updateSearchQuery,
+                        selectedFilter = selectedFilter,
+                        onFilterChange = viewModel::updateFilter,
+                        onToggleSelection = viewModel::toggleRecipientSelection,
+                        onSelectAll = viewModel::selectAllRecipients,
+                        onAddRecipient = viewModel::addRecipient,
+                        onDeleteRecipient = viewModel::deleteRecipient,
+                        onDeleteAllRecipients = viewModel::deleteAllRecipients,
+                        onResetStatus = viewModel::resetStatus,
+                        onAddToBlacklist = viewModel::addToBlacklist,
+                        onImportExcel = {
+                            filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                val callGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
-                                val stateGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
-                                if (callGranted && stateGranted) {
-                                    hasCallPermission = true
-                                } else {
-                                    try {
-                                        permissionLauncher.launch(
-                                            arrayOf(
-                                                Manifest.permission.CALL_PHONE,
-                                                Manifest.permission.READ_PHONE_STATE
-                                            )
-                                        )
-                                    } catch (_: Exception) {
-                                        val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                            data = android.net.Uri.fromParts("package", context.packageName, null)
-                                        }
-                                        context.startActivity(intent)
-                                    }
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
-                        ) {
-                            Text("Cấp quyền")
-                        }
-                    }
+                    )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            val selectedCount = customers.count { it.isSelected }
-
-            AutoCallConfigCard(
-                delaySeconds = delaySeconds,
-                onDelayChange = viewModel::updateDelay,
-                selectedSimSlot = selectedSimSlot,
-                onSimSlotChange = viewModel::updateSimSlot,
-                simConfigs = simConfigs,
-                totalCustomersCount = customers.size,
-                selectedCustomersCount = selectedCount,
-                isRunning = progressState.status == AutoCallStatus.RUNNING || progressState.status == AutoCallStatus.PAUSED,
-                onStartClick = {
-                    if (customers.isEmpty()) {
-                        android.widget.Toast.makeText(context, "Vui lòng thêm danh bạ khách hàng trước khi gọi tự động", android.widget.Toast.LENGTH_SHORT).show()
-                    } else if (hasCallPermission) {
-                        viewModel.startCampaign()
-                    } else {
-                        try {
-                            permissionLauncher.launch(
-                                arrayOf(
-                                    Manifest.permission.CALL_PHONE,
-                                    Manifest.permission.READ_PHONE_STATE
-                                )
-                            )
-                        } catch (_: Exception) {
-                            val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = android.net.Uri.fromParts("package", context.packageName, null)
-                            }
-                            context.startActivity(intent)
-                        }
-                    }
+                1 -> {
+                    CallProgressConfigTab(
+                        context = context,
+                        hasCallPermission = hasCallPermission,
+                        onHasCallPermissionChange = { hasCallPermission = it },
+                        permissionLauncher = permissionLauncher,
+                        delaySeconds = delaySeconds,
+                        onDelayChange = viewModel::updateDelay,
+                        selectedSimSlot = selectedSimSlot,
+                        onSimSlotChange = viewModel::updateSimSlot,
+                        simConfigs = simConfigs,
+                        totalRecipientsCount = recipients.size,
+                        selectedRecipientsCount = stats.selectedCount,
+                        progressState = progressState,
+                        callLogs = callLogs,
+                        onStartCampaign = viewModel::startCampaign,
+                        onPauseCampaign = viewModel::pauseCampaign,
+                        onResumeCampaign = viewModel::resumeCampaign,
+                        onStopCampaign = viewModel::stopCampaign,
+                        onClearCallLogs = viewModel::clearCallLogs
+                    )
                 }
-            )
-
-            if (progressState.status != AutoCallStatus.IDLE) {
-                Spacer(modifier = Modifier.height(16.dp))
-                AutoCallProgressCard(
-                    progress = progressState,
-                    onPause = viewModel::pauseCampaign,
-                    onResume = viewModel::resumeCampaign,
-                    onStop = viewModel::stopCampaign
-                )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            AutoCallLogSection(
-                logs = callLogs,
-                onClearLogs = viewModel::clearCallLogs
-            )
         }
+
+        // Excel Import Dialogs
+        ExcelImportDialogs(
+            isImporting = isImporting,
+            importLoadingMessage = importLoadingMessage,
+            pendingImportState = pendingImportState,
+            onSelectHeader = viewModel::updateSelectedImportHeader,
+            onSelectImportMode = viewModel::updateSelectedImportMode,
+            onConfirmImport = {
+                viewModel.confirmImport { result ->
+                    result.onSuccess { count ->
+                        Toast.makeText(context, "Nhập thành công $count khách hàng", Toast.LENGTH_SHORT).show()
+                    }.onFailure { err ->
+                        Toast.makeText(context, "Lỗi nhập Excel: ${err.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            },
+            onDismissImport = viewModel::cancelImport
+        )
     }
 }

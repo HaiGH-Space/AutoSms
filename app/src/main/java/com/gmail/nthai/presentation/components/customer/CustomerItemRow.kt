@@ -58,135 +58,34 @@ fun CustomerItemCard(
     onAddToBlacklist: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    val borderColor = if (customer.isSelected) Color(0xFF171717) else Color(0xFFEBEBEB)
-    val cardBackground = if (customer.isSelected) Color(0xFFFAFAFA) else Color(0xFFFFFFFF)
-
-    Surface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = cardBackground,
-        border = BorderStroke(if (customer.isSelected) 1.5.dp else 1.dp, borderColor)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(
-                checked = customer.isSelected,
-                onCheckedChange = { onToggleSelection() },
-                colors = CheckboxDefaults.colors(
-                    checkedColor = Color(0xFF171717),
-                    checkmarkColor = Color(0xFFFFFFFF),
-                    uncheckedColor = Color(0xFF888888)
-                )
-            )
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    val customerName = remember(customer.customFields) {
-                        customer.customFields.values.firstOrNull { it.isNotBlank() }
-                    }
-                    if (customerName != null) {
-                        Text(
-                            text = customerName.trim(),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    } else {
-                        Text(
-                            text = "Khách hàng",
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF888888)
-                        )
-                    }
-                    if (isBlacklisted) {
-                        Surface(
-                            color = Color(0xFFFEE2E2),
-                            shape = RoundedCornerShape(9999.dp),
-                            border = BorderStroke(1.dp, Color(0xFFFCA5A5))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.Block,
-                                    contentDescription = null,
-                                    tint = Color(0xFFDC2626),
-                                    modifier = Modifier.size(10.dp)
-                                )
-                                Text(
-                                    text = "Blacklist",
-                                    color = Color(0xFFDC2626),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    } else {
-                        StatusBadge(customer.status)
-                    }
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            Icons.Outlined.Phone,
-                            contentDescription = null,
-                            modifier = Modifier.size(13.dp),
-                            tint = Color(0xFF888888)
-                        )
-                        Text(
-                            text = customer.phone,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 13.sp
-                            ),
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF171717),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    CarrierEstimateBadge(customer.phone)
-                }
-            }
-
-            IconButton(onClick = onDelete) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Xóa",
-                    tint = Color(0xFF888888),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+    val customerName = remember(customer.customFields) {
+        val nameEntry = customer.customFields.entries.find { (k, _) ->
+            k.contains("tên", ignoreCase = true) || k.contains("ten", ignoreCase = true) || k.contains("name", ignoreCase = true)
         }
+        nameEntry?.value ?: customer.customFields.values.firstOrNull { it.isNotBlank() } ?: customer.phone
     }
+
+    val status = when (customer.status) {
+        CustomerStatus.PENDING -> com.gmail.nthai.domain.model.LogStatus.PENDING
+        CustomerStatus.SENT -> com.gmail.nthai.domain.model.LogStatus.SENT_SUCCESS
+        CustomerStatus.FAILED -> com.gmail.nthai.domain.model.LogStatus.FAILED
+    }
+
+    com.gmail.nthai.presentation.components.common.GenericCustomerItemCard(
+        item = com.gmail.nthai.presentation.components.common.GenericCustomerItemData(
+            id = customer.id,
+            name = customerName,
+            phone = customer.phone,
+            status = status,
+            isSelected = customer.isSelected
+        ),
+        onToggleSelection = onToggleSelection,
+        onDelete = onDelete,
+        onClick = onClick,
+        isBlacklisted = isBlacklisted,
+        onAddToBlacklist = onAddToBlacklist,
+        modifier = modifier
+    )
 }
 
 @Composable

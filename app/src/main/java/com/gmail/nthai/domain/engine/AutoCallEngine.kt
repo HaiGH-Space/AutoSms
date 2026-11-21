@@ -10,8 +10,10 @@ import com.gmail.nthai.domain.model.AutoCallConfig
 import com.gmail.nthai.domain.model.AutoCallProgress
 import com.gmail.nthai.domain.model.AutoCallStatus
 import com.gmail.nthai.domain.model.CallLogRecord
-import com.gmail.nthai.domain.model.Customer
+import com.gmail.nthai.domain.model.CallRecipient
+import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.repository.AutoCallRepository
+import com.gmail.nthai.domain.repository.CallRecipientRepository
 import com.gmail.nthai.domain.telephony.DeviceCallState
 import com.gmail.nthai.domain.telephony.PhoneCallStateObserver
 import com.gmail.nthai.service.AutoCallForegroundService
@@ -31,8 +33,9 @@ import javax.inject.Singleton
 
 @Singleton
 class AutoCallEngine @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val autoCallRepository: AutoCallRepository,
+    private val callRecipientRepository: CallRecipientRepository,
     private val callStateObserver: PhoneCallStateObserver,
     private val simManagerWrapper: SimManagerWrapper
 ) {
@@ -42,42 +45,42 @@ class AutoCallEngine @Inject constructor(
     val progressState: StateFlow<AutoCallProgress> = _progressState.asStateFlow()
 
     private var currentConfig = AutoCallConfig()
-    private var customerQueue: List<Customer> = emptyList()
+    private var recipientQueue: List<CallRecipient> = emptyList()
     private var currentIndex = 0
 
     private var executionJob: Job? = null
     private var callObserverJob: Job? = null
     private var isPaused = false
 
-    fun startCampaign(config: AutoCallConfig, customers: List<Customer>) {
+    fun startCampaign(config: AutoCallConfig, recipients: List<CallRecipient>) {
         executionJob?.cancel()
         executionJob = null
         callObserverJob?.cancel()
         callObserverJob = null
         callStateObserver.stopListening()
 
-        if (customers.isEmpty()) {
+        if (recipients.isEmpty()) {
             _progressState.update {
                 it.copy(
                     status = AutoCallStatus.FINISHED,
-                    errorMessage = "No customers selected for Auto Call."
+                    errorMessage = "Chưa có danh sách khách hàng để gọi tự động."
                 )
             }
             return
         }
 
         currentConfig = config
-        customerQueue = customers
+        recipientQueue = recipients
         currentIndex = 0
         isPaused = false
 
-        val firstName = customers[0].customFields.values.firstOrNull { it.isNotBlank() } ?: customers[0].phone
+        val firstName = recipients[0].name.ifBlank { recipients[0].phone }
         _progressState.value = AutoCallProgress(
             status = AutoCallStatus.RUNNING,
-            totalCount = customers.size,
+            totalCount = recipients.size,
             completedCount = 0,
             currentCustomerName = firstName,
-            currentPhone = customers[0].phone
+            currentPhone = recipients[0].phone
         )
 
         // Start Foreground Service
@@ -122,7 +125,7 @@ class AutoCallEngine @Inject constructor(
         if (wasRunning) {
             _progressState.update {
                 it.copy(
-                    status = if (currentIndex >= customerQueue.size && customerQueue.isNotEmpty())
+                    status = if (currentIndex >= recipientQueue.size && recipientQueue.isNotEmpty())
                         AutoCallStatus.FINISHED else AutoCallStatus.CANCELLED,
                     isWaitingDelay = false,
                     countdownRemainingSeconds = 0
@@ -132,16 +135,16 @@ class AutoCallEngine @Inject constructor(
     }
 
     private suspend fun runLoop() {
-        while (currentIndex < customerQueue.size && _progressState.value.status == AutoCallStatus.RUNNING) {
+        while (currentIndex < recipientQueue.size && _progressState.value.status == AutoCallStatus.RUNNING) {
             if (isPaused) break
 
-            val customer = customerQueue[currentIndex]
-            val customerDisplayName = customer.customFields.values.firstOrNull { it.isNotBlank() } ?: customer.phone
+            val recipient = recipientQueue[currentIndex]
+            val recipientDisplayName = recipient.name.ifBlank { recipient.phone }
             _progressState.update {
                 it.copy(
                     completedCount = currentIndex,
-                    currentCustomerName = customerDisplayName,
-                    currentPhone = customer.phone,
+                    currentCustomerName = recipientDisplayName,
+                    currentPhone = recipient.phone,
                     isWaitingDelay = false
                 )
             }
@@ -149,16 +152,16 @@ class AutoCallEngine @Inject constructor(
             val startTime = System.currentTimeMillis()
             val logId = autoCallRepository.insertCallLog(
                 CallLogRecord(
-                    customerId = customer.id,
-                    customerName = customerDisplayName,
-                    phone = customer.phone,
+                    customerId = recipient.id,
+                    customerName = recipientDisplayName,
+                    phone = recipient.phone,
                     timestamp = startTime,
                     status = "DIALING"
                 )
             )
 
             // Trigger Phone Call
-            val callLaunched = makePhoneCall(customer.phone)
+            val callLaunched = makePhoneCall(recipient.phone)
 
             if (callLaunched) {
                 // Wait until call finishes (OFFHOOK -> IDLE or timeout)
@@ -171,24 +174,37 @@ class AutoCallEngine @Inject constructor(
                     durationSeconds = callDurationSec,
                     errorMessage = null
                 )
+                callRecipientRepository.updateRecipientStatus(
+                    id = recipient.id,
+                    status = LogStatus.SENT_SUCCESS,
+                    durationSeconds = callDurationSec,
+                    note = "Gọi thành công ($callDurationSec s)"
+                )
             } else {
+                val err = "Không thể khởi tạo cuộc gọi (Số ĐT không hợp lệ hoặc không có quyền)."
                 autoCallRepository.updateCallLogStatus(
                     id = logId,
                     status = "FAILED",
                     durationSeconds = 0,
-                    errorMessage = "Không thể khởi tạo cuộc gọi (Số ĐT không hợp lệ hoặc không có quyền)."
+                    errorMessage = err
+                )
+                callRecipientRepository.updateRecipientStatus(
+                    id = recipient.id,
+                    status = LogStatus.FAILED,
+                    durationSeconds = 0,
+                    note = err
                 )
             }
 
             currentIndex++
             _progressState.update { it.copy(completedCount = currentIndex) }
 
-            if (currentIndex < customerQueue.size && !isPaused) {
+            if (currentIndex < recipientQueue.size && !isPaused) {
                 performDelay(currentConfig.delaySeconds)
             }
         }
 
-        if (currentIndex >= customerQueue.size && customerQueue.isNotEmpty()) {
+        if (currentIndex >= recipientQueue.size && recipientQueue.isNotEmpty()) {
             _progressState.update {
                 it.copy(
                     status = AutoCallStatus.FINISHED,

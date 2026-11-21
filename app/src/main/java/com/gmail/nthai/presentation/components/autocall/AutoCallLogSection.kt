@@ -38,7 +38,7 @@ fun AutoCallLogSection(
         titleAction = {
             if (logs.isNotEmpty()) {
                 TextButton(onClick = onClearLogs) {
-                    Text("Xóa lịch sử", color = Color(0xFFD32F2F))
+                    Text("Xóa lịch sử", color = Color(0xFFEE0000))
                 }
             }
         }
@@ -47,7 +47,7 @@ fun AutoCallLogSection(
             Text(
                 text = "Chưa có cuộc gọi nào được thực hiện.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray,
+                color = Color(0xFF888888),
                 modifier = Modifier.padding(vertical = 12.dp)
             )
         } else {
@@ -55,7 +55,7 @@ fun AutoCallLogSection(
                 logs.take(20).forEachIndexed { index, log ->
                     CallLogItem(log = log)
                     if (index < logs.size - 1 && index < 19) {
-                        HorizontalDivider(color = Color(0xFFEEEEEE))
+                        HorizontalDivider(color = Color(0xFFEBEBEB))
                     }
                 }
             }
@@ -79,21 +79,22 @@ private fun CallLogItem(log: CallLogRecord) {
             Text(
                 text = log.customerName.ifBlank { log.phone },
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF171717)
             )
             Text(
                 text = "${log.phone} • $formattedTime",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = Color(0xFF888888)
             )
         }
 
         Surface(
             shape = RoundedCornerShape(8.dp),
             color = when (log.status) {
-                "COMPLETED" -> Color(0xFFE8F5E9)
-                "DIALING" -> Color(0xFFE3F2FD)
-                else -> Color(0xFFFFEBEE)
+                "COMPLETED" -> Color(0xFFD3E5FF)
+                "DIALING" -> Color(0xFFF5F5F5)
+                else -> Color(0xFFF7D4D6)
             }
         ) {
             Text(
@@ -105,9 +106,9 @@ private fun CallLogItem(log: CallLogRecord) {
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium,
                 color = when (log.status) {
-                    "COMPLETED" -> Color(0xFF2E7D32)
-                    "DIALING" -> Color(0xFF1565C0)
-                    else -> Color(0xFFC62828)
+                    "COMPLETED" -> Color(0xFF0070F3)
+                    "DIALING" -> Color(0xFF171717)
+                    else -> Color(0xFFEE0000)
                 },
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )

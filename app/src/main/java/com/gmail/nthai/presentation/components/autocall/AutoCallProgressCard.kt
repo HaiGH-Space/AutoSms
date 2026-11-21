@@ -1,6 +1,7 @@
 package com.gmail.nthai.presentation.components.autocall
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -57,17 +58,18 @@ fun AutoCallProgressCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = when (progress.status) {
-                        AutoCallStatus.RUNNING -> Color(0xFF1E88E5)
-                        AutoCallStatus.PAUSED -> Color(0xFFFB8C00)
-                        AutoCallStatus.FINISHED -> Color(0xFF43A047)
-                        else -> Color(0xFFE53935)
+                        AutoCallStatus.RUNNING -> Color(0xFF0070F3)
+                        AutoCallStatus.PAUSED -> Color(0xFFF5A623)
+                        AutoCallStatus.FINISHED -> Color(0xFF0070F3)
+                        else -> Color(0xFFEE0000)
                     }
                 )
 
                 Text(
                     text = "${progress.completedCount} / ${progress.totalCount}",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF171717)
                 )
             }
 
@@ -82,8 +84,8 @@ fun AutoCallProgressCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = Color(0xFFE0E0E0)
+                color = Color(0xFF171717),
+                trackColor = Color(0xFFEBEBEB)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -92,12 +94,13 @@ fun AutoCallProgressCard(
                 Text(
                     text = "Khách hàng: ${progress.currentCustomerName ?: progress.currentPhone}",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF171717)
                 )
                 Text(
                     text = "SĐT: ${progress.currentPhone}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = Color(0xFF888888)
                 )
             }
 
@@ -108,7 +111,7 @@ fun AutoCallProgressCard(
                         text = "Tự động gọi số tiếp theo sau: ${progress.countdownRemainingSeconds}s",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE65100)
+                        color = Color(0xFFF5A623)
                     )
                 }
             }
@@ -123,22 +126,24 @@ fun AutoCallProgressCard(
                     OutlinedButton(
                         onClick = onPause,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(100.dp),
+                        border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
                     ) {
-                        Icon(Icons.Default.Pause, contentDescription = null)
+                        Icon(Icons.Default.Pause, contentDescription = null, tint = Color(0xFF171717))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Tạm dừng")
+                        Text("Tạm dừng", color = Color(0xFF171717))
                     }
                 } else if (progress.status == AutoCallStatus.PAUSED) {
                     Button(
                         onClick = onResume,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                        shape = RoundedCornerShape(100.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF171717))
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color(0xFFFFFFFF))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Tiếp tục")
+                        Text("Tiếp tục", color = Color(0xFFFFFFFF))
                     }
                 }
 
@@ -146,12 +151,12 @@ fun AutoCallProgressCard(
                     Button(
                         onClick = onStop,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                        shape = RoundedCornerShape(100.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEE0000))
                     ) {
-                        Icon(Icons.Default.Stop, contentDescription = null)
+                        Icon(Icons.Default.Stop, contentDescription = null, tint = Color(0xFFFFFFFF))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Dừng hẳn")
+                        Text("Dừng hẳn", color = Color(0xFFFFFFFF))
                     }
                 }
             }

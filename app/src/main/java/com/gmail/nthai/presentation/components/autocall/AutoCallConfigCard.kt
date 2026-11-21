@@ -48,7 +48,7 @@ fun AutoCallConfigCard(
             Text(
                 text = "Chọn SIM thực hiện cuộc gọi:",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF555555)
+                color = Color(0xFF4D4D4D)
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -64,21 +64,21 @@ fun AutoCallConfigCard(
                     Surface(
                         onClick = { if (!isRunning) onSimSlotChange(slot) },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) Color(0xFFE8F5E9) else Color(0xFFFAFAFA),
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSelected) Color(0xFF171717) else Color(0xFFFFFFFF),
                         border = BorderStroke(
-                            1.5.dp,
-                            if (isSelected) Color(0xFF2E7D32) else Color(0xFFE0E0E0)
+                            1.dp,
+                            if (isSelected) Color(0xFF171717) else Color(0xFFEBEBEB)
                         )
                     ) {
                         Row(
-                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 12.dp),
+                            modifier = Modifier.padding(vertical = 12.dp, horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Default.SimCard,
                                 contentDescription = null,
-                                tint = if (isSelected) Color(0xFF2E7D32) else Color(0xFF757575)
+                                tint = if (isSelected) Color(0xFFFFFFFF) else Color(0xFF171717)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
@@ -86,12 +86,12 @@ fun AutoCallConfigCard(
                                     text = "SIM $slot",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color(0xFF2E7D32) else Color(0xFF212121)
+                                    color = if (isSelected) Color(0xFFFFFFFF) else Color(0xFF171717)
                                 )
                                 Text(
                                     text = carrierLabel,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF757575)
+                                    color = if (isSelected) Color(0xFFEBEBEB) else Color(0xFF888888)
                                 )
                             }
                         }
@@ -109,13 +109,13 @@ fun AutoCallConfigCard(
                 Text(
                     text = "Thời gian nghỉ giữa các cuộc gọi:",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF555555)
+                    color = Color(0xFF4D4D4D)
                 )
                 Text(
                     text = "${delaySeconds}s",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = Color(0xFF171717)
                 )
             }
 
@@ -142,7 +142,7 @@ fun AutoCallConfigCard(
                     else
                         "Sẽ gọi toàn bộ: $totalCustomersCount danh bạ",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF777777)
+                    color = Color(0xFF888888)
                 )
             }
 
@@ -154,16 +154,19 @@ fun AutoCallConfigCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                shape = RoundedCornerShape(100.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF171717),
+                    disabledContainerColor = Color(0xFFEBEBEB)
+                )
             ) {
-                Icon(Icons.Default.PhoneInTalk, contentDescription = null)
+                Icon(Icons.Default.PhoneInTalk, contentDescription = null, tint = Color(0xFFFFFFFF))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Bắt đầu tự động gọi (SIM $selectedSimSlot)",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = Color(0xFFFFFFFF)
                 )
             }
         }

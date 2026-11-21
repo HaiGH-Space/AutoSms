@@ -54,9 +54,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.ZaloRecipient
-import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
-import com.gmail.nthai.presentation.components.common.AutoSmsSearchBar
-import com.gmail.nthai.presentation.components.common.StatusBadge
+import com.gmail.nthai.presentation.components.common.AddCustomerDialog
+import com.gmail.nthai.presentation.components.common.CustomerHeaderSummary
+import com.gmail.nthai.presentation.components.common.CustomerSearchBarWithActions
+import com.gmail.nthai.presentation.components.common.FilterChipItem
+import com.gmail.nthai.presentation.components.common.GenericCustomerItemCard
+import com.gmail.nthai.presentation.components.common.GenericCustomerItemData
+import com.gmail.nthai.presentation.components.common.GenericFilterChipsBar
 
 @Composable
 fun ZaloRecipientTab(
@@ -108,155 +112,34 @@ fun ZaloRecipientTab(
         )
 
         // Summary Header Card matching modern app style
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFFFFFFFF),
-            border = BorderStroke(1.dp, Color(0xFFEBEBEB))
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        Icons.Default.People,
-                        contentDescription = null,
-                        tint = Color(0xFF171717)
-                    )
-                    Column {
-                        Text(
-                            "TỔNG SỐ SĐT ZALO",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = Color(0xFF888888)
-                        )
-                        Text(
-                            totalCount.toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF171717)
-                        )
-                    }
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        "ĐÃ GỬI THÀNH CÔNG",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = Color(0xFF888888)
-                    )
-                    Text(
-                        "$successCount / $totalCount",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF171717)
-                    )
-                }
-            }
-        }
+        CustomerHeaderSummary(
+            totalTitle = "TỔNG SỐ SĐT ZALO",
+            totalCount = totalCount,
+            successTitle = "ĐÃ GỬI THÀNH CÔNG",
+            successCount = successCount
+        )
 
         // Search Bar & Action Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AutoSmsSearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                modifier = Modifier.weight(1f),
-                placeholder = "Tìm tên, SĐT..."
-            )
+        CustomerSearchBarWithActions(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            placeholder = "Tìm tên, SĐT...",
+            onAddClick = { showAddDialog = true },
+            onImportExcelClick = onImportExcel
+        )
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            IconButton(
-                onClick = { showAddDialog = true },
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color(0xFF171717), RoundedCornerShape(12.dp))
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Thêm SĐT",
-                    tint = Color(0xFFFFFFFF),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            IconButton(
-                onClick = onImportExcel,
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
-            ) {
-                Icon(
-                    Icons.Default.FileUpload,
-                    contentDescription = "Excel",
-                    tint = Color(0xFF171717),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Single Horizontal Scrollable Row for Filter Chips
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            val chips = listOf(
-                "ALL" to "Tất cả ($totalCount)",
-                "PENDING" to "Chờ gửi ($pendingCount)",
-                "SUCCESS" to "Thành công ($successCount)",
-                "FAILED" to "Thất bại ($failedCount)"
-            )
-            chips.forEach { (key, label) ->
-                val selected = selectedFilter == key
-                FilterChip(
-                    selected = selected,
-                    onClick = { selectedFilter = key },
-                    label = {
-                        Text(
-                            label,
-                            fontSize = 12.sp,
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-                        )
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF171717),
-                        selectedLabelColor = Color(0xFFFFFFFF),
-                        containerColor = Color(0xFFFFFFFF),
-                        labelColor = Color(0xFF171717)
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = selected,
-                        borderColor = Color(0xFFEBEBEB),
-                        selectedBorderColor = Color(0xFF171717)
-                    )
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
+        // Filter Chips Bar
+        val chips = listOf(
+            FilterChipItem("ALL", "Tất cả", totalCount),
+            FilterChipItem("PENDING", "Chờ gửi", pendingCount),
+            FilterChipItem("SUCCESS", "Thành công", successCount),
+            FilterChipItem("FAILED", "Thất bại", failedCount)
+        )
+        GenericFilterChipsBar(
+            chips = chips,
+            selectedKey = selectedFilter,
+            onSelectKey = { selectedFilter = it }
+        )
 
         // Recipient List
         if (filteredList.isEmpty()) {
@@ -278,10 +161,22 @@ fun ZaloRecipientTab(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(filteredList, key = { it.id }) { customer ->
-                    ZaloCustomerCard(
-                        customer = customer,
+                    val friendStatus = if (customer.isZaloFriend) "Bạn bè" else "Chưa kết bạn"
+                    GenericCustomerItemCard(
+                        item = GenericCustomerItemData(
+                            id = customer.id,
+                            name = customer.name,
+                            phone = customer.phone,
+                            subtitle = friendStatus,
+                            status = customer.status,
+                            isSelected = false,
+                            note = customer.note.ifBlank { null }
+                        ),
+                        onToggleSelection = null,
                         onDelete = { onDeleteRecipient(customer.id) },
-                        onRetry = { onRetryRecipient(customer.id) }
+                        onClick = null,
+                        isBlacklisted = false,
+                        onAddToBlacklist = null
                     )
                 }
             }
@@ -317,162 +212,13 @@ fun ZaloRecipientTab(
 
     // Add Customer Dialog
     if (showAddDialog) {
-        AlertDialog(
-            onDismissRequest = { showAddDialog = false },
-            title = {
-                Text(
-                    "Thêm SĐT Zalo mới",
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF171717)
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = newCustomerName,
-                        onValueChange = { newCustomerName = it },
-                        label = { Text("Tên người nhận") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    OutlinedTextField(
-                        value = newCustomerPhone,
-                        onValueChange = { newCustomerPhone = it },
-                        label = { Text("Số điện thoại Zalo") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (newCustomerPhone.isNotBlank()) {
-                            onAddRecipient(newCustomerName, newCustomerPhone)
-                            newCustomerName = ""
-                            newCustomerPhone = ""
-                            showAddDialog = false
-                        }
-                    },
-                    shape = RoundedCornerShape(9999.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF171717),
-                        contentColor = Color(0xFFFFFFFF)
-                    )
-                ) {
-                    Text("Thêm SĐT", fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = { showAddDialog = false },
-                    shape = RoundedCornerShape(9999.dp),
-                    border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717))
-                ) {
-                    Text("Hủy")
-                }
-            },
-            containerColor = Color(0xFFFFFFFF),
-            shape = RoundedCornerShape(16.dp)
+        AddCustomerDialog(
+            title = "Thêm SĐT Zalo mới",
+            onDismiss = { showAddDialog = false },
+            onAddCustomer = { name, phone ->
+                onAddRecipient(name, phone)
+            }
         )
-    }
-}
-
-@Composable
-private fun ZaloCustomerCard(
-    customer: ZaloRecipient,
-    onDelete: () -> Unit,
-    onRetry: () -> Unit
-) {
-    AutoSmsCardContainer(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFF5F5F5)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = customer.name.firstOrNull()?.uppercase() ?: "?",
-                    color = Color(0xFF171717),
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = customer.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF171717),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = if (customer.isZaloFriend) "(Bạn bè)" else "(Chưa kết bạn)",
-                        fontSize = 11.sp,
-                        color = if (customer.isZaloFriend) Color(0xFF10B981) else Color(0xFF888888)
-                    )
-                }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = customer.phone,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF888888)
-                )
-                if (customer.note.isNotBlank()) {
-                    Text(
-                        text = customer.note,
-                        fontSize = 11.sp,
-                        color = when (customer.status) {
-                            LogStatus.FAILED -> Color(0xFFEE0000)
-                            LogStatus.SENT_SUCCESS -> Color(0xFF10B981)
-                            else -> Color(0xFF888888)
-                        }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Column(horizontalAlignment = Alignment.End) {
-                StatusBadge(status = customer.status)
-                Spacer(modifier = Modifier.height(4.dp))
-
-                if (customer.status == LogStatus.FAILED) {
-                    IconButton(onClick = onRetry, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Gửi lại",
-                            tint = Color(0xFF171717),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                } else {
-                    IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Xóa",
-                            tint = Color(0xFF888888),
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 

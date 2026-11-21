@@ -20,6 +20,9 @@ import com.gmail.nthai.data.local.entity.SmsTemplateEntity
 import com.gmail.nthai.data.local.entity.ZaloRecipientEntity
 import com.gmail.nthai.data.local.entity.ZaloSendingLogEntity
 
+import com.gmail.nthai.data.local.dao.CallRecipientDao
+import com.gmail.nthai.data.local.entity.CallRecipientEntity
+
 @Database(
     entities = [
         CustomerEntity::class,
@@ -30,9 +33,10 @@ import com.gmail.nthai.data.local.entity.ZaloSendingLogEntity
         ZaloRecipientEntity::class,
         ZaloSendingLogEntity::class,
         BlacklistEntity::class,
-        CallLogEntity::class
+        CallLogEntity::class,
+        CallRecipientEntity::class
     ],
-    version = 14,
+    version = 15,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -44,4 +48,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun zaloSendingLogDao(): ZaloSendingLogDao
     abstract fun blacklistDao(): BlacklistDao
     abstract fun callLogDao(): CallLogDao
+    abstract fun callRecipientDao(): CallRecipientDao
 }

@@ -159,6 +159,29 @@ object DatabaseModule {
         }
     }
 
+    internal val MIGRATION_14_15 = object : Migration(14, 15) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `call_recipients` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `name` TEXT NOT NULL,
+                    `phone` TEXT NOT NULL,
+                    `status` TEXT NOT NULL DEFAULT 'PENDING',
+                    `isSelected` INTEGER NOT NULL DEFAULT 1,
+                    `callDurationSeconds` INTEGER NOT NULL DEFAULT 0,
+                    `note` TEXT NOT NULL DEFAULT '',
+                    `lastCallTime` INTEGER NOT NULL DEFAULT 0,
+                    `customFieldsJson` TEXT NOT NULL DEFAULT '{}'
+                )
+                """.trimIndent()
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_call_recipients_status` ON `call_recipients` (`status`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_call_recipients_phone` ON `call_recipients` (`phone`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_call_recipients_isSelected` ON `call_recipients` (`isSelected`)")
+        }
+    }
+
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
         MIGRATION_4_5,
@@ -170,7 +193,8 @@ object DatabaseModule {
         MIGRATION_10_11,
         MIGRATION_11_12,
         MIGRATION_12_13,
-        MIGRATION_13_14
+        MIGRATION_13_14,
+        MIGRATION_14_15
     )
 
     @Provides
@@ -213,4 +237,8 @@ object DatabaseModule {
     @Provides
     fun provideCallLogDao(db: AppDatabase): com.gmail.nthai.data.local.dao.CallLogDao =
         db.callLogDao()
+
+    @Provides
+    fun provideCallRecipientDao(db: AppDatabase): com.gmail.nthai.data.local.dao.CallRecipientDao =
+        db.callRecipientDao()
 }
