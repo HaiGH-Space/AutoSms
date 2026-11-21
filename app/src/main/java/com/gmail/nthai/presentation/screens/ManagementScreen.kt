@@ -47,6 +47,7 @@ import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 fun ManagementScreen(
     initialTab: Int = 0,
     onNavigateToAutoZalo: () -> Unit = {},
+    onNavigateToAutoCall: () -> Unit = {},
     configViewModel: ConfigViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel()
 ) {

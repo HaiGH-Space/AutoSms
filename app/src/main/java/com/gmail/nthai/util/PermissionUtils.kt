@@ -11,6 +11,7 @@ object PermissionUtils {
     fun getRequiredPermissions(): Array<String> {
         val permissions = mutableListOf(
             Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.CALL_PHONE,
             Manifest.permission.SEND_SMS
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -29,6 +30,10 @@ object PermissionUtils {
         return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.READ_PHONE_STATE
+        ) == PackageManager.PERMISSION_GRANTED &&
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CALL_PHONE
         ) == PackageManager.PERMISSION_GRANTED
     }
 

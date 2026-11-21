@@ -11,7 +11,7 @@ class DatabaseMigrationTest {
     fun testAllMigrationsDefinedAndOrdered() {
         val migrations = DatabaseModule.ALL_MIGRATIONS
         assertNotNull(migrations)
-        assertEquals(10, migrations.size)
+        assertEquals(11, migrations.size)
 
         // Verify version pairs
         assertEquals(1, migrations[0].startVersion)
@@ -43,11 +43,14 @@ class DatabaseMigrationTest {
 
         assertEquals(12, migrations[9].startVersion)
         assertEquals(13, migrations[9].endVersion)
+
+        assertEquals(13, migrations[10].startVersion)
+        assertEquals(14, migrations[10].endVersion)
     }
 
     @Test
     fun testLatestDatabaseVersionMatchesAppDatabase() {
         val latestMigration = DatabaseModule.ALL_MIGRATIONS.last()
-        assertEquals(13, latestMigration.endVersion)
+        assertEquals(14, latestMigration.endVersion)
     }
 }

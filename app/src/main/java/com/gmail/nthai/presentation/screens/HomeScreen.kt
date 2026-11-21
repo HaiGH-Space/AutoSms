@@ -79,6 +79,7 @@ fun HomeScreen(
     onNavigateToManagement: (Int) -> Unit = {},
     onNavigateToAutoSms: () -> Unit = onNavigateToProgress,
     onNavigateToAutoZalo: () -> Unit = {},
+    onNavigateToAutoCall: () -> Unit = {},
     configViewModel: ConfigViewModel = hiltViewModel(),
     dashboardViewModel: HomeDashboardViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel(),
@@ -338,6 +339,15 @@ fun HomeScreen(
                 description = "Tự động hóa tìm SĐT, kết bạn và gửi tin nhắn/hình ảnh qua ứng dụng Zalo bằng Trợ năng.",
                 primaryButtonText = "Mở Zalo Auto",
                 onPrimaryClick = onNavigateToAutoZalo
+            )
+
+            // Step 5: Auto Call
+            WorkflowStepCard(
+                stepTag = "05",
+                title = "Tự động gọi điện hàng loạt",
+                description = "Tự động quay số lần lượt theo danh sách khách hàng với thời gian đếm ngược nghỉ an toàn.",
+                primaryButtonText = "Mở Auto Call",
+                onPrimaryClick = onNavigateToAutoCall
             )
         }
     }

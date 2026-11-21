@@ -95,7 +95,9 @@ fun CustomerItemCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    val customerName = customer.customFields.values.firstOrNull { it.isNotBlank() }
+                    val customerName = remember(customer.customFields) {
+                        customer.customFields.values.firstOrNull { it.isNotBlank() }
+                    }
                     if (customerName != null) {
                         Text(
                             text = customerName.trim(),

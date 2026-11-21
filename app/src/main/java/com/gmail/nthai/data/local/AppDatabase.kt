@@ -3,6 +3,7 @@ package com.gmail.nthai.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.gmail.nthai.data.local.dao.BlacklistDao
+import com.gmail.nthai.data.local.dao.CallLogDao
 import com.gmail.nthai.data.local.dao.CustomerDao
 import com.gmail.nthai.data.local.dao.SendingLogDao
 import com.gmail.nthai.data.local.dao.SimConfigDao
@@ -10,6 +11,7 @@ import com.gmail.nthai.data.local.dao.SmsTemplateDao
 import com.gmail.nthai.data.local.dao.ZaloRecipientDao
 import com.gmail.nthai.data.local.dao.ZaloSendingLogDao
 import com.gmail.nthai.data.local.entity.BlacklistEntity
+import com.gmail.nthai.data.local.entity.CallLogEntity
 import com.gmail.nthai.data.local.entity.CustomerEntity
 import com.gmail.nthai.data.local.entity.SendingLogEntity
 import com.gmail.nthai.data.local.entity.SendingRuleEntity
@@ -27,9 +29,10 @@ import com.gmail.nthai.data.local.entity.ZaloSendingLogEntity
         SendingLogEntity::class,
         ZaloRecipientEntity::class,
         ZaloSendingLogEntity::class,
-        BlacklistEntity::class
+        BlacklistEntity::class,
+        CallLogEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -40,4 +43,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun zaloRecipientDao(): ZaloRecipientDao
     abstract fun zaloSendingLogDao(): ZaloSendingLogDao
     abstract fun blacklistDao(): BlacklistDao
+    abstract fun callLogDao(): CallLogDao
 }

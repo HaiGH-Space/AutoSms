@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.ui.graphics.vector.ImageVector
 
+import androidx.compose.material.icons.filled.Phone
+
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     data object Home : Screen("home", "Tổng quan", Icons.Default.Dashboard)
     data object Customers :
@@ -22,5 +24,6 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
 
     data object AutoSms : Screen("auto_sms", "Gửi SMS", Icons.AutoMirrored.Filled.Send)
     data object AutoZalo : Screen("auto_zalo", "Gửi Zalo", Icons.AutoMirrored.Filled.Chat)
+    data object AutoCall : Screen("auto_call", "Tự động gọi", Icons.Default.Phone)
     data object Report : Screen("report", "Báo cáo", Icons.Default.Assessment)
 }

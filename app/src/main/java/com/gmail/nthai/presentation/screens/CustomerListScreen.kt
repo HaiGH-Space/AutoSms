@@ -92,6 +92,19 @@ fun CustomerListScreen(
         viewModel.selectSimSlot(simSlot)
     }
 
+    val onToggleSelection = remember(viewModel) {
+        { customer: Customer -> viewModel.toggleCustomerSelection(customer) }
+    }
+    val onDeleteCustomer = remember(viewModel) {
+        { customer: Customer -> viewModel.deleteCustomer(customer) }
+    }
+    val onSelectCustomer = remember {
+        { customer: Customer -> selectedCustomer = customer }
+    }
+    val onAddToBlacklist = remember(viewModel) {
+        { customer: Customer -> viewModel.addToBlacklist(customer.phone, "Thêm từ danh sách khách hàng") }
+    }
+
     Scaffold(
         topBar = {
             if (showTopBar) {
@@ -184,7 +197,7 @@ fun CustomerListScreen(
 
             // Select All & Counters Bar
             if (customers.isNotEmpty()) {
-                val allSelected = customers.all { it.isSelected }
+                val allSelected = remember(customers) { customers.all { it.isSelected } }
                 CustomerSelectionBar(
                     allSelected = allSelected,
                     selectedCount = selectedCustomerCount,
@@ -208,19 +221,25 @@ fun CustomerListScreen(
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(customers, key = { it.id }) { customer ->
-                        val normalized = PhoneNumberUtils.normalizePhoneNumber(customer.phone)
-                        val isBlacklisted = blacklistedPhones.contains(normalized)
+                    items(
+                        items = customers,
+                        key = { it.id },
+                        contentType = { "customer_item" }
+                    ) { customer ->
+                        val isBlacklisted = remember(customer.phone, blacklistedPhones) {
+                            val normalized = PhoneNumberUtils.normalizePhoneNumber(customer.phone)
+                            blacklistedPhones.contains(normalized)
+                        }
                         CustomerItemCard(
                             customer = customer,
-                            onToggleSelection = { viewModel.toggleCustomerSelection(customer) },
-                            onDelete = { viewModel.deleteCustomer(customer) },
-                            onClick = { selectedCustomer = customer },
+                            onToggleSelection = remember(customer) { { onToggleSelection(customer) } },
+                            onDelete = remember(customer) { { onDeleteCustomer(customer) } },
+                            onClick = remember(customer) { { onSelectCustomer(customer) } },
                             isBlacklisted = isBlacklisted,
-                            onAddToBlacklist = { viewModel.addToBlacklist(customer.phone, "Thêm từ danh sách khách hàng") }
+                            onAddToBlacklist = remember(customer) { { onAddToBlacklist(customer) } }
                         )
                     }
-                    item {
+                    item(key = "bottom_spacer", contentType = "spacer") {
                         Spacer(modifier = Modifier.height(60.dp))
                     }
                 }

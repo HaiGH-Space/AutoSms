@@ -1,15 +1,13 @@
 package com.gmail.nthai.domain.usecase
 
+import java.util.concurrent.ConcurrentHashMap
+
 object DetectVietnameseCarrierUseCase {
 
     private const val MAX_CACHE_SIZE = 2000
     private const val NULL_MARKER = "__NULL__"
 
-    private val cache = object : LinkedHashMap<String, String>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
-            return size > MAX_CACHE_SIZE
-        }
-    }
+    private val cache = ConcurrentHashMap<String, String>()
 
     private val viettelPrefixes = (32..39).map { "0$it" }.toSet() +
             setOf("086", "096", "097", "098")
@@ -22,7 +20,7 @@ object DetectVietnameseCarrierUseCase {
     private val gmobilePrefixes = setOf("059", "099")
 
     fun detect(phone: String): String? {
-        val cached = synchronized(cache) { cache.get(phone) }
+        val cached = cache[phone]
         if (cached != null) {
             return if (cached == NULL_MARKER) null else cached
         }
@@ -32,7 +30,9 @@ object DetectVietnameseCarrierUseCase {
             digits = "0${digits.drop(2)}"
         }
         if (digits.length != 10 || !digits.startsWith("0")) {
-            synchronized(cache) { cache.put(phone, NULL_MARKER) }
+            if (cache.size < MAX_CACHE_SIZE) {
+                cache[phone] = NULL_MARKER
+            }
             return null
         }
 
@@ -48,7 +48,9 @@ object DetectVietnameseCarrierUseCase {
         }
 
         val valueToCache = result ?: NULL_MARKER
-        synchronized(cache) { cache.put(phone, valueToCache) }
+        if (cache.size < MAX_CACHE_SIZE) {
+            cache[phone] = valueToCache
+        }
         return result
     }
 }
