@@ -21,7 +21,7 @@ import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,8 +35,8 @@ fun AutoSmsScreen(
     initialTab: Int = 0,
     simSlot: Int = 1
 ) {
-    var selectedTab by remember { mutableIntStateOf(initialTab) }
-    var selectedSimSlot by remember(simSlot) { mutableIntStateOf(simSlot.coerceIn(1, 2)) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
+    var selectedSimSlot by rememberSaveable(simSlot) { mutableIntStateOf(simSlot.coerceIn(1, 2)) }
 
     Scaffold(
         topBar = {

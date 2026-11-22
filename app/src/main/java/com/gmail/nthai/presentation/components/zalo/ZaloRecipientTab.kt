@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.ZaloRecipient
+import com.gmail.nthai.util.PhoneNumberUtils
 import com.gmail.nthai.presentation.components.common.AddCustomerDialog
 import com.gmail.nthai.presentation.components.common.CustomerHeaderSummary
 import com.gmail.nthai.presentation.components.common.CustomerSearchBarWithActions
@@ -66,8 +67,10 @@ import com.gmail.nthai.presentation.components.common.GenericFilterChipsBar
 fun ZaloRecipientTab(
     isAccessibilityEnabled: Boolean = false,
     recipients: List<ZaloRecipient> = emptyList(),
+    blacklistedPhones: Set<String> = emptySet(),
     onAddRecipient: (name: String, phone: String) -> Unit = { _, _ -> },
     onDeleteRecipient: (id: Long) -> Unit = {},
+    onAddToBlacklist: (phone: String) -> Unit = {},
     onRetryRecipient: (id: Long) -> Unit = {},
     onImportExcel: () -> Unit = {},
     onStartSending: () -> Unit = {},
@@ -162,6 +165,8 @@ fun ZaloRecipientTab(
             ) {
                 items(filteredList, key = { it.id }) { customer ->
                     val friendStatus = if (customer.isZaloFriend) "Bạn bè" else "Chưa kết bạn"
+                    val normalized = remember(customer.phone) { PhoneNumberUtils.normalizePhoneNumber(customer.phone) }
+                    val isBlacklisted = remember(normalized, blacklistedPhones) { blacklistedPhones.contains(normalized) }
                     GenericCustomerItemCard(
                         item = GenericCustomerItemData(
                             id = customer.id,
@@ -175,8 +180,8 @@ fun ZaloRecipientTab(
                         onToggleSelection = null,
                         onDelete = { onDeleteRecipient(customer.id) },
                         onClick = null,
-                        isBlacklisted = false,
-                        onAddToBlacklist = null
+                        isBlacklisted = isBlacklisted,
+                        onAddToBlacklist = { onAddToBlacklist(customer.phone) }
                     )
                 }
             }

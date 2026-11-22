@@ -36,7 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,9 +64,10 @@ fun ZaloScreen(
     viewModel: ZaloViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    var selectedTab by remember { mutableIntStateOf(initialTab) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
 
     val recipients by viewModel.recipients.collectAsState()
+    val blacklistedPhones by viewModel.blacklistedPhones.collectAsState()
     val logs by viewModel.logs.collectAsState()
     val progressState by viewModel.progressState.collectAsState()
     val isAccessibilityEnabled by viewModel.isAccessibilityEnabled.collectAsState()
@@ -238,8 +239,10 @@ fun ZaloScreen(
                 1 -> ZaloRecipientTab(
                     isAccessibilityEnabled = isAccessibilityEnabled,
                     recipients = recipients,
+                    blacklistedPhones = blacklistedPhones,
                     onAddRecipient = { name, phone -> viewModel.addRecipient(name, phone) },
                     onDeleteRecipient = { id -> viewModel.deleteRecipient(id) },
+                    onAddToBlacklist = { phone -> viewModel.addToBlacklist(phone) },
                     onRetryRecipient = { id -> viewModel.resetRecipientStatus(id) },
                     onImportExcel = {
                         filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
