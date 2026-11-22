@@ -71,7 +71,7 @@ fun LogRecordCard(
                     Text(
                         text = log.customerName.firstOrNull()?.uppercase() ?: "?",
                         color = Color(0xFF171717),
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         style = MaterialTheme.typography.titleSmall
                     )
                 }

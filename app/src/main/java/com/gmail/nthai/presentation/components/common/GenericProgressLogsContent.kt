@@ -157,11 +157,11 @@ fun GenericProgressLogsContent(
                                     onClick = onResumeCampaign,
                                     modifier = Modifier.weight(1f),
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF171717)),
-                                    shape = RoundedCornerShape(10.dp)
+                                    shape = RoundedCornerShape(9999.dp)
                                 ) {
                                     Icon(Icons.Default.PlayArrow, contentDescription = "Tiếp tục")
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Tiếp tục")
+                                    Text("Tiếp tục", fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         } else {
@@ -169,11 +169,11 @@ fun GenericProgressLogsContent(
                                 OutlinedButton(
                                     onClick = onPauseCampaign,
                                     modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp)
+                                    shape = RoundedCornerShape(9999.dp)
                                 ) {
                                     Icon(Icons.Default.Pause, contentDescription = "Tạm dừng")
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Tạm dừng", color = Color(0xFF171717))
+                                    Text("Tạm dừng", color = Color(0xFF171717), fontWeight = FontWeight.Medium)
                                 }
                             }
                         }
@@ -183,11 +183,11 @@ fun GenericProgressLogsContent(
                                 onClick = onStopCampaign,
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEE0000)),
-                                shape = RoundedCornerShape(10.dp)
+                                shape = RoundedCornerShape(9999.dp)
                             ) {
                                 Icon(Icons.Default.Stop, contentDescription = "Dừng chiến dịch")
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Dừng", color = Color(0xFFEE0000))
+                                Text("Dừng", color = Color(0xFFEE0000), fontWeight = FontWeight.Medium)
                             }
                         }
                     }
@@ -205,7 +205,7 @@ fun GenericProgressLogsContent(
                 text = "LỊCH SỬ NHẬT KÝ CHIẾN DỊCH (${logs.size})",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 ),
                 color = Color(0xFF888888)
             )
@@ -253,7 +253,7 @@ fun GenericProgressLogsContent(
     if (showClearDialog && onClearLogs != null) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text("Xác nhận xóa nhật ký", fontWeight = FontWeight.Bold) },
+            title = { Text("Xác nhận xóa nhật ký", fontWeight = FontWeight.SemiBold) },
             text = { Text("Bạn có chắc chắn muốn xóa tất cả lịch sử nhật ký không?") },
             confirmButton = {
                 Button(
@@ -262,17 +262,17 @@ fun GenericProgressLogsContent(
                         showClearDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEE0000)),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(9999.dp)
                 ) {
-                    Text("Xóa", color = Color.White)
+                    Text("Xóa", color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 OutlinedButton(
                     onClick = { showClearDialog = false },
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(9999.dp)
                 ) {
-                    Text("Hủy", color = Color(0xFF171717))
+                    Text("Hủy", color = Color(0xFF171717), fontWeight = FontWeight.Medium)
                 }
             },
             shape = RoundedCornerShape(16.dp),

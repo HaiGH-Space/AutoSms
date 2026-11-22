@@ -115,11 +115,11 @@ fun SimSendingProgressCard(
         AlertDialog(
             onDismissRequest = { showStopConfirmation = false },
             containerColor = Color(0xFFFFFFFF),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             title = {
                 Text(
                     "Dừng gửi bằng SIM $simSlot?",
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF171717)
                 )
             },
@@ -136,12 +136,12 @@ fun SimSendingProgressCard(
                         onStop()
                     }
                 ) {
-                    Text("Dừng gửi", fontWeight = FontWeight.Bold, color = Color(0xFFEE0000))
+                    Text("Dừng gửi", fontWeight = FontWeight.SemiBold, color = Color(0xFFEE0000))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStopConfirmation = false }) {
-                    Text("Tiếp tục gửi", color = Color(0xFF171717))
+                    Text("Tiếp tục gửi", color = Color(0xFF171717), fontWeight = FontWeight.Medium)
                 }
             }
         )
@@ -321,7 +321,7 @@ fun SimSendingProgressCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(42.dp),
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(9999.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF171717),
                                 contentColor = Color(0xFFFFFFFF),
@@ -349,7 +349,7 @@ fun SimSendingProgressCard(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(42.dp),
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(9999.dp),
                             border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = Color(0xFF171717)
@@ -368,7 +368,7 @@ fun SimSendingProgressCard(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(42.dp),
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(9999.dp),
                             border = BorderStroke(1.dp, Color(0xFFF7D4D6)),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = Color(0xFFEE0000)
@@ -390,7 +390,7 @@ fun SimSendingProgressCard(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(42.dp),
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(9999.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF171717),
                                 contentColor = Color(0xFFFFFFFF)
@@ -409,7 +409,7 @@ fun SimSendingProgressCard(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(42.dp),
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(9999.dp),
                             border = BorderStroke(1.dp, Color(0xFFF7D4D6)),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = Color(0xFFEE0000)

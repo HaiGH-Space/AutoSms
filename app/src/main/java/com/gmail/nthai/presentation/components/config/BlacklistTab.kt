@@ -106,7 +106,7 @@ fun BlacklistTab(
                         containerColor = Color(0xFF171717),
                         contentColor = Color(0xFFFFFFFF)
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
@@ -117,7 +117,7 @@ fun BlacklistTab(
 
                 OutlinedButton(
                     onClick = { showAddBatchDialog = true },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF171717)),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
@@ -133,7 +133,7 @@ fun BlacklistTab(
                         onClick = { showClearAllConfirm = true },
                         modifier = Modifier
                             .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(CircleShape)
                             .background(Color(0xFFFEE2E2))
                     ) {
                         Icon(
@@ -213,10 +213,11 @@ fun BlacklistTab(
 
         AlertDialog(
             onDismissRequest = { showAddSingleDialog = false },
+            shape = RoundedCornerShape(16.dp),
             title = {
                 Text(
                     "Thêm số vào Danh sách đen",
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp,
                     color = Color(0xFF171717)
                 )
@@ -229,6 +230,7 @@ fun BlacklistTab(
                         label = { Text("Số điện thoại *") },
                         placeholder = { Text("0912345678") },
                         singleLine = true,
+                        shape = RoundedCornerShape(9999.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF171717),
                             focusedLabelColor = Color(0xFF171717)
@@ -242,6 +244,7 @@ fun BlacklistTab(
                         label = { Text("Ghi chú / Lý do (không bắt buộc)") },
                         placeholder = { Text("Ví dụ: Khách yêu cầu không làm phiền") },
                         singleLine = true,
+                        shape = RoundedCornerShape(9999.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF171717),
                             focusedLabelColor = Color(0xFF171717)
@@ -258,14 +261,15 @@ fun BlacklistTab(
                             showAddSingleDialog = false
                         }
                     },
+                    shape = RoundedCornerShape(9999.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF171717))
                 ) {
-                    Text("Thêm vào danh sách", color = Color(0xFFFFFFFF))
+                    Text("Thêm vào danh sách", color = Color(0xFFFFFFFF), fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddSingleDialog = false }) {
-                    Text("Hủy", color = Color(0xFF666666))
+                    Text("Hủy", color = Color(0xFF666666), fontWeight = FontWeight.Medium)
                 }
             }
         )
@@ -278,10 +282,11 @@ fun BlacklistTab(
 
         AlertDialog(
             onDismissRequest = { showAddBatchDialog = false },
+            shape = RoundedCornerShape(16.dp),
             title = {
                 Text(
                     "Nhập danh sách số điện thoại",
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 18.sp,
                     color = Color(0xFF171717)
                 )
@@ -299,6 +304,7 @@ fun BlacklistTab(
                         placeholder = { Text("0912345678\n0987654321\n0901112223") },
                         minLines = 4,
                         maxLines = 8,
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF171717),
                             focusedLabelColor = Color(0xFF171717)
@@ -312,6 +318,7 @@ fun BlacklistTab(
                         label = { Text("Ghi chú chung (không bắt buộc)") },
                         placeholder = { Text("Nhập từ danh sách chặn") },
                         singleLine = true,
+                        shape = RoundedCornerShape(9999.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF171717),
                             focusedLabelColor = Color(0xFF171717)
@@ -328,14 +335,15 @@ fun BlacklistTab(
                             showAddBatchDialog = false
                         }
                     },
+                    shape = RoundedCornerShape(9999.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF171717))
                 ) {
-                    Text("Thêm danh sách", color = Color(0xFFFFFFFF))
+                    Text("Thêm danh sách", color = Color(0xFFFFFFFF), fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddBatchDialog = false }) {
-                    Text("Hủy", color = Color(0xFF666666))
+                    Text("Hủy", color = Color(0xFF666666), fontWeight = FontWeight.Medium)
                 }
             }
         )
@@ -345,7 +353,8 @@ fun BlacklistTab(
     itemToDelete?.let { item ->
         AlertDialog(
             onDismissRequest = { itemToDelete = null },
-            title = { Text("Xác nhận xóa khỏi Danh sách đen") },
+            shape = RoundedCornerShape(16.dp),
+            title = { Text("Xác nhận xóa khỏi Danh sách đen", fontWeight = FontWeight.SemiBold) },
             text = { Text("Bạn có chắc chắn muốn bỏ chặn số ${item.rawPhone}? Sau khi xóa, hệ thống sẽ tiếp tục gửi tin nhắn cho số này bình thường.") },
             confirmButton = {
                 Button(
@@ -353,14 +362,15 @@ fun BlacklistTab(
                         viewModel.deletePhone(item.id)
                         itemToDelete = null
                     },
+                    shape = RoundedCornerShape(9999.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
                 ) {
-                    Text("Xóa bỏ", color = Color(0xFFFFFFFF))
+                    Text("Xóa bỏ", color = Color(0xFFFFFFFF), fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToDelete = null }) {
-                    Text("Hủy", color = Color(0xFF666666))
+                    Text("Hủy", color = Color(0xFF666666), fontWeight = FontWeight.Medium)
                 }
             }
         )
@@ -370,7 +380,8 @@ fun BlacklistTab(
     if (showClearAllConfirm) {
         AlertDialog(
             onDismissRequest = { showClearAllConfirm = false },
-            title = { Text("Xóa toàn bộ Danh sách đen?") },
+            shape = RoundedCornerShape(16.dp),
+            title = { Text("Xóa toàn bộ Danh sách đen?", fontWeight = FontWeight.SemiBold) },
             text = { Text("Hành động này sẽ xóa tất cả ${items.size} số điện thoại khỏi danh sách đen. Bạn có chắc chắn không?") },
             confirmButton = {
                 Button(
@@ -378,14 +389,15 @@ fun BlacklistTab(
                         viewModel.clearAll()
                         showClearAllConfirm = false
                     },
+                    shape = RoundedCornerShape(9999.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
                 ) {
-                    Text("Xóa tất cả", color = Color(0xFFFFFFFF))
+                    Text("Xóa tất cả", color = Color(0xFFFFFFFF), fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearAllConfirm = false }) {
-                    Text("Hủy", color = Color(0xFF666666))
+                    Text("Hủy", color = Color(0xFF666666), fontWeight = FontWeight.Medium)
                 }
             }
         )
@@ -400,7 +412,7 @@ private fun BlacklistItemCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color(0xFFFFFFFF),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, Color(0xFFEBEBEB))
     ) {
         Row(
@@ -437,7 +449,7 @@ private fun BlacklistItemCard(
                     ) {
                         Text(
                             text = item.rawPhone,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp,
                             color = Color(0xFF171717)
                         )

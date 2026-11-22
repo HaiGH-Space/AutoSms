@@ -1,10 +1,13 @@
 package com.gmail.nthai.presentation.components.autocall
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.gmail.nthai.domain.model.CallRecipient
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.repository.CallRecipientStats
+import com.gmail.nthai.presentation.components.common.CampaignBottomActionBar
 import com.gmail.nthai.presentation.components.common.FilterChipItem
 import com.gmail.nthai.presentation.components.common.GenericCustomerItemData
 import com.gmail.nthai.presentation.components.common.GenericRecipientListContent
@@ -26,7 +29,9 @@ fun CallRecipientTab(
     onResetStatus: () -> Unit,
     onAddToBlacklist: (String) -> Unit,
     onImportExcel: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedSimSlot: Int = 1,
+    onStartCampaign: () -> Unit = {}
 ) {
     val filteredList = recipients.filter { recipient ->
         val matchesSearch = recipient.name.contains(searchQuery, ignoreCase = true) ||
@@ -85,6 +90,16 @@ fun CallRecipientTab(
         onImportExcel = onImportExcel,
         addDialogTitle = "Thêm SĐT gọi",
         modifier = modifier,
-        emptyStateMessage = "Chưa có danh sách SĐT gọi nào."
+        emptyStateMessage = "Chưa có danh sách SĐT gọi nào.",
+        bottomBar = {
+            if (recipients.isNotEmpty()) {
+                CampaignBottomActionBar(
+                    primaryButtonText = "Bắt đầu tự động gọi (SIM $selectedSimSlot)",
+                    primaryButtonIcon = Icons.Default.PhoneInTalk,
+                    onPrimaryClick = onStartCampaign,
+                    enabled = true
+                )
+            }
+        }
     )
 }

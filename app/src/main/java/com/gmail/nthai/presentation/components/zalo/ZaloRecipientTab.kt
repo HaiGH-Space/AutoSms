@@ -1,5 +1,7 @@
 package com.gmail.nthai.presentation.components.zalo
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.ZaloRecipient
+import com.gmail.nthai.presentation.components.common.CampaignBottomActionBar
 import com.gmail.nthai.presentation.components.common.FilterChipItem
 import com.gmail.nthai.presentation.components.common.GenericCustomerItemData
 import com.gmail.nthai.presentation.components.common.GenericRecipientListContent
@@ -84,6 +87,16 @@ fun ZaloRecipientTab(
         onImportExcel = onImportExcel,
         addDialogTitle = "Thêm SĐT Zalo",
         modifier = modifier,
-        emptyStateMessage = "Chưa có danh sách SĐT Zalo nào."
+        emptyStateMessage = "Chưa có danh sách SĐT Zalo nào.",
+        bottomBar = {
+            if (recipients.isNotEmpty()) {
+                CampaignBottomActionBar(
+                    primaryButtonText = "Bắt đầu gửi Zalo",
+                    primaryButtonIcon = Icons.AutoMirrored.Filled.Send,
+                    onPrimaryClick = onStartSending,
+                    enabled = true
+                )
+            }
+        }
     )
 }

@@ -85,7 +85,7 @@ fun AutoCallConfigCard(
                                 Text(
                                     text = "SIM $slot",
                                     style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = if (isSelected) Color(0xFFFFFFFF) else Color(0xFF171717)
                                 )
                                 Text(
@@ -114,7 +114,7 @@ fun AutoCallConfigCard(
                 Text(
                     text = "${delaySeconds}s",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF171717)
                 )
             }
@@ -154,7 +154,7 @@ fun AutoCallConfigCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(100.dp),
+                shape = RoundedCornerShape(9999.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF171717),
                     disabledContainerColor = Color(0xFFEBEBEB)
@@ -165,7 +165,7 @@ fun AutoCallConfigCard(
                 Text(
                     text = "Bắt đầu tự động gọi (SIM $selectedSimSlot)",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFFFFFFFF)
                 )
             }

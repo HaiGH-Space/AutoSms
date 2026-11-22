@@ -8,10 +8,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -27,7 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gmail.nthai.presentation.components.ExcelImportDialogs
-import com.gmail.nthai.presentation.components.autocall.CallProgressConfigTab
+import com.gmail.nthai.presentation.components.autocall.CallConfigTab
+import com.gmail.nthai.presentation.components.autocall.CallProgressTab
 import com.gmail.nthai.presentation.components.autocall.CallRecipientTab
 import com.gmail.nthai.presentation.components.common.CampaignTabItem
 import com.gmail.nthai.presentation.components.common.FeatureCampaignScaffold
@@ -71,6 +73,25 @@ fun AutoCallScreen(
         onPauseOrDispose {}
     }
 
+    val handleStartCampaign = {
+        if (recipients.isEmpty()) {
+            Toast.makeText(context, "Vui lòng thêm danh bạ gọi trước khi bắt đầu", Toast.LENGTH_SHORT).show()
+        } else if (hasCallPermission) {
+            viewModel.startCampaign()
+            Toast.makeText(context, "Đã khởi chạy chiến dịch gọi tự động!", Toast.LENGTH_SHORT).show()
+            selectedTab = 2
+        } else {
+            try {
+                val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -79,15 +100,39 @@ fun AutoCallScreen(
         hasCallPermission = callGranted && stateGranted
         if (hasCallPermission) {
             viewModel.startCampaign()
+            Toast.makeText(context, "Đã khởi chạy chiến dịch gọi tự động!", Toast.LENGTH_SHORT).show()
+            selectedTab = 2
         } else {
             Toast.makeText(context, "Vui lòng cấp quyền gọi điện trong Cài đặt ứng dụng", Toast.LENGTH_LONG).show()
             try {
                 val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                    data = android.net.Uri.fromParts("package", context.packageName, null)
+                    data = Uri.fromParts("package", context.packageName, null)
                 }
                 context.startActivity(intent)
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    val requestPermissionAction = {
+        val callGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
+        val stateGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+        if (callGranted && stateGranted) {
+            hasCallPermission = true
+        } else {
+            try {
+                permissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.CALL_PHONE,
+                        Manifest.permission.READ_PHONE_STATE
+                    )
+                )
+            } catch (_: Exception) {
+                val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
             }
         }
     }
@@ -103,8 +148,9 @@ fun AutoCallScreen(
     }
 
     val tabs = listOf(
+        CampaignTabItem("Soạn & Cấu hình", Icons.Default.Tune),
         CampaignTabItem("Danh sách gọi", Icons.Default.People),
-        CampaignTabItem("Cấu hình & Tiến độ", Icons.Default.Call)
+        CampaignTabItem("Tiến độ gọi", Icons.AutoMirrored.Filled.Send)
     )
 
     FeatureCampaignScaffold(
@@ -122,7 +168,7 @@ fun AutoCallScreen(
             }
         },
         actions = {
-            if (selectedTab == 0 && recipients.isNotEmpty()) {
+            if (selectedTab == 1 && recipients.isNotEmpty()) {
                 IconButton(onClick = { viewModel.resetStatus() }) {
                     Icon(
                         Icons.Default.Refresh,
@@ -142,6 +188,23 @@ fun AutoCallScreen(
     ) { currentTab ->
         when (currentTab) {
             0 -> {
+                CallConfigTab(
+                    hasCallPermission = hasCallPermission,
+                    onRequestPermission = requestPermissionAction,
+                    delaySeconds = delaySeconds,
+                    onDelayChange = viewModel::updateDelay,
+                    selectedSimSlot = selectedSimSlot,
+                    onSimSlotChange = viewModel::updateSimSlot,
+                    simConfigs = simConfigs,
+                    totalRecipientsCount = recipients.size,
+                    selectedRecipientsCount = stats.selectedCount,
+                    onNextToRecipients = { selectedTab = 1 },
+                    onImportExcel = {
+                        filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    }
+                )
+            }
+            1 -> {
                 CallRecipientTab(
                     recipients = recipients,
                     stats = stats,
@@ -159,25 +222,16 @@ fun AutoCallScreen(
                     onAddToBlacklist = viewModel::addToBlacklist,
                     onImportExcel = {
                         filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    }
+                    },
+                    selectedSimSlot = selectedSimSlot,
+                    onStartCampaign = handleStartCampaign
                 )
             }
-            1 -> {
-                CallProgressConfigTab(
-                    context = context,
-                    hasCallPermission = hasCallPermission,
-                    onHasCallPermissionChange = { hasCallPermission = it },
-                    permissionLauncher = permissionLauncher,
-                    delaySeconds = delaySeconds,
-                    onDelayChange = viewModel::updateDelay,
-                    selectedSimSlot = selectedSimSlot,
-                    onSimSlotChange = viewModel::updateSimSlot,
-                    simConfigs = simConfigs,
-                    totalRecipientsCount = recipients.size,
-                    selectedRecipientsCount = stats.selectedCount,
+            2 -> {
+                CallProgressTab(
                     progressState = progressState,
                     callLogs = callLogs,
-                    onStartCampaign = viewModel::startCampaign,
+                    selectedSimSlot = selectedSimSlot,
                     onPauseCampaign = viewModel::pauseCampaign,
                     onResumeCampaign = viewModel::resumeCampaign,
                     onStopCampaign = viewModel::stopCampaign,
@@ -198,6 +252,7 @@ fun AutoCallScreen(
             viewModel.confirmImport { result ->
                 result.onSuccess { count ->
                     Toast.makeText(context, "Nhập thành công $count khách hàng", Toast.LENGTH_SHORT).show()
+                    selectedTab = 1
                 }.onFailure { err ->
                     Toast.makeText(context, "Lỗi nhập Excel: ${err.message}", Toast.LENGTH_LONG).show()
                 }

@@ -82,7 +82,7 @@ fun CustomerHeaderSummary(
                     Text(
                         totalCount.toString(),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF171717)
                     )
                 }
@@ -100,7 +100,7 @@ fun CustomerHeaderSummary(
                 Text(
                     "$successCount / $totalCount",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF171717)
                 )
             }
@@ -134,7 +134,7 @@ fun CustomerSearchBarWithActions(
                 onClick = onAddClick,
                 modifier = Modifier
                     .size(48.dp)
-                    .background(Color(0xFF171717), RoundedCornerShape(12.dp))
+                    .background(Color(0xFF171717), RoundedCornerShape(9999.dp))
             ) {
                 Icon(
                     Icons.Default.Add,
@@ -151,7 +151,7 @@ fun CustomerSearchBarWithActions(
                 onClick = onImportExcelClick,
                 modifier = Modifier
                     .size(48.dp)
-                    .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF5F5F5), RoundedCornerShape(9999.dp))
             ) {
                 Icon(
                     Icons.Default.FileUpload,
@@ -175,7 +175,7 @@ fun AddCustomerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title, fontWeight = FontWeight.Bold) },
+        title = { Text(title, fontWeight = FontWeight.SemiBold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
@@ -183,7 +183,7 @@ fun AddCustomerDialog(
                     onValueChange = { name = it },
                     label = { Text("Tên người nhận (tùy chọn)") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     singleLine = true
                 )
                 OutlinedTextField(
@@ -191,7 +191,7 @@ fun AddCustomerDialog(
                     onValueChange = { phone = it },
                     label = { Text("Số điện thoại *") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     singleLine = true
                 )
             }
@@ -205,17 +205,17 @@ fun AddCustomerDialog(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF171717)),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(9999.dp)
             ) {
-                Text("Thêm", color = Color.White)
+                Text("Thêm", color = Color.White, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
             OutlinedButton(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(9999.dp)
             ) {
-                Text("Hủy", color = Color(0xFF171717))
+                Text("Hủy", color = Color(0xFF171717), fontWeight = FontWeight.Medium)
             }
         },
         shape = RoundedCornerShape(16.dp),

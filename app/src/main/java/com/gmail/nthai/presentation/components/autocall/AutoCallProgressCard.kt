@@ -56,7 +56,7 @@ fun AutoCallProgressCard(
                         AutoCallStatus.IDLE -> ""
                     },
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = when (progress.status) {
                         AutoCallStatus.RUNNING -> Color(0xFF0070F3)
                         AutoCallStatus.PAUSED -> Color(0xFFF5A623)
@@ -68,7 +68,7 @@ fun AutoCallProgressCard(
                 Text(
                     text = "${progress.completedCount} / ${progress.totalCount}",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF171717)
                 )
             }
@@ -110,7 +110,7 @@ fun AutoCallProgressCard(
                     Text(
                         text = "Tự động gọi số tiếp theo sau: ${progress.countdownRemainingSeconds}s",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color(0xFFF5A623)
                     )
                 }
