@@ -62,14 +62,16 @@ fun AutoCallScreen(
     var hasCallPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
         )
     }
 
     androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
         hasCallPermission =
             ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
         onPauseOrDispose {}
     }
 
@@ -97,13 +99,14 @@ fun AutoCallScreen(
     ) { permissions ->
         val callGranted = permissions[Manifest.permission.CALL_PHONE] ?: false
         val stateGranted = permissions[Manifest.permission.READ_PHONE_STATE] ?: false
-        hasCallPermission = callGranted && stateGranted
+        val logGranted = permissions[Manifest.permission.READ_CALL_LOG] ?: false
+        hasCallPermission = callGranted && stateGranted && logGranted
         if (hasCallPermission) {
             viewModel.startCampaign()
             Toast.makeText(context, "Đã khởi chạy chiến dịch gọi tự động!", Toast.LENGTH_SHORT).show()
             selectedTab = 2
         } else {
-            Toast.makeText(context, "Vui lòng cấp quyền gọi điện trong Cài đặt ứng dụng", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Vui lòng cấp quyền gọi điện và nhật ký cuộc gọi trong Cài đặt ứng dụng", Toast.LENGTH_LONG).show()
             try {
                 val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = Uri.fromParts("package", context.packageName, null)
@@ -118,14 +121,16 @@ fun AutoCallScreen(
     val requestPermissionAction = {
         val callGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
         val stateGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED
-        if (callGranted && stateGranted) {
+        val logGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+        if (callGranted && stateGranted && logGranted) {
             hasCallPermission = true
         } else {
             try {
                 permissionLauncher.launch(
                     arrayOf(
                         Manifest.permission.CALL_PHONE,
-                        Manifest.permission.READ_PHONE_STATE
+                        Manifest.permission.READ_PHONE_STATE,
+                        Manifest.permission.READ_CALL_LOG
                     )
                 )
             } catch (_: Exception) {

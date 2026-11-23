@@ -2,9 +2,13 @@ package com.gmail.nthai.domain.engine
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.provider.CallLog
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
+import androidx.core.content.ContextCompat
 import com.gmail.nthai.data.sms.SimManagerWrapper
 import com.gmail.nthai.domain.model.AutoCallConfig
 import com.gmail.nthai.domain.model.AutoCallProgress
@@ -165,21 +169,71 @@ class AutoCallEngine @Inject constructor(
 
             if (callLaunched) {
                 // Wait until call finishes (OFFHOOK -> IDLE or timeout)
-                waitForCallCompletion()
+                val hasBeenOffhook = waitForCallCompletion()
 
-                val callDurationSec = ((System.currentTimeMillis() - startTime) / 1000).toInt()
-                autoCallRepository.updateCallLogStatus(
-                    id = logId,
-                    status = "COMPLETED",
-                    durationSeconds = callDurationSec,
-                    errorMessage = null
-                )
-                callRecipientRepository.updateRecipientStatus(
-                    id = recipient.id,
-                    status = LogStatus.SENT_SUCCESS,
-                    durationSeconds = callDurationSec,
-                    note = "Gọi thành công ($callDurationSec s)"
-                )
+                // Allow system CallLog provider time to write the record
+                delay(800)
+
+                val sysLog = queryLatestCallLog(recipient.phone, startTime)
+
+                if (sysLog != null) {
+                    if (sysLog.isAnswered) {
+                        autoCallRepository.updateCallLogStatus(
+                            id = logId,
+                            status = "COMPLETED",
+                            durationSeconds = sysLog.durationSeconds,
+                            errorMessage = null
+                        )
+                        callRecipientRepository.updateRecipientStatus(
+                            id = recipient.id,
+                            status = LogStatus.SENT_SUCCESS,
+                            durationSeconds = sysLog.durationSeconds,
+                            note = sysLog.noteText
+                        )
+                    } else {
+                        autoCallRepository.updateCallLogStatus(
+                            id = logId,
+                            status = sysLog.statusText,
+                            durationSeconds = 0,
+                            errorMessage = sysLog.noteText
+                        )
+                        callRecipientRepository.updateRecipientStatus(
+                            id = recipient.id,
+                            status = LogStatus.FAILED,
+                            durationSeconds = 0,
+                            note = sysLog.noteText
+                        )
+                    }
+                } else {
+                    if (hasBeenOffhook) {
+                        val callDurationSec = ((System.currentTimeMillis() - startTime) / 1000).toInt()
+                        autoCallRepository.updateCallLogStatus(
+                            id = logId,
+                            status = "COMPLETED",
+                            durationSeconds = callDurationSec,
+                            errorMessage = null
+                        )
+                        callRecipientRepository.updateRecipientStatus(
+                            id = recipient.id,
+                            status = LogStatus.SENT_SUCCESS,
+                            durationSeconds = callDurationSec,
+                            note = "Đã nghe máy ($callDurationSec s)"
+                        )
+                    } else {
+                        autoCallRepository.updateCallLogStatus(
+                            id = logId,
+                            status = "NO_ANSWER",
+                            durationSeconds = 0,
+                            errorMessage = "Không nghe máy (0s)"
+                        )
+                        callRecipientRepository.updateRecipientStatus(
+                            id = recipient.id,
+                            status = LogStatus.FAILED,
+                            durationSeconds = 0,
+                            note = "Không nghe máy (0s)"
+                        )
+                    }
+                }
             } else {
                 val err = "Không thể khởi tạo cuộc gọi (Số ĐT không hợp lệ hoặc không có quyền)."
                 autoCallRepository.updateCallLogStatus(
@@ -272,7 +326,7 @@ class AutoCallEngine @Inject constructor(
         }
     }
 
-    private suspend fun waitForCallCompletion() {
+    private suspend fun waitForCallCompletion(): Boolean {
         var hasBeenOffhook = false
         var isCallActive = true
 
@@ -318,7 +372,85 @@ class AutoCallEngine @Inject constructor(
 
         callObserverJob?.cancel()
         callObserverJob = null
+        return hasBeenOffhook
     }
+
+    private data class CallResultDetail(
+        val isAnswered: Boolean,
+        val durationSeconds: Int,
+        val statusText: String,
+        val noteText: String
+    )
+
+    private fun queryLatestCallLog(phone: String, callStartTimeMs: Long): CallResultDetail? {
+        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
+            return null
+        }
+
+        val cleanTargetPhone = phone.replace(Regex("[^0-9]"), "")
+        if (cleanTargetPhone.isBlank()) return null
+
+        val uri = CallLog.Calls.CONTENT_URI
+        val selection = "${CallLog.Calls.DATE} >= ?"
+        val selectionArgs = arrayOf((callStartTimeMs - 10000).toString())
+        val sortOrder = "${CallLog.Calls.DATE} DESC"
+
+        try {
+            context.contentResolver.query(uri, null, selection, selectionArgs, sortOrder)?.use { cursor ->
+                val numberIdx = cursor.getColumnIndex(CallLog.Calls.NUMBER)
+                val durationIdx = cursor.getColumnIndex(CallLog.Calls.DURATION)
+                val typeIdx = cursor.getColumnIndex(CallLog.Calls.TYPE)
+                val causeIdx = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    cursor.getColumnIndex("disconnect_cause")
+                } else -1
+
+                while (cursor.moveToNext()) {
+                    val number = if (numberIdx >= 0) cursor.getString(numberIdx) ?: "" else ""
+                    val cleanNumber = number.replace(Regex("[^0-9]"), "")
+
+                    val isMatch = cleanNumber == cleanTargetPhone ||
+                            (cleanTargetPhone.length >= 8 && cleanNumber.endsWith(cleanTargetPhone.takeLast(8))) ||
+                            (cleanNumber.length >= 8 && cleanTargetPhone.endsWith(cleanNumber.takeLast(8)))
+
+                    if (isMatch) {
+                        val duration = if (durationIdx >= 0) cursor.getInt(durationIdx) else 0
+                        val type = if (typeIdx >= 0) cursor.getInt(typeIdx) else 0
+                        val cause = if (causeIdx >= 0) cursor.getInt(causeIdx) else -1
+
+                        if (duration > 0) {
+                            return CallResultDetail(
+                                isAnswered = true,
+                                durationSeconds = duration,
+                                statusText = "COMPLETED",
+                                noteText = "Đã nghe máy (${duration}s)"
+                            )
+                        } else {
+                            val (statusText, noteText) = when {
+                                cause == 7 || cause == 1 -> "NO_NUMBER" to "Số không tồn tại / Không có thực"
+                                cause == 4 -> "BUSY" to "Máy bận"
+                                cause == 5 -> "REJECTED" to "Cuộc gọi bị từ chối"
+                                cause == 8 || cause == 11 -> "UNREACHABLE" to "Thuê bao / Không liên lạc được"
+                                type == CallLog.Calls.BLOCKED_TYPE -> "BLOCKED" to "Cuộc gọi bị chặn"
+                                else -> "NO_ANSWER" to "Không nghe máy (0s)"
+                            }
+
+                            return CallResultDetail(
+                                isAnswered = false,
+                                durationSeconds = 0,
+                                statusText = statusText,
+                                noteText = noteText
+                            )
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+
 
     private suspend fun performDelay(seconds: Int) {
         _progressState.update {

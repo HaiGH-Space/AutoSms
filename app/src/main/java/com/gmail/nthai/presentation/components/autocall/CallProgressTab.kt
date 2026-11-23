@@ -46,16 +46,31 @@ fun CallProgressTab(
     )
 
     val logs = callLogs.map { log ->
+        val logStatus = when (log.status) {
+            "COMPLETED", "SUCCESS", "CONNECTED", "Đã nghe máy" -> LogStatus.SENT_SUCCESS
+            "DIALING" -> LogStatus.PENDING
+            else -> LogStatus.FAILED
+        }
+        val displayMessage = when {
+            log.callDurationSeconds > 0 -> "Đã nghe máy (${log.callDurationSeconds}s)"
+            !log.errorMessage.isNullOrBlank() -> log.errorMessage
+            log.status == "NO_NUMBER" -> "Số không tồn tại / Không có thực"
+            log.status == "BUSY" -> "Máy bận"
+            log.status == "REJECTED" -> "Cuộc gọi bị từ chối"
+            log.status == "UNREACHABLE" -> "Thuê bao / Không liên lạc được"
+            log.status == "NO_ANSWER" -> "Không nghe máy (0s)"
+            else -> "Cuộc gọi tự động"
+        }
         LogRecord(
             id = log.id,
             customerId = log.customerId,
             customerName = log.customerName,
             phone = log.phone,
-            messageContent = if (log.callDurationSeconds > 0) "Cuộc gọi (${log.callDurationSeconds}s)" else "Cuộc gọi tự động",
+            messageContent = displayMessage,
             simSlot = selectedSimSlot,
             timestamp = log.timestamp,
-            status = if (log.status == "SUCCESS" || log.status == "CONNECTED") LogStatus.SENT_SUCCESS else LogStatus.FAILED,
-            errorMessage = log.errorMessage
+            status = logStatus,
+            errorMessage = if (logStatus == LogStatus.FAILED) (log.errorMessage ?: displayMessage) else null
         )
     }
 
