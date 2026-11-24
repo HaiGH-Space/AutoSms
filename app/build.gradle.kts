@@ -205,5 +205,18 @@ tasks.register("syncUpdateJson") {
         val outputJson = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(jsonMap))
         updateJsonFile.writeText(outputJson + "\n", Charsets.UTF_8)
         logger.lifecycle("✅ Synced update.json channel [$channelKey] with versionName=$targetVersionName, versionCode=$targetVersionCode")
+
+        // Tương thích ngược với các phiên bản app cũ (như v0.2.0) chỉ đọc root JSON:
+        // Luôn đồng bộ các trường ở root theo kênh "release" chính thức
+        @Suppress("UNCHECKED_CAST")
+        val rootReleaseObj = jsonMap["release"] as? Map<String, Any?>
+        if (rootReleaseObj != null) {
+            rootReleaseObj.forEach { (key, value) ->
+                jsonMap[key] = value
+            }
+            val legacyCompatibleJson = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(jsonMap))
+            updateJsonFile.writeText(legacyCompatibleJson + "\n", Charsets.UTF_8)
+            logger.lifecycle("✅ Synced root fields with official release for legacy app compatibility")
+        }
     }
 }
