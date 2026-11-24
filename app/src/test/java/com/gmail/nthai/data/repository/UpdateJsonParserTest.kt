@@ -1,22 +1,11 @@
 package com.gmail.nthai.data.repository
 
-import android.content.Context
 import com.gmail.nthai.domain.model.ReleaseType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
-import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
 
-class UpdateRepositoryImplTest {
-
-    private lateinit var repository: UpdateRepositoryImpl
-
-    @Before
-    fun setUp() {
-        val mockContext = mock(Context::class.java)
-        repository = UpdateRepositoryImpl(mockContext)
-    }
+class UpdateJsonParserTest {
 
     @Test
     fun parseUpdateInfoFromJson_returnsRelease_whenIncludePrereleaseIsFalse() {
@@ -37,7 +26,7 @@ class UpdateRepositoryImplTest {
             }
         """.trimIndent()
 
-        val result = repository.parseUpdateInfoFromJson(json, includePrerelease = false)
+        val result = UpdateJsonParser.parseUpdateInfoFromJson(json, includePrerelease = false)
         assertEquals(10, result.versionCode)
         assertEquals("1.0.0", result.versionName)
         assertEquals(ReleaseType.OFFICIAL, result.releaseType)
@@ -62,7 +51,7 @@ class UpdateRepositoryImplTest {
             }
         """.trimIndent()
 
-        val result = repository.parseUpdateInfoFromJson(json, includePrerelease = true)
+        val result = UpdateJsonParser.parseUpdateInfoFromJson(json, includePrerelease = true)
         assertEquals(11, result.versionCode)
         assertEquals("1.1.0-beta", result.versionName)
         assertEquals(ReleaseType.BETA, result.releaseType)
@@ -85,7 +74,7 @@ class UpdateRepositoryImplTest {
             }
         """.trimIndent()
 
-        val result = repository.parseUpdateInfoFromJson(json, includePrerelease = true)
+        val result = UpdateJsonParser.parseUpdateInfoFromJson(json, includePrerelease = true)
         assertEquals(15, result.versionCode)
         assertEquals("1.5.0", result.versionName)
     }
@@ -102,7 +91,7 @@ class UpdateRepositoryImplTest {
             }
         """.trimIndent()
 
-        val result = repository.parseUpdateInfoFromJson(json, includePrerelease = false)
+        val result = UpdateJsonParser.parseUpdateInfoFromJson(json, includePrerelease = false)
         assertEquals(12, result.versionCode)
         assertEquals("0.2.1", result.versionName)
         assertEquals(ReleaseType.ALPHA, result.releaseType)
@@ -121,7 +110,7 @@ class UpdateRepositoryImplTest {
         """.trimIndent()
 
         assertThrows(IllegalArgumentException::class.java) {
-            repository.parseUpdateInfoFromJson(json, includePrerelease = false)
+            UpdateJsonParser.parseUpdateInfoFromJson(json, includePrerelease = false)
         }
     }
 }
