@@ -11,16 +11,18 @@ This repository uses **GitHub Actions** along with **Semantic Release** (`semant
 1. **Trigger**:
    - Pushes / merges to `main` or `master`: Generates an official **Release** (e.g., `v1.0.0`, `v1.1.0`).
    - Pushes / merges to `dev` or `beta`: Generates a **Pre-release** (e.g., `v1.1.0-beta.1`).
-2. **Build & Signing**:
-   - The CI environment configures JDK 21 and Android SDK.
-   - Decodes the release keystore from GitHub Secrets (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`).
-   - Builds the signed Android Release APK via `./gradlew assembleRelease`.
-3. **Semantic Release Execution**:
+2. **Semantic Release Execution**:
    - Scans commits since the previous release tag.
-   - Parses commit messages following the **Conventional Commits** specification to determine the next SemVer bump (Major, Minor, or Patch).
-   - Generates release notes and updates changelog.
+   - Parses commit messages following the **Conventional Commits** specification to determine the next SemVer bump.
+   - Generates release notes.
+   - Calculates the Android `versionCode` dynamically using the formula:
+     `MAJOR * 10000 + MINOR * 1000 + PATCH * 100 + CHANNEL_OFFSET`
+     where Alpha is `1..19`, Beta is `20..89`, and Official release is `90` (e.g., `1.0.1` -> `10190`, `1.0.1-beta.1` -> `10120`, `1.0.1-alpha.1` -> `10101`).
+   - Executes `./gradlew :app:syncUpdateJson -PVERSION_NAME=...` to automatically update `update.json` with the new version code, version name, download URL, and release notes.
+   - Builds and signs the release APK via `./gradlew assembleRelease -PVERSION_NAME=...`.
+   - Commits the updated `update.json` back to the repository (`[skip ci]`).
    - Pushes a new Git Tag.
-   - Publishes a **GitHub Release** (or Pre-release) and attaches the signed release **APK**.
+   - Publishes a **GitHub Release** (or Pre-release) and attaches the signed release **APK** (`AutoSms-v${version}.apk`).
 
 ---
 

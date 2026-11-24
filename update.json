@@ -1,17 +1,17 @@
 {
   "release": {
-    "versionCode": 11,
+    "versionCode": 20090,
     "versionName": "0.2.0",
     "releaseType": "official",
-    "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.2.0/app-release.apk",
+    "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/v0.2.0/AutoSms-v0.2.0.apk",
     "releaseNotes": "[BẢN PHÁT HÀNH CHÍNH THỨC 0.2.0]\n- Phiên bản ổn định chính thức cho mọi người dùng.",
     "forceUpdate": false
   },
   "prerelease": {
-    "versionCode": 12,
-    "versionName": "0.2.1-alpha",
+    "versionCode": 2101,
+    "versionName": "0.2.1-alpha.1",
     "releaseType": "alpha",
-    "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/0.2.1/app-release.apk",
+    "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/v0.2.1-alpha.1/AutoSms-v0.2.1-alpha.1.apk",
     "releaseNotes": "[BẢN THỬ NGHIỆM 0.2.1]\n- Bổ sung tính năng Tự động gọi thoại (Auto Call) với Foreground Service loại phoneCall và theo dõi thời lượng cuộc gọi tự động\n- Tích hợp tính năng Quản lý danh sách đen (Blacklist) tự động chặn số liên lạc xuyên suốt SMS, Auto Call và Zalo\n- Nâng cấp Room Database lên Schema v15 với các migration v12->v13, v13->v14 và v14->v15 an toàn\n- Tái cấu trúc và module hóa giao diện chiến dịch với FeatureCampaignScaffold tuân thủ Design System DESIGN.md",
     "forceUpdate": false
   }

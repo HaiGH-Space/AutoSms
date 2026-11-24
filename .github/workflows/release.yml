@@ -49,11 +49,9 @@ jobs:
           echo "RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-
-      - name: Run Semantic Release
+      - name: Build and Release with Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          npm install --no-save @semantic-release/exec @semantic-release/git
           npx semantic-release
