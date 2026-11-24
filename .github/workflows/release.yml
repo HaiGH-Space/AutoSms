@@ -8,6 +8,10 @@ on:
       - dev
       - beta
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Build & Release
@@ -37,6 +41,9 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --continue
 
       - name: Prepare Keystore from Secret
         if: env.KEYSTORE_BASE64 != ''
