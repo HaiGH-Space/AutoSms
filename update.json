@@ -1,12 +1,12 @@
 {
-    "versionCode": 20090,
+    "versionCode": 11,
     "versionName": "0.2.0",
     "releaseType": "official",
     "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/v0.2.0/AutoSms-v0.2.0.apk",
     "releaseNotes": "[B\u1ea2N PH\u00c1T H\u00c0NH CH\u00cdNH TH\u1ee8C 0.2.0]\n- Phi\u00ean b\u1ea3n \u1ed5n \u0111\u1ecbnh ch\u00ednh th\u1ee9c cho m\u1ecdi ng\u01b0\u1eddi d\u00f9ng.",
     "forceUpdate": false,
     "release": {
-        "versionCode": 20090,
+        "versionCode": 11,
         "versionName": "0.2.0",
         "releaseType": "official",
         "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/v0.2.0/AutoSms-v0.2.0.apk",
