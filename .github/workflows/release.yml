@@ -62,3 +62,30 @@ jobs:
         run: |
           npm install --no-save @semantic-release/exec @semantic-release/git
           npx semantic-release
+
+      - name: Sync update.json to master branch
+        if: github.ref_name != 'master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Stash or preserve local updated update.json
+          cp update.json /tmp/update.json
+          
+          # Fetch and checkout master
+          git fetch origin master:master
+          git checkout master
+          
+          # Compare and copy updated update.json
+          cp /tmp/update.json update.json
+          
+          # Commit and push if changed
+          if ! git diff --quiet update.json; then
+            git add update.json
+            git commit -m "chore(release): sync update.json from ${{ github.ref_name }} [skip ci]"
+            git push origin master
+          else
+            echo "update.json on master is already up to date."
+          fi
