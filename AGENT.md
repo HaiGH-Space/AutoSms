@@ -20,7 +20,8 @@ This repository uses **GitHub Actions** along with **Semantic Release** (`semant
      where Alpha is `1..19`, Beta is `20..89`, and Official release is `90` (e.g., `1.0.1` -> `10190`, `1.0.1-beta.1` -> `10120`, `1.0.1-alpha.1` -> `10101`).
    - Executes `./gradlew :app:syncUpdateJson -PVERSION_NAME=...` to automatically update `update.json` with the new version code, version name, download URL, and release notes.
    - Builds and signs the release APK via `./gradlew assembleRelease -PVERSION_NAME=...`.
-   - Commits the updated `update.json` back to the repository (`[skip ci]`).
+   - Commits the updated `update.json` back to the current branch (`[skip ci]`).
+   - Automatically syncs and commits the updated `update.json` to the `master` branch if running on a pre-release branch (e.g. `dev`, `beta`), ensuring in-app update checks pointing to `master` always receive the newest metadata.
    - Pushes a new Git Tag.
    - Publishes a **GitHub Release** (or Pre-release) and attaches the signed release **APK** (`AutoSms-v${version}.apk`).
 
