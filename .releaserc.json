@@ -47,7 +47,8 @@
         "assets": [
           {
             "path": "app/build/outputs/apk/release/*.apk",
-            "label": "AutoSms-v${nextRelease.version}.apk"
+            "name": "AutoSms-v${nextRelease.version}.apk",
+            "label": "AutoSms v${nextRelease.version}"
           }
         ]
       }
