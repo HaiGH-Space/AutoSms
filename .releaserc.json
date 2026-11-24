@@ -1,0 +1,29 @@
+{
+  "branches": [
+    "main",
+    "master",
+    {
+      "name": "dev",
+      "prerelease": "beta"
+    },
+    {
+      "name": "beta",
+      "prerelease": true
+    }
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "app/build/outputs/apk/release/*.apk",
+            "label": "AutoSms-v${nextRelease.version}.apk"
+          }
+        ]
+      }
+    ]
+  ]
+}
