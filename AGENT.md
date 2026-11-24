@@ -40,12 +40,12 @@ For Semantic Release to calculate the next version correctly, **all commits must
 
 ### Supported Types & Version Impacts:
 
-| Type | Meaning | SemVer Impact | Example |
+| Type | Meaning | SemVer Impact (v0.x) | Example |
 | :--- | :--- | :--- | :--- |
-| **`fix`** | Bug fix | **PATCH** (`1.0.0` -> `1.0.1`) | `fix(sms): handle null pointer when parsing otp` |
-| **`feat`** | New feature | **MINOR** (`1.0.0` -> `1.1.0`) | `feat(ui): add dark mode toggle` |
-| **`BREAKING CHANGE`** (or `!`) | Breaking API/behavior changes | **MAJOR** (`1.0.0` -> `2.0.0`) | `feat(api)!: migrate to new backend schema` |
-| `perf` | Performance improvement | PATCH (configurable) | `perf(db): optimize sms query speed` |
+| **`fix`** | Bug fix | **PATCH** (`0.2.0` -> `0.2.1`) | `fix(sms): handle null pointer when parsing otp` |
+| **`feat`** | New feature | **PATCH** (`0.2.0` -> `0.2.1`) | `feat(ui): add dark mode toggle` |
+| **`BREAKING CHANGE`** (or `!`) | Breaking API/behavior changes | **MINOR** (`0.2.0` -> `0.3.0`) | `feat(api)!: migrate to new backend schema` |
+| `perf` | Performance improvement | PATCH | `perf(db): optimize sms query speed` |
 | `docs` | Documentation only | No version bump | `docs: update AGENT.md guidelines` |
 | `refactor` | Code restructuring without fixing bugs or adding features | No version bump | `refactor: simplify permission handler` |
 | `test` | Adding or updating tests | No version bump | `test: add unit test for SmsReceiver` |
