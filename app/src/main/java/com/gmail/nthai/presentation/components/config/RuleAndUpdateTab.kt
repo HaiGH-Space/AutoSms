@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import com.gmail.nthai.presentation.components.common.AutoSmsCardContainer
 import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
@@ -65,6 +66,7 @@ fun RuleAndUpdateTab(
     val context = LocalContext.current
     val rule by viewModel.sendingRule.collectAsStateWithLifecycle()
     val updateState by updateViewModel.updateState.collectAsStateWithLifecycle()
+    val includePrerelease by updateViewModel.includePrerelease.collectAsStateWithLifecycle()
 
     when (val state = updateState) {
         is UpdateState.UpdateAvailable -> {
@@ -433,6 +435,42 @@ fun RuleAndUpdateTab(
                                 text = "Build code: ${updateViewModel.getCurrentVersionCode()}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text(
+                                    text = "Nhận bản cập nhật thử nghiệm",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = if (includePrerelease) {
+                                        "Đang bật: Nhận cả bản Pre-release / Beta / Alpha"
+                                    } else {
+                                        "Đang tắt: Chỉ nhận bản phát hành chính thức (Release)"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = includePrerelease,
+                                onCheckedChange = { isChecked ->
+                                    updateViewModel.setIncludePrerelease(isChecked)
+                                }
                             )
                         }
                     }

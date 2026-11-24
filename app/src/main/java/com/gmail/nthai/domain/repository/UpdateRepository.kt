@@ -6,7 +6,13 @@ import java.io.File
 interface UpdateRepository {
     fun getUpdateUrl(): String
     suspend fun saveUpdateUrl(url: String)
-    suspend fun checkForUpdate(isManualCheck: Boolean = false, urlOverride: String? = null): Result<UpdateInfo>
+    fun isIncludePrerelease(): Boolean
+    suspend fun setIncludePrerelease(enabled: Boolean)
+    suspend fun checkForUpdate(
+        isManualCheck: Boolean = false,
+        urlOverride: String? = null,
+        includePrerelease: Boolean = isIncludePrerelease()
+    ): Result<UpdateInfo>
     suspend fun downloadApk(
         downloadUrl: String,
         outputFile: File,
