@@ -29,6 +29,9 @@ class UpdateViewModel @Inject constructor(
     private val _updateUrl = MutableStateFlow(updateRepository.getUpdateUrl())
     val updateUrl: StateFlow<String> = _updateUrl.asStateFlow()
 
+    private val _includePrerelease = MutableStateFlow(updateRepository.isIncludePrerelease())
+    val includePrerelease: StateFlow<Boolean> = _includePrerelease.asStateFlow()
+
     private var downloadJob: Job? = null
 
     init {
@@ -41,6 +44,13 @@ class UpdateViewModel @Inject constructor(
     fun getCurrentVersionName(): String = updateRepository.getCurrentVersionName()
 
     fun getCurrentVersionCode(): Int = updateRepository.getCurrentVersionCode()
+
+    fun setIncludePrerelease(enabled: Boolean) {
+        viewModelScope.launch {
+            updateRepository.setIncludePrerelease(enabled)
+            _includePrerelease.value = enabled
+        }
+    }
 
     fun saveUpdateUrl(url: String) {
         viewModelScope.launch {
@@ -55,7 +65,11 @@ class UpdateViewModel @Inject constructor(
                 _updateState.value = UpdateState.Checking
             }
 
-            val result = updateRepository.checkForUpdate(isManualCheck, urlOverride)
+            val result = updateRepository.checkForUpdate(
+                isManualCheck = isManualCheck,
+                urlOverride = urlOverride,
+                includePrerelease = _includePrerelease.value
+            )
             result.onSuccess { info ->
                 val currentCode = updateRepository.getCurrentVersionCode()
                 if (info.versionCode > currentCode) {
