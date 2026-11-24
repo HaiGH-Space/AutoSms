@@ -8,10 +8,10 @@
         "forceUpdate": false
     },
     "prerelease": {
-        "versionCode": 2120,
-        "versionName": "0.2.1-beta.1",
+        "versionCode": 2121,
+        "versionName": "0.2.1-beta.2",
         "releaseType": "beta",
-        "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/v0.2.1-beta.1/AutoSms-v0.2.1-beta.1.apk",
+        "downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/v0.2.1-beta.2/AutoSms-v0.2.1-beta.2.apk",
         "releaseNotes": "[B\u1ea2N TH\u1eec NGHI\u1ec6M 0.2.1]\n- B\u1ed5 sung t\u00ednh n\u0103ng T\u1ef1 \u0111\u1ed9ng g\u1ecdi tho\u1ea1i (Auto Call) v\u1edbi Foreground Service lo\u1ea1i phoneCall v\u00e0 theo d\u00f5i th\u1eddi l\u01b0\u1ee3ng cu\u1ed9c g\u1ecdi t\u1ef1 \u0111\u1ed9ng\n- T\u00edch h\u1ee3p t\u00ednh n\u0103ng Qu\u1ea3n l\u00fd danh s\u00e1ch \u0111en (Blacklist) t\u1ef1 \u0111\u1ed9ng ch\u1eb7n s\u1ed1 li\u00ean l\u1ea1c xuy\u00ean su\u1ed1t SMS, Auto Call v\u00e0 Zalo\n- N\u00e2ng c\u1ea5p Room Database l\u00ean Schema v15 v\u1edbi c\u00e1c migration v12->v13, v13->v14 v\u00e0 v14->v15 an to\u00e0n\n- T\u00e1i c\u1ea5u tr\u00fac v\u00e0 module h\u00f3a giao di\u1ec7n chi\u1ebfn d\u1ecbch v\u1edbi FeatureCampaignScaffold tu\u00e2n th\u1ee7 Design System DESIGN.md",
         "forceUpdate": false
     }
