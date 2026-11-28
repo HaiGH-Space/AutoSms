@@ -77,7 +77,7 @@ fun <T> SelectionOptionCard(
                 Text(
                     text = option.title,
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                     color = Color(0xFF171717)
                 )
                 if (!option.description.isNullOrBlank()) {
@@ -113,7 +113,7 @@ fun <T> GenericSelectionDialog(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF171717)
             )
         },

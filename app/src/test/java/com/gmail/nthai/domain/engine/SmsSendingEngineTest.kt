@@ -17,6 +17,7 @@ import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
 import com.gmail.nthai.domain.repository.TemplateRepository
+import com.gmail.nthai.domain.repository.FakeBlacklistRepository
 import com.gmail.nthai.domain.usecase.CalculateNextDelayUseCase
 import com.gmail.nthai.domain.usecase.ParseSpintaxUseCase
 import com.gmail.nthai.domain.usecase.ProcessSimSendingUseCase
@@ -40,11 +41,13 @@ class SmsSendingEngineTest {
     private val fakeTemplateRepository = FakeTemplateRepository()
     private val fakeSimConfigRepository = FakeSimConfigRepository()
     private val fakeSendingLogRepository = FakeSendingLogRepository()
+    private val fakeBlacklistRepository = FakeBlacklistRepository()
 
     private val processSimSendingUseCase = ProcessSimSendingUseCase(
         customerRepository = fakeCustomerRepository,
         simConfigRepository = fakeSimConfigRepository,
         sendingLogRepository = fakeSendingLogRepository,
+        blacklistRepository = fakeBlacklistRepository,
         parseSpintaxUseCase = ParseSpintaxUseCase(),
         validateConstraintUseCase = ValidateSendingConstraintUseCase(),
         calculateNextDelayUseCase = CalculateNextDelayUseCase(),

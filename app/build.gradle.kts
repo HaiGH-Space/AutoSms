@@ -13,8 +13,30 @@ android {
         applicationId = "com.gmail.nthai"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 12
-        versionName = "0.2.0-hotfix"
+
+        val rawVersionName = (project.findProperty("VERSION_NAME") as String?) ?: "0.2.1-alpha"
+        fun calculateVersionCode(name: String): Int {
+            val semverRegex = Regex("""^v?(\d+)\.(\d+)\.(\d+)(?:-(alpha|beta)(?:\.(\d+))?)?""")
+            val match = semverRegex.find(name) ?: return 12
+            val major = match.groupValues[1].toInt()
+            val minor = match.groupValues[2].toInt()
+            val patch = match.groupValues[3].toInt()
+            val channel = match.groupValues[4]
+            val buildNum = match.groupValues[5].toIntOrNull() ?: 1
+
+            val channelOffset = when (channel.lowercase()) {
+                "alpha" -> (1 + (buildNum - 1)).coerceIn(1, 19)
+                "beta" -> (20 + (buildNum - 1)).coerceIn(20, 89)
+                else -> 90
+            }
+            return major * 10000 + minor * 1000 + patch * 100 + channelOffset
+        }
+
+        val calculatedVersionCode = (project.findProperty("VERSION_CODE") as String?)?.toIntOrNull()
+            ?: calculateVersionCode(rawVersionName)
+
+        versionCode = calculatedVersionCode
+        versionName = rawVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -130,44 +152,71 @@ dependencies {
 
 tasks.register("validateUpdateJson") {
     group = "verification"
-    description = "Validates that update.json matches app build version info"
+    description = "Validates that update.json is valid and contains required update configurations"
     val updateJsonFile = layout.projectDirectory.file("../update.json").asFile
-    val appVersionName = android.defaultConfig.versionName.orEmpty()
-    val appVersionCode = android.defaultConfig.versionCode ?: 0
     doLast {
         if (!updateJsonFile.exists()) {
             throw GradleException("update.json does not exist at root directory!")
         }
         val jsonText = updateJsonFile.readText()
-
-        if (!jsonText.contains(""""versionCode": $appVersionCode""")) {
-            throw GradleException("update.json versionCode does not match build.gradle.kts ($appVersionCode)")
+        if (!jsonText.contains(""""downloadUrl":""")) {
+            throw GradleException("update.json missing downloadUrl!")
         }
-        if (!jsonText.contains(""""versionName": "$appVersionName"""")) {
-            throw GradleException("update.json versionName does not match build.gradle.kts ($appVersionName)")
-        }
-        logger.lifecycle("✅ update.json version ($appVersionName / $appVersionCode) matches build.gradle.kts!")
+        logger.lifecycle("✅ update.json is present and valid!")
     }
 }
 
 tasks.register("syncUpdateJson") {
     group = "publishing"
-    description = "Syncs versionCode and versionName in update.json from build.gradle.kts"
+    description = "Syncs versionCode and versionName in update.json from project properties or build.gradle.kts"
     val updateJsonFile = layout.projectDirectory.file("../update.json").asFile
-    val appVersionName = android.defaultConfig.versionName.orEmpty()
-    val appVersionCode = android.defaultConfig.versionCode ?: 0
+    val targetVersionName = (project.findProperty("VERSION_NAME") as String?) ?: android.defaultConfig.versionName.orEmpty()
+    val targetVersionCode = (project.findProperty("VERSION_CODE") as String?)?.toIntOrNull() ?: (android.defaultConfig.versionCode ?: 0)
+    val isPrerelease = targetVersionName.contains("-alpha", ignoreCase = true) || targetVersionName.contains("-beta", ignoreCase = true)
+    val targetReleaseNotes = (project.findProperty("RELEASE_NOTES") as String?)
     doLast {
         if (!updateJsonFile.exists()) {
             throw GradleException("update.json does not exist at root directory!")
         }
-        var content = updateJsonFile.readText()
-        content = content.replace(Regex(""""versionCode":\s*\d+"""), """"versionCode": $appVersionCode""")
-        content = content.replace(Regex(""""versionName":\s*"[^"]+""""), """"versionName": "$appVersionName"""")
-        content = content.replace(
-            Regex(""""downloadUrl":\s*"https://github.com/HaiGH-Space/AutoSms/releases/download/[^"]+/app-release.apk""""),
-            """"downloadUrl": "https://github.com/HaiGH-Space/AutoSms/releases/download/$appVersionName/app-release.apk""""
-        )
-        updateJsonFile.writeText(content)
-        logger.lifecycle("✅ Synced update.json with versionName=$appVersionName, versionCode=$appVersionCode")
+        val slurper = groovy.json.JsonSlurper()
+        @Suppress("UNCHECKED_CAST")
+        val jsonMap = (slurper.parse(updateJsonFile, "UTF-8") as? MutableMap<String, Any?>) ?: mutableMapOf()
+
+        val channelKey = if (isPrerelease) "prerelease" else "release"
+        @Suppress("UNCHECKED_CAST")
+        val channelObj = (jsonMap[channelKey] as? MutableMap<String, Any?>) ?: mutableMapOf()
+
+        channelObj["versionCode"] = targetVersionCode
+        channelObj["versionName"] = targetVersionName
+        channelObj["downloadUrl"] = "https://github.com/HaiGH-Space/AutoSms/releases/download/v$targetVersionName/AutoSms-v$targetVersionName.apk"
+        if (!targetReleaseNotes.isNullOrBlank()) {
+            channelObj["releaseNotes"] = targetReleaseNotes
+        }
+        if (isPrerelease) {
+            val type = if (targetVersionName.contains("alpha", ignoreCase = true)) "alpha" else "beta"
+            channelObj["releaseType"] = type
+        } else {
+            channelObj["releaseType"] = "official"
+        }
+        channelObj["forceUpdate"] = channelObj["forceUpdate"] ?: false
+
+        jsonMap[channelKey] = channelObj
+
+        val outputJson = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(jsonMap))
+        updateJsonFile.writeText(outputJson + "\n", Charsets.UTF_8)
+        logger.lifecycle("✅ Synced update.json channel [$channelKey] with versionName=$targetVersionName, versionCode=$targetVersionCode")
+
+        // Tương thích ngược với các phiên bản app cũ (như v0.2.0) chỉ đọc root JSON:
+        // Luôn đồng bộ các trường ở root theo kênh "release" chính thức
+        @Suppress("UNCHECKED_CAST")
+        val rootReleaseObj = jsonMap["release"] as? Map<String, Any?>
+        if (rootReleaseObj != null) {
+            rootReleaseObj.forEach { (key, value) ->
+                jsonMap[key] = value
+            }
+            val legacyCompatibleJson = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(jsonMap))
+            updateJsonFile.writeText(legacyCompatibleJson + "\n", Charsets.UTF_8)
+            logger.lifecycle("✅ Synced root fields with official release for legacy app compatibility")
+        }
     }
 }

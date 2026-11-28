@@ -12,6 +12,7 @@ import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.SendingRule
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.model.SmsTemplate
+import com.gmail.nthai.domain.repository.BlacklistRepository
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
@@ -26,6 +27,7 @@ class ProcessSimSendingUseCase @Inject constructor(
     private val customerRepository: CustomerRepository,
     private val simConfigRepository: SimConfigRepository,
     private val sendingLogRepository: SendingLogRepository,
+    private val blacklistRepository: BlacklistRepository,
     private val parseSpintaxUseCase: ParseSpintaxUseCase,
     private val validateConstraintUseCase: ValidateSendingConstraintUseCase,
     private val calculateNextDelayUseCase: CalculateNextDelayUseCase,
@@ -193,6 +195,47 @@ class ProcessSimSendingUseCase @Inject constructor(
                 if (previousLog?.status == LogStatus.SENT_SUCCESS ||
                     (previousLog?.status == LogStatus.PENDING && previousLog.timestamp >= sessionStartTime)
                 ) {
+                    continue
+                }
+
+                if (blacklistRepository.isPhoneBlacklisted(recipient)) {
+                    val messageContent = parseSpintaxUseCase(template.content, customer.copy(phone = recipient))
+                    val displayName = customer.customFields.values.firstOrNull { it.isNotBlank() } ?: recipient
+                    val errorMsg = "Số điện thoại nằm trong Danh sách đen (Blacklist)"
+                    val logRecord = LogRecord(
+                        id = previousLog?.takeIf { it.status == LogStatus.FAILED }?.id ?: 0,
+                        customerId = customer.id,
+                        customerName = displayName,
+                        phone = recipient,
+                        messageContent = messageContent,
+                        simSlot = simSlot,
+                        timestamp = System.currentTimeMillis(),
+                        status = LogStatus.FAILED,
+                        errorMessage = errorMsg
+                    )
+                    val logId = if (logRecord.id != 0L) {
+                        sendingLogRepository.updateLog(logRecord)
+                        logRecord.id
+                    } else {
+                        sendingLogRepository.insertLog(logRecord)
+                    }
+                    onReportSmsFailure(simSlot, logId)
+
+                    val allCustomerLogs = sendingLogRepository.getLogsForCustomer(customer.id)
+                    val latestLogsByPhone = recipients.mapNotNull { phone ->
+                        allCustomerLogs.filter { it.phone == phone }.maxByOrNull { it.timestamp }
+                    }
+                    val finishedLogs =
+                        latestLogsByPhone.filter { it.status == LogStatus.SENT_SUCCESS || it.status == LogStatus.FAILED }
+
+                    if (finishedLogs.size >= recipients.size) {
+                        val hasFailed = finishedLogs.any { it.status == LogStatus.FAILED }
+                        val newStatus = if (hasFailed) CustomerStatus.FAILED else CustomerStatus.SENT
+                        customerRepository.updateCustomerStatus(customer.id, newStatus)
+                    }
+
+                    sent++
+                    onProgressUpdate(sent, total, displayName, null)
                     continue
                 }
 

@@ -91,7 +91,7 @@ fun ZaloMessageTemplateCard(
                         focusedContainerColor = Color(0xFFFFFFFF),
                         unfocusedContainerColor = Color(0xFFFFFFFF)
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(9999.dp),
                     modifier = Modifier
                         .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                         .fillMaxWidth()
@@ -108,7 +108,7 @@ fun ZaloMessageTemplateCard(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
                                             text = templateItem.title,
-                                            fontWeight = FontWeight.Bold,
+                                            fontWeight = FontWeight.SemiBold,
                                             color = Color(0xFF171717)
                                         )
                                         if (templateItem.isSelected) {
@@ -117,7 +117,7 @@ fun ZaloMessageTemplateCard(
                                                 text = "(Mặc định SMS)",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = Color(0xFF0070F3),
-                                                fontWeight = FontWeight.Bold
+                                                fontWeight = FontWeight.SemiBold
                                             )
                                         }
                                     }
@@ -151,7 +151,7 @@ fun ZaloMessageTemplateCard(
                 .fillMaxWidth()
                 .height(130.dp),
             placeholder = { Text("Nhập nội dung tin nhắn Zalo...") },
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFF171717),
                 unfocusedBorderColor = Color(0xFFEBEBEB),

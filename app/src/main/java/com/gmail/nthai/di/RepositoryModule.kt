@@ -1,13 +1,16 @@
 package com.gmail.nthai.di
 
+import com.gmail.nthai.data.local.dao.BlacklistDao
 import com.gmail.nthai.data.local.dao.CustomerDao
 import com.gmail.nthai.data.local.dao.SendingLogDao
 import com.gmail.nthai.data.local.dao.SimConfigDao
 import com.gmail.nthai.data.local.dao.SmsTemplateDao
+import com.gmail.nthai.data.repository.BlacklistRepositoryImpl
 import com.gmail.nthai.data.repository.CustomerRepositoryImpl
 import com.gmail.nthai.data.repository.SendingLogRepositoryImpl
 import com.gmail.nthai.data.repository.SimConfigRepositoryImpl
 import com.gmail.nthai.data.repository.TemplateRepositoryImpl
+import com.gmail.nthai.domain.repository.BlacklistRepository
 import com.gmail.nthai.domain.repository.CustomerRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
@@ -44,5 +47,11 @@ object RepositoryModule {
     @Singleton
     fun provideSendingLogRepository(sendingLogDao: SendingLogDao): SendingLogRepository {
         return SendingLogRepositoryImpl(sendingLogDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlacklistRepository(blacklistDao: BlacklistDao): BlacklistRepository {
+        return BlacklistRepositoryImpl(blacklistDao)
     }
 }

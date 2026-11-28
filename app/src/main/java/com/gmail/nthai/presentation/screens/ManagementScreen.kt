@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Assessment
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SimCard
 import androidx.compose.material.icons.outlined.Sms
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.gmail.nthai.presentation.components.config.BlacklistTab
 import com.gmail.nthai.presentation.components.config.RuleAndUpdateTab
 import com.gmail.nthai.presentation.components.config.SimManagementTab
 import com.gmail.nthai.presentation.viewmodel.ConfigViewModel
@@ -45,15 +48,17 @@ import com.gmail.nthai.presentation.viewmodel.UpdateViewModel
 fun ManagementScreen(
     initialTab: Int = 0,
     onNavigateToAutoZalo: () -> Unit = {},
+    onNavigateToAutoCall: () -> Unit = {},
     configViewModel: ConfigViewModel = hiltViewModel(),
     updateViewModel: UpdateViewModel = hiltViewModel()
 ) {
-    var selectedTab by remember(initialTab) { mutableIntStateOf(initialTab.coerceIn(0, 3)) }
+    var selectedTab by rememberSaveable(initialTab) { mutableIntStateOf(initialTab.coerceIn(0, 4)) }
     val tabs = listOf(
         Triple("Mẫu tin", "Mẫu tin nhắn & Spintax", Icons.Outlined.Sms),
         Triple("Báo cáo", "Báo cáo gửi & Xuất Excel", Icons.Outlined.Assessment),
         Triple("Hạn mức SIM", "Quản lý 2 khe SIM", Icons.Outlined.SimCard),
-        Triple("Quy tắc & Update", "Quy định an toàn & Cập nhật", Icons.Outlined.Settings)
+        Triple("Quy tắc & Update", "Quy định an toàn & Cập nhật", Icons.Outlined.Settings),
+        Triple("Danh sách đen", "Danh sách đen & Chặn số", Icons.Outlined.Block)
     )
 
     Scaffold(
@@ -121,6 +126,7 @@ fun ManagementScreen(
                     updateViewModel = updateViewModel,
                     showTopBar = false
                 )
+                4 -> BlacklistTab()
             }
         }
     }

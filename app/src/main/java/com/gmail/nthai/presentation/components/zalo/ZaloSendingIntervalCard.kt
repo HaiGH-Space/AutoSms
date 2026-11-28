@@ -50,7 +50,7 @@ fun ZaloSendingIntervalCard(
             Text(
                 text = "Giãn cách & Chống khóa Zalo",
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF171717)
             )
         }

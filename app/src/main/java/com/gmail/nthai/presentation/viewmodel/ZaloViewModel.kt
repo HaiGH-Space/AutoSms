@@ -11,6 +11,7 @@ import com.gmail.nthai.domain.model.LogRecord
 import com.gmail.nthai.domain.model.PendingImportState
 import com.gmail.nthai.domain.model.SmsTemplate
 import com.gmail.nthai.domain.model.ZaloRecipient
+import com.gmail.nthai.domain.repository.BlacklistRepository
 import com.gmail.nthai.domain.repository.TemplateRepository
 import com.gmail.nthai.domain.repository.ZaloRepository
 import com.gmail.nthai.domain.usecase.ImportCustomerExcelUseCase
@@ -34,8 +35,16 @@ class ZaloViewModel @Inject constructor(
     private val zaloRepository: ZaloRepository,
     private val zaloSendingEngine: ZaloSendingEngine,
     private val templateRepository: TemplateRepository,
+    private val blacklistRepository: BlacklistRepository,
     private val importCustomerExcelUseCase: ImportCustomerExcelUseCase
 ) : ViewModel() {
+
+    val blacklistedPhones: StateFlow<Set<String>> = blacklistRepository.getBlacklistedPhonesFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptySet()
+        )
 
     val recipients: StateFlow<List<ZaloRecipient>> = zaloRepository.observeRecipients()
         .stateIn(
@@ -128,6 +137,12 @@ class ZaloViewModel @Inject constructor(
     fun deleteRecipient(id: Long) {
         viewModelScope.launch {
             zaloRepository.deleteRecipient(id)
+        }
+    }
+
+    fun addToBlacklist(phone: String, reason: String = "Thêm từ danh sách Zalo") {
+        viewModelScope.launch {
+            blacklistRepository.addToBlacklist(phone, reason)
         }
     }
 

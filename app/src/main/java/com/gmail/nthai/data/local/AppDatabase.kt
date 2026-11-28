@@ -2,12 +2,16 @@ package com.gmail.nthai.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.gmail.nthai.data.local.dao.BlacklistDao
+import com.gmail.nthai.data.local.dao.CallLogDao
 import com.gmail.nthai.data.local.dao.CustomerDao
 import com.gmail.nthai.data.local.dao.SendingLogDao
 import com.gmail.nthai.data.local.dao.SimConfigDao
 import com.gmail.nthai.data.local.dao.SmsTemplateDao
 import com.gmail.nthai.data.local.dao.ZaloRecipientDao
 import com.gmail.nthai.data.local.dao.ZaloSendingLogDao
+import com.gmail.nthai.data.local.entity.BlacklistEntity
+import com.gmail.nthai.data.local.entity.CallLogEntity
 import com.gmail.nthai.data.local.entity.CustomerEntity
 import com.gmail.nthai.data.local.entity.SendingLogEntity
 import com.gmail.nthai.data.local.entity.SendingRuleEntity
@@ -15,6 +19,9 @@ import com.gmail.nthai.data.local.entity.SimConfigEntity
 import com.gmail.nthai.data.local.entity.SmsTemplateEntity
 import com.gmail.nthai.data.local.entity.ZaloRecipientEntity
 import com.gmail.nthai.data.local.entity.ZaloSendingLogEntity
+
+import com.gmail.nthai.data.local.dao.CallRecipientDao
+import com.gmail.nthai.data.local.entity.CallRecipientEntity
 
 @Database(
     entities = [
@@ -24,9 +31,12 @@ import com.gmail.nthai.data.local.entity.ZaloSendingLogEntity
         SendingRuleEntity::class,
         SendingLogEntity::class,
         ZaloRecipientEntity::class,
-        ZaloSendingLogEntity::class
+        ZaloSendingLogEntity::class,
+        BlacklistEntity::class,
+        CallLogEntity::class,
+        CallRecipientEntity::class
     ],
-    version = 12,
+    version = 15,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -36,4 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun sendingLogDao(): SendingLogDao
     abstract fun zaloRecipientDao(): ZaloRecipientDao
     abstract fun zaloSendingLogDao(): ZaloSendingLogDao
+    abstract fun blacklistDao(): BlacklistDao
+    abstract fun callLogDao(): CallLogDao
+    abstract fun callRecipientDao(): CallRecipientDao
 }

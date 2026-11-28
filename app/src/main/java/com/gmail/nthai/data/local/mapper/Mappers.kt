@@ -195,3 +195,54 @@ fun LogRecord.toZaloEntity(): com.gmail.nthai.data.local.entity.ZaloSendingLogEn
         status = status.name,
         errorMessage = errorMessage
     )
+
+// Blacklist Mappers
+fun com.gmail.nthai.data.local.entity.BlacklistEntity.toDomain(): com.gmail.nthai.domain.model.BlacklistItem =
+    com.gmail.nthai.domain.model.BlacklistItem(
+        id = id,
+        phone = phone,
+        rawPhone = rawPhone,
+        reason = reason,
+        createdAt = createdAt
+    )
+
+fun com.gmail.nthai.domain.model.BlacklistItem.toEntity(): com.gmail.nthai.data.local.entity.BlacklistEntity =
+    com.gmail.nthai.data.local.entity.BlacklistEntity(
+        id = id,
+        phone = phone,
+        rawPhone = rawPhone,
+        reason = reason,
+        createdAt = createdAt
+    )
+
+// CallRecipient Mappers
+fun com.gmail.nthai.data.local.entity.CallRecipientEntity.toDomain(): com.gmail.nthai.domain.model.CallRecipient =
+    com.gmail.nthai.domain.model.CallRecipient(
+        id = id,
+        name = name,
+        phone = phone,
+        status = try {
+            LogStatus.valueOf(status)
+        } catch (_: Exception) {
+            LogStatus.PENDING
+        },
+        isSelected = isSelected,
+        callDurationSeconds = callDurationSeconds,
+        note = note,
+        lastCallTime = lastCallTime,
+        customFieldsJson = customFieldsJson
+    )
+
+fun com.gmail.nthai.domain.model.CallRecipient.toEntity(): com.gmail.nthai.data.local.entity.CallRecipientEntity =
+    com.gmail.nthai.data.local.entity.CallRecipientEntity(
+        id = id,
+        name = name,
+        phone = phone,
+        status = status.name,
+        isSelected = isSelected,
+        callDurationSeconds = callDurationSeconds,
+        note = note,
+        lastCallTime = lastCallTime,
+        customFieldsJson = customFieldsJson
+    )
+

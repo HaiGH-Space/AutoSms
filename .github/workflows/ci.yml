@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ master, main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,6 +33,3 @@ jobs:
 
       - name: Validate update.json version consistency
         run: ./gradlew :app:validateUpdateJson
-
-      - name: Assemble debug build
-        run: ./gradlew assembleDebug

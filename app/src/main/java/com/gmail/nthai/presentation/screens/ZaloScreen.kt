@@ -5,57 +5,37 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SecondaryTabRow
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.Text
-import com.gmail.nthai.presentation.components.common.AutoSmsTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.gmail.nthai.presentation.components.ExcelImportDialogs
+import com.gmail.nthai.presentation.components.common.CampaignTabItem
+import com.gmail.nthai.presentation.components.common.FeatureCampaignScaffold
 import com.gmail.nthai.presentation.components.zalo.ZaloConfigTab
 import com.gmail.nthai.presentation.components.zalo.ZaloProgressTab
 import com.gmail.nthai.presentation.components.zalo.ZaloRecipientTab
 import com.gmail.nthai.presentation.viewmodel.ZaloViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ZaloScreen(
     initialTab: Int = 0,
@@ -64,9 +44,10 @@ fun ZaloScreen(
     viewModel: ZaloViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    var selectedTab by remember { mutableIntStateOf(initialTab) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(initialTab) }
 
     val recipients by viewModel.recipients.collectAsState()
+    val blacklistedPhones by viewModel.blacklistedPhones.collectAsState()
     val logs by viewModel.logs.collectAsState()
     val progressState by viewModel.progressState.collectAsState()
     val isAccessibilityEnabled by viewModel.isAccessibilityEnabled.collectAsState()
@@ -121,159 +102,112 @@ fun ZaloScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            Column {
-                AutoSmsTopAppBar(
-                    title = "Tự động gửi Zalo",
-                    navigationIcon = if (showTopBarBackIcon) {
-                        {
-                            IconButton(onClick = onBack) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Quay lại",
-                                    tint = Color(0xFF171717)
-                                )
-                            }
-                        }
-                    } else null
-                )
-                SecondaryTabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = Color(0xFFFFFFFF),
-                    contentColor = Color(0xFF171717),
-                    indicator = {
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.tabIndicatorOffset(selectedTab),
-                            color = Color(0xFF171717)
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, Color(0xFFEBEBEB))
-                ) {
-                    val tabs = listOf(
-                        Pair("Soạn tin & Cấu hình", Icons.Default.Tune),
-                        Pair("Danh sách SĐT", Icons.Default.People),
-                        Pair("Tiến độ gửi", Icons.AutoMirrored.Filled.Send)
+    val tabs = listOf(
+        CampaignTabItem("Soạn tin & Cấu hình", Icons.Default.Tune),
+        CampaignTabItem("Danh sách SĐT", Icons.Default.People),
+        CampaignTabItem("Tiến độ gửi", Icons.AutoMirrored.Filled.Send)
+    )
+
+    FeatureCampaignScaffold(
+        title = "Tự động gửi Zalo",
+        tabs = tabs,
+        selectedTabIndex = selectedTab,
+        onTabSelected = { selectedTab = it },
+        navigationIcon = if (showTopBarBackIcon) {
+            {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Quay lại",
+                        tint = Color(0xFF171717)
                     )
-                    tabs.forEachIndexed { index, tab ->
-                        val selected = selectedTab == index
-                        Tab(
-                            selected = selected,
-                            onClick = { selectedTab = index },
-                            text = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        tab.second,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = if (selected) Color(0xFF171717) else Color(0xFF888888)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = tab.first,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selected) Color(0xFF171717) else Color(
-                                            0xFF888888
-                                        )
-                                    )
-                                }
-                            }
-                        )
-                    }
                 }
             }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(Color(0xFFFAFAFA))
-        ) {
-            when (selectedTab) {
-                0 -> ZaloConfigTab(
-                    isAccessibilityEnabled = isAccessibilityEnabled,
-                    templates = templates,
-                    selectedTemplateId = selectedTemplateId,
-                    onSelectTemplate = { viewModel.selectTemplate(it) },
-                    messageContent = messageContent,
-                    onMessageContentChange = { viewModel.messageContent.value = it },
-                    delayRange = delayRange,
-                    onDelayRangeChange = { viewModel.delayRange.value = it },
-                    autoAddFriend = autoAddFriend,
-                    onAutoAddFriendChange = { viewModel.autoAddFriend.value = it },
-                    sendOnlyIfUnsent = sendOnlyIfUnsent,
-                    onSendOnlyIfUnsentChange = { viewModel.sendOnlyIfUnsent.value = it },
-                    isLowSpecDevice = isLowSpecDevice,
-                    onIsLowSpecDeviceChange = { viewModel.isLowSpecDevice.value = it },
-                    onStartSending = {
-                        if (!isAccessibilityEnabled) {
-                            Toast.makeText(
-                                context,
-                                "Vui lòng cấp quyền Trợ năng Zalo trước khi bắt đầu gửi tin!",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            openAccessibilitySettings()
-                        } else {
-                            viewModel.startCampaign()
-                            Toast.makeText(
-                                context,
-                                "Đã khởi chạy chiến dịch gửi Zalo tự động!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            selectedTab = 2 // Switch to progress tab
-                        }
-                    },
-                    onNextToRecipients = {
-                        selectedTab = 1 // Switch to recipient list tab
-                    },
-                    onImportExcel = {
-                        filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    },
-                    onOpenAccessibilitySettings = openAccessibilitySettings
-                )
+        } else null
+    ) { currentTab ->
+        when (currentTab) {
+            0 -> ZaloConfigTab(
+                isAccessibilityEnabled = isAccessibilityEnabled,
+                templates = templates,
+                selectedTemplateId = selectedTemplateId,
+                onSelectTemplate = { viewModel.selectTemplate(it) },
+                messageContent = messageContent,
+                onMessageContentChange = { viewModel.messageContent.value = it },
+                delayRange = delayRange,
+                onDelayRangeChange = { viewModel.delayRange.value = it },
+                autoAddFriend = autoAddFriend,
+                onAutoAddFriendChange = { viewModel.autoAddFriend.value = it },
+                sendOnlyIfUnsent = sendOnlyIfUnsent,
+                onSendOnlyIfUnsentChange = { viewModel.sendOnlyIfUnsent.value = it },
+                isLowSpecDevice = isLowSpecDevice,
+                onIsLowSpecDeviceChange = { viewModel.isLowSpecDevice.value = it },
+                onStartSending = {
+                    if (!isAccessibilityEnabled) {
+                        Toast.makeText(
+                            context,
+                            "Vui lòng cấp quyền Trợ năng Zalo trước khi bắt đầu gửi tin!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        openAccessibilitySettings()
+                    } else {
+                        viewModel.startCampaign()
+                        Toast.makeText(
+                            context,
+                            "Đã khởi chạy chiến dịch gửi Zalo tự động!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        selectedTab = 2
+                    }
+                },
+                onNextToRecipients = {
+                    selectedTab = 1
+                },
+                onImportExcel = {
+                    filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                },
+                onOpenAccessibilitySettings = openAccessibilitySettings
+            )
 
-                1 -> ZaloRecipientTab(
-                    isAccessibilityEnabled = isAccessibilityEnabled,
-                    recipients = recipients,
-                    onAddRecipient = { name, phone -> viewModel.addRecipient(name, phone) },
-                    onDeleteRecipient = { id -> viewModel.deleteRecipient(id) },
-                    onRetryRecipient = { id -> viewModel.resetRecipientStatus(id) },
-                    onImportExcel = {
-                        filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                    },
-                    onStartSending = {
-                        if (!isAccessibilityEnabled) {
-                            Toast.makeText(
-                                context,
-                                "Vui lòng cấp quyền Trợ năng Zalo trước khi bắt đầu gửi tin!",
-                                Toast.LENGTH_LONG
-                            ).show()
-                            openAccessibilitySettings()
-                        } else {
-                            viewModel.startCampaign()
-                            Toast.makeText(
-                                context,
-                                "Đã khởi chạy chiến dịch gửi Zalo tự động!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            selectedTab = 2 // Switch to progress tab
-                        }
-                    },
-                    onOpenAccessibilitySettings = openAccessibilitySettings
-                )
+            1 -> ZaloRecipientTab(
+                isAccessibilityEnabled = isAccessibilityEnabled,
+                recipients = recipients,
+                blacklistedPhones = blacklistedPhones,
+                onAddRecipient = { name, phone -> viewModel.addRecipient(name, phone) },
+                onDeleteRecipient = { id -> viewModel.deleteRecipient(id) },
+                onAddToBlacklist = { phone -> viewModel.addToBlacklist(phone) },
+                onRetryRecipient = { id -> viewModel.resetRecipientStatus(id) },
+                onImportExcel = {
+                    filePickerLauncher.launch("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                },
+                onStartSending = {
+                    if (!isAccessibilityEnabled) {
+                        Toast.makeText(
+                            context,
+                            "Vui lòng cấp quyền Trợ năng Zalo trước khi bắt đầu gửi tin!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        openAccessibilitySettings()
+                    } else {
+                        viewModel.startCampaign()
+                        Toast.makeText(
+                            context,
+                            "Đã khởi chạy chiến dịch gửi Zalo tự động!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        selectedTab = 2
+                    }
+                },
+                onOpenAccessibilitySettings = openAccessibilitySettings
+            )
 
-                2 -> ZaloProgressTab(
-                    progressState = progressState,
-                    logs = logs,
-                    onPauseCampaign = { viewModel.pauseCampaign() },
-                    onResumeCampaign = { viewModel.resumeCampaign() },
-                    onStopCampaign = { viewModel.stopCampaign() },
-                    onClearLogs = { viewModel.clearLogs() }
-                )
-            }
+            2 -> ZaloProgressTab(
+                progressState = progressState,
+                logs = logs,
+                onPauseCampaign = { viewModel.pauseCampaign() },
+                onResumeCampaign = { viewModel.resumeCampaign() },
+                onStopCampaign = { viewModel.stopCampaign() },
+                onClearLogs = { viewModel.clearLogs() }
+            )
         }
     }
 

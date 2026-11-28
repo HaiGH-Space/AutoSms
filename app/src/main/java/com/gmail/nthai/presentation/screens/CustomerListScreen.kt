@@ -48,6 +48,7 @@ import com.gmail.nthai.presentation.components.customer.CustomerSelectionBar
 import com.gmail.nthai.presentation.components.customer.ResetStatusDialog
 import com.gmail.nthai.presentation.components.customer.SimSlotTabs
 import com.gmail.nthai.presentation.viewmodel.CustomerViewModel
+import com.gmail.nthai.util.PhoneNumberUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +61,7 @@ fun CustomerListScreen(
 ) {
     val context = LocalContext.current
     val customers by viewModel.customersState.collectAsStateWithLifecycle()
+    val blacklistedPhones by viewModel.blacklistedPhones.collectAsStateWithLifecycle()
     val searchQuery by viewModel.query.collectAsStateWithLifecycle()
     val selectedFilter by viewModel.filter.collectAsStateWithLifecycle()
     val selectedCarrierFilter by viewModel.carrierFilter.collectAsStateWithLifecycle()
@@ -88,6 +90,19 @@ fun CustomerListScreen(
 
     LaunchedEffect(simSlot) {
         viewModel.selectSimSlot(simSlot)
+    }
+
+    val onToggleSelection = remember(viewModel) {
+        { customer: Customer -> viewModel.toggleCustomerSelection(customer) }
+    }
+    val onDeleteCustomer = remember(viewModel) {
+        { customer: Customer -> viewModel.deleteCustomer(customer) }
+    }
+    val onSelectCustomer = remember {
+        { customer: Customer -> selectedCustomer = customer }
+    }
+    val onAddToBlacklist = remember(viewModel) {
+        { customer: Customer -> viewModel.addToBlacklist(customer.phone, "Thêm từ danh sách khách hàng") }
     }
 
     Scaffold(
@@ -182,7 +197,7 @@ fun CustomerListScreen(
 
             // Select All & Counters Bar
             if (customers.isNotEmpty()) {
-                val allSelected = customers.all { it.isSelected }
+                val allSelected = remember(customers) { customers.all { it.isSelected } }
                 CustomerSelectionBar(
                     allSelected = allSelected,
                     selectedCount = selectedCustomerCount,
@@ -206,15 +221,25 @@ fun CustomerListScreen(
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(customers, key = { it.id }) { customer ->
+                    items(
+                        items = customers,
+                        key = { it.id },
+                        contentType = { "customer_item" }
+                    ) { customer ->
+                        val isBlacklisted = remember(customer.phone, blacklistedPhones) {
+                            val normalized = PhoneNumberUtils.normalizePhoneNumber(customer.phone)
+                            blacklistedPhones.contains(normalized)
+                        }
                         CustomerItemCard(
                             customer = customer,
-                            onToggleSelection = { viewModel.toggleCustomerSelection(customer) },
-                            onDelete = { viewModel.deleteCustomer(customer) },
-                            onClick = { selectedCustomer = customer }
+                            onToggleSelection = remember(customer) { { onToggleSelection(customer) } },
+                            onDelete = remember(customer) { { onDeleteCustomer(customer) } },
+                            onClick = remember(customer) { { onSelectCustomer(customer) } },
+                            isBlacklisted = isBlacklisted,
+                            onAddToBlacklist = remember(customer) { { onAddToBlacklist(customer) } }
                         )
                     }
-                    item {
+                    item(key = "bottom_spacer", contentType = "spacer") {
                         Spacer(modifier = Modifier.height(60.dp))
                     }
                 }
@@ -223,8 +248,12 @@ fun CustomerListScreen(
     }
 
     selectedCustomer?.let { customer ->
+        val normalized = PhoneNumberUtils.normalizePhoneNumber(customer.phone)
+        val isBlacklisted = blacklistedPhones.contains(normalized)
         CustomerDetailDialog(
             customer = customer,
+            isBlacklisted = isBlacklisted,
+            onAddToBlacklist = { viewModel.addToBlacklist(customer.phone, "Thêm từ danh sách khách hàng") },
             onDismiss = { selectedCustomer = null }
         )
     }

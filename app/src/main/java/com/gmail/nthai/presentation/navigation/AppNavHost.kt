@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.gmail.nthai.presentation.screens.AutoCallScreen
 import com.gmail.nthai.presentation.screens.AutoSmsScreen
 import com.gmail.nthai.presentation.screens.CustomerListScreen
 import com.gmail.nthai.presentation.screens.HomeScreen
@@ -33,6 +34,7 @@ fun AppNavHost() {
         Screen.Home,
         Screen.AutoSms,
         Screen.AutoZalo,
+        Screen.AutoCall,
         Screen.Management
     )
 
@@ -55,6 +57,7 @@ fun AppNavHost() {
                         ) == true
 
                         Screen.AutoZalo -> currentRoute == Screen.AutoZalo.route
+                        Screen.AutoCall -> currentRoute == Screen.AutoCall.route
                         Screen.Management -> currentRoute == Screen.Management.route
                         else -> currentRoute == screen.route
                     }
@@ -113,7 +116,8 @@ fun AppNavHost() {
                     onNavigateToCustomers = { navController.navigate(Screen.AutoSms.route) },
                     onNavigateToProgress = { navController.navigate(Screen.Progress.route) },
                     onNavigateToManagement = { _ -> navController.navigate(Screen.Management.route) },
-                    onNavigateToAutoZalo = { navController.navigate(Screen.AutoZalo.route) }
+                    onNavigateToAutoZalo = { navController.navigate(Screen.AutoZalo.route) },
+                    onNavigateToAutoCall = { navController.navigate(Screen.AutoCall.route) }
                 )
             }
             composable(
@@ -136,7 +140,8 @@ fun AppNavHost() {
             }
             composable(Screen.Management.route) {
                 ManagementScreen(
-                    onNavigateToAutoZalo = { navController.navigate(Screen.AutoZalo.route) }
+                    onNavigateToAutoZalo = { navController.navigate(Screen.AutoZalo.route) },
+                    onNavigateToAutoCall = { navController.navigate(Screen.AutoCall.route) }
                 )
             }
 
@@ -146,6 +151,11 @@ fun AppNavHost() {
             composable(Screen.AutoZalo.route) {
                 ZaloScreen(
                     showTopBarBackIcon = false,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.AutoCall.route) {
+                AutoCallScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

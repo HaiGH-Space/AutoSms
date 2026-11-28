@@ -11,6 +11,7 @@ import com.gmail.nthai.domain.model.ResetStatusScope
 import com.gmail.nthai.domain.model.SendingRule
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.repository.CustomerRepository
+import com.gmail.nthai.domain.repository.FakeBlacklistRepository
 import com.gmail.nthai.domain.repository.SendingLogRepository
 import com.gmail.nthai.domain.repository.SimConfigRepository
 import com.gmail.nthai.domain.usecase.ImportCustomerExcelUseCase
@@ -39,6 +40,7 @@ class CustomerViewModelTest {
     private val fakeCustomerRepository = FakeCustomerRepositoryForVM()
     private val fakeSimConfigRepository = FakeSimConfigRepositoryForVM()
     private val fakeSendingLogRepository = FakeSendingLogRepositoryForVM()
+    private val fakeBlacklistRepository = FakeBlacklistRepository()
     private val importCustomerExcelUseCase = ImportCustomerExcelUseCase(ExcelParser())
 
     private lateinit var viewModel: CustomerViewModel
@@ -50,6 +52,7 @@ class CustomerViewModelTest {
             customerRepository = fakeCustomerRepository,
             simConfigRepository = fakeSimConfigRepository,
             sendingLogRepository = fakeSendingLogRepository,
+            blacklistRepository = fakeBlacklistRepository,
             importCustomerExcelUseCase = importCustomerExcelUseCase
         )
     }
