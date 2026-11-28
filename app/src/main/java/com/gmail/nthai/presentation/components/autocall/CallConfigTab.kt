@@ -42,14 +42,16 @@ fun CallConfigTab(
     selectedRecipientsCount: Int,
     onNextToRecipients: () -> Unit,
     onImportExcel: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hasOverlayPermission: Boolean = true,
+    onRequestOverlayPermission: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // 1. Permission Banner Status Card
         CampaignStatusBanner(
@@ -59,6 +61,17 @@ fun CallConfigTab(
             actionLabel = "Cấp quyền",
             onActionClick = onRequestPermission
         )
+
+        // 2. Overlay Window Banner Card
+        if ((onRequestOverlayPermission != null) && !hasOverlayPermission) {
+            CampaignStatusBanner(
+                isGranted = false,
+                title = "Cửa sổ nổi tên người gọi: CHƯA CẤP",
+                description = "Cấp quyền cửa sổ nổi để hiển thị Tên khách hàng đè lên màn hình gọi điện.",
+                actionLabel = "Bật cửa sổ nổi",
+                onActionClick = onRequestOverlayPermission
+            )
+        }
 
         // 2. SIM Selection & Delay Slider Config Card
         AutoCallConfigCard(

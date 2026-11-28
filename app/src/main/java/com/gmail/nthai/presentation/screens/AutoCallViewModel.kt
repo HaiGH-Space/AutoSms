@@ -10,7 +10,6 @@ import com.gmail.nthai.domain.model.AutoCallProgress
 import com.gmail.nthai.domain.model.CallLogRecord
 import com.gmail.nthai.domain.model.CallRecipient
 import com.gmail.nthai.domain.model.ImportMode
-import com.gmail.nthai.domain.model.LogStatus
 import com.gmail.nthai.domain.model.PendingImportState
 import com.gmail.nthai.domain.model.SimConfig
 import com.gmail.nthai.domain.repository.AutoCallRepository
@@ -36,9 +35,9 @@ class AutoCallViewModel @Inject constructor(
     private val autoCallEngine: AutoCallEngine,
     private val callRecipientRepository: CallRecipientRepository,
     private val autoCallRepository: AutoCallRepository,
-    private val simConfigRepository: SimConfigRepository,
+    simConfigRepository: SimConfigRepository,
     private val blacklistRepository: BlacklistRepository,
-    private val importCustomerExcelUseCase: ImportCustomerExcelUseCase
+    private val importCustomerExcelUseCase: ImportCustomerExcelUseCase,
 ) : ViewModel() {
 
     val progressState: StateFlow<AutoCallProgress> = autoCallEngine.progressState
@@ -88,7 +87,7 @@ class AutoCallViewModel @Inject constructor(
     }
 
     fun updateDelay(seconds: Int) {
-        if (seconds in 1..120) {
+        if ((seconds in 1..120)) {
             _delaySeconds.value = seconds
         }
     }
@@ -161,10 +160,18 @@ class AutoCallViewModel @Inject constructor(
                     lower.contains("sdt") || lower.contains("sđt") || lower.contains("phone") || lower.contains("thoại")
                 } ?: headers.firstOrNull() ?: ""
 
+                val detectedNameCol = headers.firstOrNull { h ->
+                    val lower = h.lowercase()
+                    lower != detectedPhoneCol.lowercase() && (
+                        lower.contains("tên") || lower.contains("ten") || lower.contains("name") || lower.contains("họ") || lower.contains("ho")
+                    )
+                } ?: ""
+
                 _pendingImportState.value = PendingImportState(
                     fileBytes = bytes,
                     headers = headers,
                     selectedHeader = detectedPhoneCol,
+                    selectedNameHeader = detectedNameCol,
                     selectedImportMode = ImportMode.REPLACE_ALL
                 )
                 _isImporting.value = false
@@ -178,6 +185,11 @@ class AutoCallViewModel @Inject constructor(
     fun updateSelectedImportHeader(header: String) {
         val current = _pendingImportState.value ?: return
         _pendingImportState.value = current.copy(selectedHeader = header)
+    }
+
+    fun updateSelectedImportNameHeader(header: String) {
+        val current = _pendingImportState.value ?: return
+        _pendingImportState.value = current.copy(selectedNameHeader = header)
     }
 
     fun updateSelectedImportMode(mode: ImportMode) {
@@ -201,6 +213,7 @@ class AutoCallViewModel @Inject constructor(
                     callRecipientRepository.importFromExcel(
                         stream,
                         current.selectedHeader,
+                        current.selectedNameHeader.ifBlank { null },
                         current.selectedImportMode
                     )
                 }
@@ -217,7 +230,7 @@ class AutoCallViewModel @Inject constructor(
         viewModelScope.launch {
             val allList = recipients.value
             val selected = allList.filter { it.isSelected }
-            val listToCall = if (selected.isNotEmpty()) selected else allList
+            val listToCall = selected.ifEmpty { allList }
             val validList = listToCall.filter { it.phone.replace(Regex("[^0-9+]"), "").isNotBlank() }
 
             val config = AutoCallConfig(

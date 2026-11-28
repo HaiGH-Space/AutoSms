@@ -27,6 +27,9 @@ class AutoCallForegroundService : Service() {
     @Inject
     lateinit var autoCallEngine: AutoCallEngine
 
+    @Inject
+    lateinit var callOverlayManager: com.gmail.nthai.domain.telephony.CallOverlayManager
+
     private val serviceJob = Job()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
@@ -41,17 +44,23 @@ class AutoCallForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> {
-                if (autoCallEngine.progressState.value.status == AutoCallStatus.RUNNING ||
-                    autoCallEngine.progressState.value.status == AutoCallStatus.PAUSED) {
+                if ((autoCallEngine.progressState.value.status == AutoCallStatus.RUNNING) ||
+                    (autoCallEngine.progressState.value.status == AutoCallStatus.PAUSED)) {
                     autoCallEngine.stopCampaign()
                 }
+                callOverlayManager.hideOverlay()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
             ACTION_PAUSE -> autoCallEngine.pauseCampaign()
             ACTION_RESUME -> autoCallEngine.resumeCampaign()
             ACTION_START -> {
-                val notification = buildNotification("Đang chuẩn bị tự động gọi...", 0, 0, false)
+                val notification = buildNotification(
+                    content = "Đang chuẩn bị tự động gọi...",
+                    current = 0,
+                    total = 0,
+                    isPaused = false
+                )
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL)
                 } else {
@@ -68,21 +77,32 @@ class AutoCallForegroundService : Service() {
                 when (progress.status) {
                     AutoCallStatus.RUNNING -> {
                         val name = progress.currentCustomerName ?: progress.currentPhone ?: ""
+                        val phone = progress.currentPhone ?: ""
                         val content = if (progress.isWaitingDelay) {
                             "Đang chờ ${progress.countdownRemainingSeconds}s để gọi tiếp..."
                         } else {
                             "Đang gọi: $name"
                         }
                         updateNotification(content, progress.completedCount, progress.totalCount, isPaused = false)
+
+                        if (!progress.isWaitingDelay && name.isNotBlank() && phone.isNotBlank()) {
+                            callOverlayManager.showOverlay(name, phone)
+                        } else {
+                            callOverlayManager.hideOverlay()
+                        }
                     }
                     AutoCallStatus.PAUSED -> {
                         updateNotification("Tạm dừng gọi tự động", progress.completedCount, progress.totalCount, isPaused = true)
+                        callOverlayManager.hideOverlay()
                     }
                     AutoCallStatus.FINISHED, AutoCallStatus.CANCELLED -> {
+                        callOverlayManager.hideOverlay()
                         stopForeground(STOP_FOREGROUND_REMOVE)
                         stopSelf()
                     }
-                    AutoCallStatus.IDLE -> {}
+                    AutoCallStatus.IDLE -> {
+                        callOverlayManager.hideOverlay()
+                    }
                 }
             }
         }
@@ -153,6 +173,7 @@ class AutoCallForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        callOverlayManager.hideOverlay()
         serviceJob.cancel()
     }
 

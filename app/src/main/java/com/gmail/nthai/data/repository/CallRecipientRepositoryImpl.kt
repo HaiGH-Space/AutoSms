@@ -4,7 +4,6 @@ import com.gmail.nthai.data.excel.ExcelParser
 import com.gmail.nthai.data.local.dao.CallRecipientDao
 import com.gmail.nthai.data.local.entity.CallRecipientEntity
 import com.gmail.nthai.data.local.mapper.toDomain
-import com.gmail.nthai.data.local.mapper.toEntity
 import com.gmail.nthai.domain.model.CallRecipient
 import com.gmail.nthai.domain.model.ImportMode
 import com.gmail.nthai.domain.model.LogStatus
@@ -23,7 +22,7 @@ import javax.inject.Singleton
 @Singleton
 class CallRecipientRepositoryImpl @Inject constructor(
     private val callRecipientDao: CallRecipientDao,
-    private val excelParser: ExcelParser = ExcelParser()
+    private val excelParser: ExcelParser = ExcelParser(),
 ) : CallRecipientRepository {
 
     override fun getAllRecipients(): Flow<List<CallRecipient>> {
@@ -33,13 +32,13 @@ class CallRecipientRepositoryImpl @Inject constructor(
     }
 
     override fun observeStats(): Flow<CallRecipientStats> {
-        return callRecipientDao.observeRecipientStats().map { entity ->
+        return callRecipientDao.observeRecipientStats().map { (totalCount, pendingCount, calledCount, failedCount, selectedCount) ->
             CallRecipientStats(
-                totalCount = entity.totalCount,
-                pendingCount = entity.pendingCount,
-                calledCount = entity.calledCount,
-                failedCount = entity.failedCount,
-                selectedCount = entity.selectedCount
+                totalCount = totalCount,
+                pendingCount = pendingCount,
+                calledCount = calledCount,
+                failedCount = failedCount,
+                selectedCount = selectedCount,
             )
         }
     }
@@ -96,6 +95,7 @@ class CallRecipientRepositoryImpl @Inject constructor(
     override suspend fun importFromExcel(
         inputStream: InputStream,
         phoneColumn: String,
+        nameColumn: String?,
         importMode: ImportMode
     ): Result<Int> = withContext(Dispatchers.IO) {
         runCatching {
@@ -117,15 +117,23 @@ class CallRecipientRepositoryImpl @Inject constructor(
                 val cleanPhone = PhoneNumberUtils.normalizePhoneNumber(c.phone)
                 if (cleanPhone.isBlank()) continue
 
-                if (importMode == ImportMode.SKIP_DUPLICATES && existingPhones.contains(cleanPhone)) {
+                if ((importMode == ImportMode.SKIP_DUPLICATES) && existingPhones.contains(cleanPhone)) {
                     continue
                 }
 
-                // Determine name from custom fields if available
-                val name = c.customFields["ho_ten"]
-                    ?: c.customFields["hoten"]
-                    ?: c.customFields["ten"]
-                    ?: c.customFields["name"]
+                // Determine name from selected nameColumn or common fallback keys
+                val nameFromSelectedColumn = nameColumn?.let { col ->
+                    c.customFields[col]?.trim()?.ifBlank { null }
+                }
+
+                val name = nameFromSelectedColumn
+                    ?: c.customFields.entries.find { (k, _) ->
+                        val lower = k.lowercase()
+                        lower == "ho_ten" || lower == "hoten" || lower == "ten" || lower == "name" ||
+                        lower == "họ và tên" || lower == "họ tên" || lower == "tên khách hàng" ||
+                        lower == "khách hàng" || lower == "tên" ||
+                        lower.contains("tên") || lower.contains("ten") || lower.contains("name") || lower.contains("họ")
+                    }?.value?.trim()?.ifBlank { null }
                     ?: cleanPhone
 
                 val jsonStr = JSONObject().apply {

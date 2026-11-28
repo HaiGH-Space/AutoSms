@@ -40,20 +40,23 @@ fun ExcelImportDialogs(
     importLoadingMessage: String,
     pendingImportState: PendingImportState?,
     onSelectHeader: (String) -> Unit,
+    onSelectNameHeader: ((String) -> Unit)? = null,
     onSelectImportMode: (ImportMode) -> Unit,
     onConfirmImport: () -> Unit,
-    onDismissImport: () -> Unit
+    onDismissImport: () -> Unit,
 ) {
     if (isImporting) {
         LoadingDialog(message = importLoadingMessage)
     }
 
-    pendingImportState?.let { pendingState ->
+    pendingImportState?.let {
         SelectPhoneColumnDialog(
-            headers = pendingState.headers,
-            selectedHeader = pendingState.selectedHeader,
+            headers = it.headers,
+            selectedHeader = it.selectedHeader,
             onSelectHeader = onSelectHeader,
-            selectedImportMode = pendingState.selectedImportMode,
+            selectedNameHeader = it.selectedNameHeader,
+            onSelectNameHeader = onSelectNameHeader,
+            selectedImportMode = it.selectedImportMode,
             onSelectImportMode = onSelectImportMode,
             onConfirm = onConfirmImport,
             onDismiss = onDismissImport
@@ -113,6 +116,8 @@ fun SelectPhoneColumnDialog(
     headers: List<String>,
     selectedHeader: String,
     onSelectHeader: (String) -> Unit,
+    selectedNameHeader: String = "",
+    onSelectNameHeader: ((String) -> Unit)? = null,
     selectedImportMode: ImportMode = ImportMode.REPLACE_ALL,
     onSelectImportMode: (ImportMode) -> Unit = {},
     onConfirm: () -> Unit,
@@ -133,7 +138,7 @@ fun SelectPhoneColumnDialog(
         text = {
             Column(
                 modifier = Modifier
-                    .heightIn(max = 420.dp)
+                    .heightIn(max = 480.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -155,10 +160,42 @@ fun SelectPhoneColumnDialog(
                     )
                 }
 
+                if (onSelectNameHeader != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Text(
+                        text = "2. Chọn cột chứa Tên người gọi / Khách hàng:",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF171717)
+                    )
+
+                    SelectionOptionCard(
+                        option = SelectionOption(
+                            value = "",
+                            title = "(Tự động nhận diện)",
+                            description = "Tự động tìm cột tên hoặc dùng SĐT nếu không tìm thấy"
+                        ),
+                        isSelected = selectedNameHeader.isEmpty(),
+                        onSelect = { onSelectNameHeader("") }
+                    )
+
+                    headers.forEach { header ->
+                        SelectionOptionCard(
+                            option = SelectionOption(
+                                value = header,
+                                title = header
+                            ),
+                            isSelected = (header == selectedNameHeader),
+                            onSelect = { onSelectNameHeader(it) }
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "2. Chọn chế độ lưu dữ liệu:",
+                    text = if (onSelectNameHeader != null) "3. Chọn chế độ lưu dữ liệu:" else "2. Chọn chế độ lưu dữ liệu:",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF171717)

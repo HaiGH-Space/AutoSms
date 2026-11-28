@@ -61,18 +61,35 @@ fun AutoCallScreen(
 
     var hasCallPermission by remember {
         mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+            (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) &&
+            (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) &&
+            (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED)
         )
+    }
+
+    var hasOverlayPermission by remember {
+        mutableStateOf(android.provider.Settings.canDrawOverlays(context))
     }
 
     androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
         hasCallPermission =
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+            (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) &&
+            (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) &&
+            (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED)
+        hasOverlayPermission = android.provider.Settings.canDrawOverlays(context)
         onPauseOrDispose {}
+    }
+
+    val requestOverlayPermissionAction = {
+        try {
+            val intent = android.content.Intent(
+                android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${context.packageName}")
+            )
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     val handleStartCampaign = {
@@ -145,8 +162,8 @@ fun AutoCallScreen(
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri != null) {
-            viewModel.prepareExcelImportWithUri(context, uri) { err ->
+        uri?.let {
+            viewModel.prepareExcelImportWithUri(context, it) { err ->
                 Toast.makeText(context, "Lỗi đọc tiêu đề Excel: ${err.message}", Toast.LENGTH_LONG).show()
             }
         }
@@ -196,6 +213,8 @@ fun AutoCallScreen(
                 CallConfigTab(
                     hasCallPermission = hasCallPermission,
                     onRequestPermission = requestPermissionAction,
+                    hasOverlayPermission = hasOverlayPermission,
+                    onRequestOverlayPermission = requestOverlayPermissionAction,
                     delaySeconds = delaySeconds,
                     onDelayChange = viewModel::updateDelay,
                     selectedSimSlot = selectedSimSlot,
@@ -252,6 +271,7 @@ fun AutoCallScreen(
         importLoadingMessage = importLoadingMessage,
         pendingImportState = pendingImportState,
         onSelectHeader = viewModel::updateSelectedImportHeader,
+        onSelectNameHeader = viewModel::updateSelectedImportNameHeader,
         onSelectImportMode = viewModel::updateSelectedImportMode,
         onConfirmImport = {
             viewModel.confirmImport { result ->

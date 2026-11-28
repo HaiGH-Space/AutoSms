@@ -28,6 +28,7 @@ interface CallRecipientRepository {
     suspend fun importFromExcel(
         inputStream: InputStream,
         phoneColumn: String,
+        nameColumn: String? = null,
         importMode: ImportMode
     ): Result<Int>
 }
